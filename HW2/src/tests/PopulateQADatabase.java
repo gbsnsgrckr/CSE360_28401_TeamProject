@@ -17,7 +17,7 @@ public class PopulateQADatabase {
 
 	public void execute() {
 
-		System.out.println("This process will populate the question, answer, and relation databases.\n");
+		System.out.println("\nThis process will populate the question, answer, and relation databases.\n");
 
 		// Populate Question 1
 		question = new Question("User Stories for HW2",
@@ -305,6 +305,7 @@ public class PopulateQADatabase {
 			System.out.println("Error registering answer 15");
 			e.printStackTrace();
 		}
+		System.out.println("\nThe population of the database has completed.\n");
 	}
 
 }
