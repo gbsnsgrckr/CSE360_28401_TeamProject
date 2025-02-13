@@ -8,7 +8,8 @@
 
 
 1. HW2              -  file containing HW2 and all source code
-2. Screencast       -  file containing Screencast 
+   (When running the code in Eclipse, the StartCSE360 is the start of the GUI application. If you wish to run the testbed then you must run the file in the tests package named HW2TestBed.)
+3. Screencast       -  file containing Screencast 
   
 
 
