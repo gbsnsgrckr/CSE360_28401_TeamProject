@@ -14,12 +14,24 @@ public class User {
 	private String email;
 	private String currentRole;
 	private List<String> roles;
+	private int preferredAnswer;
 	
 	// Flag will be true if one-time password is active on user
 	private boolean otp;
 
 	// Constructor to initialize a new User object with userName, password, and
 	// role.
+	public User(int id, String userName, String name, String password, String email, List<String> roles, boolean otp, int preferredAnswer) {
+		this.id = id;
+		this.userName = userName;
+		this.name = name;
+		this.password = password;
+		this.email = email;
+		this.roles = roles;
+		this.otp = otp;
+		this.preferredAnswer = preferredAnswer;
+	}
+	
 	public User(int id, String userName, String name, String password, String email, List<String> roles, boolean otp) {
 		this.id = id;
 		this.userName = userName;
@@ -78,6 +90,10 @@ public class User {
 	public boolean getOTPFlag() {
 		return this.otp;
 	}
+	
+	public int getPreferredAnswer() {
+		return this.preferredAnswer;
+	}
 
 	public void setPassword(String password) {
 		this.password = password;
@@ -90,8 +106,12 @@ public class User {
 	public void setOTPFlag(boolean flag) {
 		this.otp = flag;
 	}
+	
+	public void setPreferredAnswer(int preferredAnswer) {
+		this.preferredAnswer = preferredAnswer;
+	}
 
 	public String toString() {
-		return String.format("USER: \n Id: %s, Username: %s, Name: %s, Email: %s, Roles: %s", id, userName, name, email, roles);
+		return String.format("USER: \n Id: %s, Username: %s, Name: %s, Email: %s, Roles: %s, Preferred Answer: %s", id, userName, name, email, roles, preferredAnswer);
 	}
 }

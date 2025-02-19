@@ -144,7 +144,7 @@ public class DatabaseHelper {
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
-				boolean otp = rs.getBoolean("otp");								
+				boolean otp = rs.getBoolean("otp");				
 				return new User(id, username, name, password, email, roles, otp);
 			}
 		}
@@ -252,7 +252,7 @@ public class DatabaseHelper {
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
-				boolean otp = rs.getBoolean("otp");
+				boolean otp = rs.getBoolean("otp");				
 				User user = new User(id, username, name, password, email, roles, otp);  // create new user with all of the attributes
 				System.out.println("USERS: " + user.toString());
 				users.add(user);                                                    // add new user to the list of users
