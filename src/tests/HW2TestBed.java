@@ -8,7 +8,7 @@ import application.*;
 import databasePart1.*;
 
 public class HW2TestBed {
-	private static final QAHelper qaHelper = new QAHelper();
+	private static final QAHelper1 qaHelper = new QAHelper1();
 	static int numPassed = 0;
 	static int numFailed = 0;
 	static int size;
