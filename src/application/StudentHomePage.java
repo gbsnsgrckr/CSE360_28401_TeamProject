@@ -338,6 +338,22 @@ public class StudentHomePage {
 				resultsBox.setText(searchResults.toString());
 			}
 		});
+		
+		// Add listeners for the textArea title field
+		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+			if (isFocused) {
+				qTable.getSelectionModel().clearSelection();
+				aTable.getSelectionModel().clearSelection();				
+			}
+		});
+		
+		// Add listeners for the textArea input field
+		inputField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
+			if (isFocused) {
+				qTable.getSelectionModel().clearSelection();
+				aTable.getSelectionModel().clearSelection();				
+			}
+		});
 
 		// Add listeners for table selections to read selected objects from tables
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
