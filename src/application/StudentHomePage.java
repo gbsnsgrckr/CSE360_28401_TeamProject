@@ -557,7 +557,61 @@ public class StudentHomePage {
 				aTable.getSelectionModel().clearSelection();
 			}
 		});
-
+		
+		// POSSIBLE FIX FOR WHEN DATABASE IS EMTPY TO ADD ONE QUESTION, MIGHT NOT BE NECESSARY 
+		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+//		submitButton.setOnAction(a -> {
+//					String titleInput = titleField.getText();
+//					String textInput = inputField.getText();
+//
+//					// Check if titleInput is empty or null
+//					if (titleInput == null || titleInput.isEmpty()) {
+//						errorLabel.setText("Error, question-title field is blank.");
+//						return;
+//					}
+//
+//					// Check if textInput is empty or null
+//					if (textInput == null || textInput.isEmpty()) {
+//						errorLabel.setText("Error, question-body field is blank.");
+//						return;
+//					}
+//
+//					// Check if inputs are empty or null
+//					try {
+//						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
+//							Question newQuestion = new Question(titleInput, textInput,
+//									databaseHelper.currentUser.getUserId());
+//
+//							// Clear input fields for new inputs
+//							titleField.clear();
+//							inputField.clear();
+//
+//							// Register the new question object into the database
+//							databaseHelper.qaHelper.registerQuestion(newQuestion);
+//
+//							// Retrieve an updated list of questions from the database
+//							questions = databaseHelper.qaHelper.getAllQuestions();
+//
+//							// Refresh contents of tables manually
+//							questionObservableList.clear();
+//							questionObservableList.addAll(questions);
+//							qTable.setItems(questionObservableList);
+//
+//						} else {
+//							System.out.println("Title and/or Question fields are blank");
+//							return;
+//						}
+//					} catch (SQLException e) {
+//						e.printStackTrace();
+//						System.err.println("Error trying to register new question into database via submit button");
+//						;
+//						return;
+//					}
+//
+//				});
+//
+//		///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		
 		// Add listeners for table selections to read selected objects from tables
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
@@ -586,13 +640,17 @@ public class StudentHomePage {
 					// Check if inputs are empty or null
 					try {
 						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-							Question newQuestion = new Question(titleInput, textInput,
-									databaseHelper.currentUser.getUserId());
+							//Question newQuestion = new Question(titleInput, textInput,
+									//databaseHelper.currentUser.getUserId());
 
 							// Clear input fields for new inputs
 							titleField.clear();
 							inputField.clear();
-
+							
+							Question newQuestion = newSelection;
+							newQuestion.setTitle(titleInput);
+							newQuestion.setText(textInput);
+							
 							// Register the new question object into the database
 							databaseHelper.qaHelper.updateQuestion(newQuestion);
 
