@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import application.Answer;
 import application.Question;
@@ -63,7 +62,7 @@ public class DatabaseHelper {
 	private void createTables() throws SQLException {
 		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" + "id INT AUTO_INCREMENT PRIMARY KEY, " 
 				+ "userName VARCHAR(255) UNIQUE, " + "name VARCHAR(255), " + "password VARCHAR(255), "	// added in username, name, password, email, OTPFlag	  
-				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "reviewerIds VARCHAR(70)" + "otp BOOLEAN DEFAULT FALSE)";  // added in roles as a comma separated string
+				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "otp BOOLEAN DEFAULT FALSE)";  // added in roles as a comma separated string
 		statement.execute(userTable);
 
 		// Create the invitation codes table
@@ -82,94 +81,6 @@ public class DatabaseHelper {
 		return true;
 	}
 
-	//// REVIEWER IDS
-	public List<Integer> getAllReviewerIds(int userId) throws SQLException {
-		String query = "SELECT reviewerIds FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
-		List<Integer> reviewerIds = new ArrayList<>();
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-			
-			if (rs.next()) {
-				reviewerIds = reviewerDeserial(rs.getString("reviewerIds"));
-			}
-		}
-		return reviewerIds;
-	}
-	
-	public boolean addReviewerId(int userId, int reviewerId) throws SQLException {
- 		String query = "SELECT reviewerIds FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-
-			if (rs.next()) {   // if the user is found
-				List<Integer> reviewers = reviewerDeserial(rs.getString("reviewerIds"));  // deserialize string into list of roles
-				if (!reviewers.contains(reviewerId)) {  						    // make sure to not duplicate roles
-					reviewers.add(reviewerId);   									// add new roles
-
-					String reviewerString = reviewerSerial(reviewers);               	// serialize list of roles into a string
-					try {
-						updateReviewerIds(reviewers, userId);                 // calling updateRoles for reusability
-						return true;
-					} catch (SQLException e) {
-						System.out.println(e.getMessage() + "\n" + "ERROR IN UPDATEREVIEWERS");
-						return false;
-					}
-				} else {
-					System.out.println("UPDATEREVIEWERS: User already has this reviewer");
-					return false;
-				}
-			}
-			System.out.println("UPDATEREVIEWERS: User was not found");
-			return false;
-		}
-	}
-	
-	public boolean updateReviewerIds(List<Integer> reviewers, int userId) throws SQLException {
- 		String query = "UPDATE cse360users SET reviewerIds = ? WHERE id = ?";            // selecting all of the rows in the database
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setString(1, reviewerSerial(reviewers));
-			pstmt.setInt(2, userId);
-			pstmt.executeUpdate();
-			return true;
-		}
-	}
-	
-	public boolean removeReviewer(int userId, int reviewerId) throws SQLException {
-		String query = "SELECT reviewerIds FROM cse360users AS c WHERE c.id = ?	";
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-
-			if (rs.next()) {
-				List<Integer> reviewers = reviewerDeserial(rs.getString("reviewerIds"));   // get list of deserialized roles
-
-				if (reviewers.contains(reviewerId)) {    							// make sure that user has this role
-					reviewers.remove(reviewers.indexOf(reviewerId)); 					// possible to delete last role
-
-					String reviewersString = reviewerSerial(reviewers);                // serialize roles into a string 
-					try {
-						updateReviewerIds(reviewers, userId);					// reusing updateRoles method
-						return true;	
-					} catch (SQLException e) {
-						System.out.println(e.getMessage() + "\n" + "ERROR IN UPDATEROLES");
-						return false;
-					}
-				} else {
-					System.out.println("REMOVEREVIEWER: User does not have this reviewer");
-					return false;
-				}
-			} else {
-				System.out.println("REMOVEREVIEWER: Reviewer was not found");
-			}
-		}
-		return false;
-	}
-	
 	// Registers a new user in the database.
 	public void register(User user) throws SQLException {  
 		String insertUser = "INSERT INTO cse360users (userName, name, password, email, roles, otp) VALUES (?, ?, ?, ?, ?, ?)";
@@ -527,27 +438,6 @@ public class DatabaseHelper {
 			return "";
 		} else {  
 			return String.join(",", roles);            // joining each Role in the list to be comma separated string
-		}
-	}
-	
-	private List<Integer> reviewerDeserial(String reviewers) {  // Deserializing from String to List<Roles> for easier logic
-		if (reviewers == null || reviewers == "") {
-			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
-		} else {
-			List<Integer> reviewerIds = Arrays.asList(reviewers.split(",")).stream().map(r -> Integer.parseInt(r)).collect(Collectors.toList());
-			return new ArrayList<>(reviewerIds);
-		}
-	}
-
-	private String reviewerSerial(List<Integer> reviewers) {   // serializing a List<Roles> into a string to be stored in database
-		if (reviewers == null || reviewers.isEmpty()) {        // make sure that the list is not empty or null
-			return "";
-		} else {  
-			String serial = "";
-			for (Integer i : reviewers) {
-				serial = serial + i.toString() + ",";
-			}
-			return serial;
 		}
 	}
 
