@@ -56,7 +56,7 @@ public class RoleSelectPage {
 		comboBox.setPromptText("Please select a role");
 		comboBox.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;"
-				+ "-fx-prompt-text-fill: black;");
+				+ "-fx-prompt-text-fill: black;");				
 
 		// ComboBox allows selection of roles and deactivates Next button until
 		// selection

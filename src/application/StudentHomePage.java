@@ -194,10 +194,20 @@ public class StudentHomePage {
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
 		// Styling for the table
-		qTable.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
 		qTable.setPrefWidth(350);
 		qTable.setFixedCellSize(-1);
+		
+		qTable.setRowFactory(a -> new TableRow<Question>() {
+			@Override
+			protected void updateItem(Question item, boolean flag) {
+				super.updateItem(item, flag);
+				if (flag || item == null) {
+					setStyle("-fx-border-color: transparent;");
+				} else {
+					setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+				}
+			}
+		});
 
 		// Create an observable list of questions and assign to the table
 		ObservableList<Question> questionObservableList = FXCollections.observableArrayList(questions);
@@ -225,6 +235,7 @@ public class StudentHomePage {
 				setGraphic(flag || item == null ? null : textLabel);
 				if (!flag && item != null) {
 					textLabel.setText(item);
+					textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 				}
 			}
 		});
@@ -244,11 +255,9 @@ public class StudentHomePage {
 		VBox questionDB = new VBox(5, titleBox2, qTable);
 
 		// Set height of table to adjust to container
-		qTable.prefHeightProperty().bind(questionDB.heightProperty());
-		;
+		qTable.prefHeightProperty().bind(questionDB.heightProperty());		
 
 		// Table display of the answer database
-
 		// Label to display title to user
 		Label prompt3 = new Label("Answer Database");
 		prompt3.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
@@ -318,9 +327,34 @@ public class StudentHomePage {
 
 		TableView<QATableRow> resultsTable = new TableView<>();
 		resultsTable.setItems(resultsObservableList);
+		resultsTable.setRowFactory(a -> new TableRow<QATableRow>() {
+			@Override
+			protected void updateItem(QATableRow item, boolean flag) {
+				super.updateItem(item, flag);
+				if (flag || item == null) {
+					setStyle("-fx-border-color: transparent;");
+				} else {
+					setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+				}
+			}
+		});
 
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
 		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
+		
+		// Add cell factory to deal with text runoff and disable horizontal scrolling
+		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
+			Label textLabel = new Label();
+					@Override
+					protected void updateItem(String item, boolean flag) {
+						super.updateItem(item, flag);
+						setGraphic(flag || item == null ? null : textLabel);
+						if (!flag && item != null) {
+							textLabel.setText(item);
+							textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+						}
+					}
+				});
 
 		// Set columns to resultsTable
 		resultsTable.getColumns().setAll(contentColumn);
@@ -332,6 +366,8 @@ public class StudentHomePage {
 				titleBar.setManaged(false);
 			}
 		});
+		
+		
 
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
