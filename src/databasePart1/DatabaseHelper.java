@@ -39,7 +39,7 @@ public class DatabaseHelper {
 	
 	// Initialize new QAHelper object2
 	public DatabaseHelper() {
-		qaHelper = new QAHelper1();
+		qaHelper = new QAHelper1(this);
 	}
 
 	public void connectToDatabase() throws SQLException {
@@ -140,6 +140,25 @@ public class DatabaseHelper {
 
 			if (rs.next()) {
 				int id = rs.getInt("id");
+				String name = rs.getString("name");
+				String password = rs.getString("password");
+				String email = rs.getString("email");
+				List<String> roles = rolesDeserial(rs.getString("roles"));
+				boolean otp = rs.getBoolean("otp");				
+				return new User(id, username, name, password, email, roles, otp);
+			}
+		}
+		return null;
+	}
+	
+	public User getUser(int id) throws SQLException {
+		String query = "SELECT * FROM cse360users AS c WHERE c.id = ?	";  // getting all of the fields of a user
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, id);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {				
+				String username = rs.getString("userName");
 				String name = rs.getString("name");
 				String password = rs.getString("password");
 				String email = rs.getString("email");

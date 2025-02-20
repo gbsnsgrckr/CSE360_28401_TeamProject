@@ -16,10 +16,13 @@ import application.QuestionsSet;
 import application.AnswersSet;
 import tests.*;
 
+import application.User;
+
 // This is a database class used to create, read, update, and delete SQL databases among other managing functions in order
 // to maintain a database of questions and answers and to perform various functions to them.
 
 public class QAHelper1 {
+	private DatabaseHelper databaseHelper;
 
 	// JDBC driver name and database URL
 	static final String JDBC_DRIVER = "org.h2.Driver";
@@ -31,6 +34,10 @@ public class QAHelper1 {
 
 	private Connection connection = null;
 	private Statement statement = null;
+	
+	public QAHelper1(DatabaseHelper databaseHelper) {
+		this.databaseHelper = databaseHelper;
+	}
 
 	// Initialize connection to database
 	public void connectToDatabase() throws SQLException {
@@ -99,7 +106,7 @@ public class QAHelper1 {
 		try (PreparedStatement pstmt = connection.prepareStatement(insertQuestion)) {
 			pstmt.setString(1, question.getTitle());
 			pstmt.setString(2, question.getText());
-			pstmt.setInt(3, question.getAuthor());
+			pstmt.setInt(3, question.getAuthorId());
 			pstmt.executeUpdate();
 		}
 		System.out.println("Question registered successfully.");
@@ -110,7 +117,7 @@ public class QAHelper1 {
 		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
 		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
 			pstmt.setString(1, answer.getText());
-			pstmt.setInt(2, answer.getAuthor());
+			pstmt.setInt(2, answer.getAuthorId());
 			pstmt.executeUpdate();
 
 			ResultSet newID = pstmt.getGeneratedKeys();
@@ -261,19 +268,22 @@ public class QAHelper1 {
 				int id = rs.getInt("id");
 				String title = rs.getString("title"); // for each row, get all of the user attributes
 				String text = rs.getString("text");
-				int author = rs.getInt("author");
+				int authorId = rs.getInt("author");
 				Timestamp created = rs.getTimestamp("created_On");
 				// Convert to LocalDateTime format
 				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
-				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-				int preferredAnswer = rs.getInt("preferred_answer");
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;				
 				
 				List<String> comp = textDeserial(text);
+				
+				int preferredAnswer = rs.getInt("preferred_answer");
+				
+				User author = databaseHelper.getUser(authorId);
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, author, createdOn, updatedOn, comp, preferredAnswer);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
 
 				// Return the question object
 				return question;
@@ -294,16 +304,18 @@ public class QAHelper1 {
 			if (rs.next()) {
 				int id = rs.getInt("id");
 				String text = rs.getString("text");
-				int author = rs.getInt("author");
+				int authorId = rs.getInt("author");
 				Timestamp created = rs.getTimestamp("created_On");
 				// Convert to LocalDateTime format
 				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				
+				User author = databaseHelper.getUser(authorId);
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, author, createdOn, updatedOn);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author);
 
 				// Return the answer object
 				return answer;
@@ -324,7 +336,7 @@ public class QAHelper1 {
 				int id = rs.getInt("id");
 				String title = rs.getString("title"); // for each row, get all of the user attributes
 				String text = rs.getString("text");
-				int author = rs.getInt("author");
+				int authorId = rs.getInt("author");
 				Timestamp created = rs.getTimestamp("created_On");
 				// Convert to LocalDateTime format
 				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
@@ -334,9 +346,11 @@ public class QAHelper1 {
 				int preferredAnswer = rs.getInt("preferred_answer");
 
 				List<String> comp = textDeserial(text);
+				
+				User author = databaseHelper.getUser(authorId);
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, author, createdOn, updatedOn, comp, preferredAnswer);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -358,16 +372,18 @@ public class QAHelper1 {
 				// Pull the info from that row for one answer object
 				int id = rs.getInt("id");
 				String text = rs.getString("text");
-				int author = rs.getInt("author");
+				int authorId = rs.getInt("author");
 				Timestamp created = rs.getTimestamp("created_On");
 				// Convert to LocalDateTime format
 				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				
+				User author = databaseHelper.getUser(authorId);
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, author, createdOn, updatedOn);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author);
 
 				// Add the new answer object to the list of answer objects
 				answers.add(answer);

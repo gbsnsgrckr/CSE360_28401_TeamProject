@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 
 import javafx.scene.control.*;
@@ -37,6 +38,7 @@ import databasePart1.DatabaseHelper;
 public class StudentHomePage {
 	private final DatabaseHelper databaseHelper;
 	private Question question;
+	private Answer answer;
 	private List<Question> questions;
 	private List<Answer> answers;
 	private List<QuestionsSet> questionsSet;
@@ -46,6 +48,40 @@ public class StudentHomePage {
 
 	public StudentHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
+	}
+
+	// Class to allow for dynamic rows within a table
+	public class QATableRow {
+		public enum RowType {
+			QUESTION, ANSWER
+		}
+
+		private final RowType type;
+		private final String text;
+		private final Integer answerId;
+
+		public QATableRow(RowType type, String text, Integer answerId) {
+			this.type = type;
+			this.text = text;
+			this.answerId = answerId;
+		}
+
+		public RowType getType() {
+			return type;
+		}
+
+		public String getText() {
+			return text;
+		}
+
+		public Integer getAnswerId() {
+			return answerId;
+		}
+
+		@Override
+		public String toString() {
+			return text;
+		}
 	}
 
 	public void show(Stage primaryStage) {
@@ -158,43 +194,58 @@ public class StudentHomePage {
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
 		// Styling for the table
-		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-		qTable.setPrefWidth(600);
+		qTable.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+		qTable.setPrefWidth(350);
 		qTable.setFixedCellSize(-1);
 
 		// Create an observable list of questions and assign to the table
 		ObservableList<Question> questionObservableList = FXCollections.observableArrayList(questions);
 		qTable.setItems(questionObservableList);
 
-		// Create, assign, and associate values to table
-		TableColumn<Question, Integer> idColumn = new TableColumn<>("Question ID");
-		idColumn.setCellValueFactory(new PropertyValueFactory<>("id"));
+		TableColumn<Question, String> detailsColumn = new TableColumn<>("Question Details");
+		detailsColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().toDisplay()));
+		// Set the preferred width of the table column
+		detailsColumn.setPrefWidth(350);
 
-		// Create a title column
-		TableColumn<Question, String> titleColumn = new TableColumn<>("Title");
-		titleColumn.setCellValueFactory(new PropertyValueFactory<>("title"));
+		// Add cell factory to deal with text runoff and disable horizontal scrolling
+		detailsColumn.setCellFactory(a -> new TableCell<Question, String>() {
+			private final Label textLabel = new Label();
 
-		// Create a text column
-		TableColumn<Question, String> textColumn = new TableColumn<>("Question");
-		textColumn.setCellValueFactory(new PropertyValueFactory<>("text"));
-		textColumn.setPrefWidth(200);
+			{
+				textLabel.setWrapText(false);
+				textLabel.setEllipsisString("...");
+				textLabel.setMaxWidth(Double.MAX_VALUE);
+				textLabel.setStyle("-fx-text-overrun: ellipsis; -fx-padding: 5px;");
+			}
 
-		// Create an userID column
-		TableColumn<Question, Integer> authorColumn = new TableColumn<>("Author ID");
-		authorColumn.setCellValueFactory(new PropertyValueFactory<>("author"));
+			@Override
+			protected void updateItem(String item, boolean flag) {
+				super.updateItem(item, flag);
+				setGraphic(flag || item == null ? null : textLabel);
+				if (!flag && item != null) {
+					textLabel.setText(item);
+				}
+			}
+		});
 
-		// Create a createdOn column
-		TableColumn<Question, String> createdColumn = new TableColumn<>("Created On");
-		createdColumn.setCellValueFactory(new PropertyValueFactory<>("createdOn"));
+		qTable.getColumns().addAll(detailsColumn);
 
-		// Create an updatedOn column
-		TableColumn<Question, String> updatedColumn = new TableColumn<>("Updated On");
-		updatedColumn.setCellValueFactory(new PropertyValueFactory<>("updatedOn"));
-
-		qTable.getColumns().addAll(idColumn, titleColumn, textColumn, authorColumn, createdColumn, updatedColumn);
+		// Listener to dynamically hide the title bar of the Question Details table
+		qTable.widthProperty().addListener((obs, oldVal, newVal) -> {
+			Node titleBar = qTable.lookup("TableHeaderRow");
+			if (titleBar != null && titleBar.isVisible()) {
+				titleBar.setVisible(false);
+				titleBar.setManaged(false);
+			}
+		});
 
 		// Container to hold the table
 		VBox questionDB = new VBox(5, titleBox2, qTable);
+
+		// Set height of table to adjust to container
+		qTable.prefHeightProperty().bind(questionDB.heightProperty());
+		;
 
 		// Table display of the answer database
 
@@ -245,8 +296,6 @@ public class StudentHomePage {
 		// Container to hold the table
 		VBox answerDB = new VBox(5, titleBox3, aTable);
 
-		
-
 		// Area to display results of searches
 
 		// Label to display title to user
@@ -257,13 +306,83 @@ public class StudentHomePage {
 		HBox titleBox5 = new HBox(prompt5);
 		titleBox5.setAlignment(Pos.CENTER);
 
-		// Text area to display results for search/selection functions
-		TextArea resultsBox = new TextArea();
-		resultsBox.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-		resultsBox.setPrefWidth(900);
-		resultsBox.setPrefHeight(400);
-		resultsBox.setWrapText(true);
+		/*
+		 * // Text area to display results for search/selection functions TextArea
+		 * resultsBox = new TextArea(); resultsBox.setStyle(
+		 * "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
+		 * ); resultsBox.setPrefWidth(900); resultsBox.setPrefHeight(400);
+		 * resultsBox.setWrapText(true);
+		 */
+
+		ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
+
+		TableView<QATableRow> resultsTable = new TableView<>();
+		resultsTable.setItems(resultsObservableList);
+
+		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
+		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
+
+		// Set columns to resultsTable
+		resultsTable.getColumns().setAll(contentColumn);
+		// Hide header for resultsTable
+		resultsTable.widthProperty().addListener((obs, oldVal, newVal) -> {
+			Node titleBar = resultsTable.lookup("TableHeaderRow");
+			if (titleBar != null) {
+				titleBar.setVisible(false);
+				titleBar.setManaged(false);
+			}
+		});
+
+		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+			if (newSelection != null) {
+				// Clear the observable list
+				resultsObservableList.clear();
+				// Retrieve an updated answer list of answers related to selected question from
+				// the qtable
+				try {
+					answers = databaseHelper.qaHelper.getAllAnswersForQuestion(newSelection.getId());
+					// question = qTable.getSelectionModel().getSelectedItem();
+
+					// Put the selected question in the first row
+					resultsObservableList
+							.add(new QATableRow(QATableRow.RowType.QUESTION, newSelection.toString(), null));
+
+					// After that, if there are any, add each answer as its own row
+					for (Answer answer : answers) {
+						resultsObservableList
+								.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toString(), answer.getId()));
+					}
+
+					// Check if selected question has a preferred answer and put that in row 2 if so
+					if (newSelection.getPreferredAnswer() > 0) {
+						resultsObservableList.sort((row1, row2) -> {
+							if (row1.getType() == QATableRow.RowType.QUESTION) {
+								return -1;
+							}
+							if (row2.getType() == QATableRow.RowType.QUESTION) {
+								return 1;
+							}
+
+							if (row1.getAnswerId() != null
+									&& row1.getAnswerId().equals(newSelection.getPreferredAnswer())) {
+								return -1;
+							} else if (row2.getAnswerId() != null
+									&& row2.getAnswerId().equals(newSelection.getPreferredAnswer())) {
+								return 1;
+							}
+
+							return 0;
+						});
+					}
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+					System.err.println(
+							"Error trying to .getAllAnswers() within qTable.getSelectionModel... on line 327 in StudentHomePage.java");
+					return;
+				}
+			}
+		});
 
 		// Label to display error messages
 		Label errorLabel = new Label();
@@ -282,10 +401,6 @@ public class StudentHomePage {
 
 			new UserLoginPage(databaseHelper).show(newStage);
 		});
-
-		
-
-		
 
 		// Event to allow searching of question database for similar entries while the
 		// user types into the inputField
@@ -318,7 +433,7 @@ public class StudentHomePage {
 					}
 
 					// Set initial threshold to add comp to map
-					if (count > 5) {
+					if (count > 2) {
 						similarity.put(question, count);
 					}
 				}
@@ -335,23 +450,36 @@ public class StudentHomePage {
 				}
 
 				// Display results of updating similarity search in resultsBox
-				resultsBox.setText(searchResults.toString());
+				// resultsBox.setText(searchResults.toString());
 			}
 		});
-		
+
+		// Add listener to the resultsTable to allow dynamic selection of objects from
+		// the table
+		resultsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldRow, newRow) -> {
+			if (newRow != null) {
+
+				if (newRow.getType() == QATableRow.RowType.QUESTION) {
+					// Question specific actions
+				} else {
+					// Answer specific actions
+				}
+			}
+		});
+
 		// Add listeners for the textArea title field
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
 				qTable.getSelectionModel().clearSelection();
-				aTable.getSelectionModel().clearSelection();				
+				aTable.getSelectionModel().clearSelection();
 			}
 		});
-		
+
 		// Add listeners for the textArea input field
 		inputField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
 				qTable.getSelectionModel().clearSelection();
-				aTable.getSelectionModel().clearSelection();				
+				aTable.getSelectionModel().clearSelection();
 			}
 		});
 
@@ -360,9 +488,9 @@ public class StudentHomePage {
 			if (newSelection != null) {
 				// Clear selections on the other tables
 				aTable.getSelectionModel().clearSelection();
-				
+
 				submitButton.setText("Update Question");
-				
+
 				// Button to submit an answer or question from the input fields
 				submitButton.setOnAction(a -> {
 					String titleInput = titleField.getText();
@@ -383,7 +511,8 @@ public class StudentHomePage {
 					// Check if inputs are empty or null
 					try {
 						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-							Question newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
+							Question newQuestion = new Question(titleInput, textInput,
+									databaseHelper.currentUser.getUserId());
 
 							// Clear input fields for new inputs
 							titleField.clear();
@@ -393,7 +522,7 @@ public class StudentHomePage {
 							databaseHelper.qaHelper.updateQuestion(newQuestion);
 
 							// Retrieve an updated list of questions from the database
-							questions = databaseHelper.qaHelper.getAllQuestions();					
+							questions = databaseHelper.qaHelper.getAllQuestions();
 
 							// Refresh contents of tables manually
 							questionObservableList.clear();
@@ -430,22 +559,9 @@ public class StudentHomePage {
 					// Refresh contents of tables manually
 					questionObservableList.clear();
 					questionObservableList.addAll(questions);
-					qTable.setItems(questionObservableList);	
+					qTable.setItems(questionObservableList);
 
 				});
-				// Send the details of the selection to the resultsBox to display to the user
-
-				try {
-					System.out
-							.println(databaseHelper.qaHelper.getAllAnswersForQuestion(newSelection.getId()).toString());
-					resultsBox.setText(newSelection.toString() + "\n"
-							+ databaseHelper.qaHelper.getAllAnswersForQuestion(newSelection.getId()).stream()
-									.map(Object::toString).collect(Collectors.joining("\n")));
-				} catch (SQLException e) {
-					e.printStackTrace();
-					System.err.println("Error trying to populate resultsBox with results of selected question: "
-							+ newSelection.getId());
-				}
 			} else {
 				// If nothing is selected on the question table, then....
 				submitButton.setText("Submit Question");
@@ -469,7 +585,8 @@ public class StudentHomePage {
 					// Check if inputs are empty or null
 					try {
 						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-							Question newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
+							Question newQuestion = new Question(titleInput, textInput,
+									databaseHelper.currentUser.getUserId());
 
 							// Clear input fields for new inputs
 							titleField.clear();
@@ -479,7 +596,7 @@ public class StudentHomePage {
 							databaseHelper.qaHelper.registerQuestion(newQuestion);
 
 							// Retrieve an updated list of questions from the database
-							questions = databaseHelper.qaHelper.getAllQuestions();					
+							questions = databaseHelper.qaHelper.getAllQuestions();
 
 							// Refresh contents of tables manually
 							questionObservableList.clear();
@@ -506,9 +623,9 @@ public class StudentHomePage {
 			if (newSelection != null) {
 				// Clear selections on the other tables
 				qTable.getSelectionModel().clearSelection();
-				
+
 				submitAnswerButton.setText("Update Answer");
-				
+
 				// Button to submit an answer to answer database. Must be located after qtable
 				// to allow selections of question to pass
 				submitAnswerButton.setOnAction(a -> {
@@ -524,7 +641,8 @@ public class StudentHomePage {
 					// Check if inputs are empty or null
 					try {
 						if (textInput != null && !textInput.isEmpty()) {
-							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is registered for
+							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is
+																					// registered for
 							newAnswer.setId(selectedAnswer.getId());
 
 							// Clear input fields for new inputs
@@ -536,7 +654,7 @@ public class StudentHomePage {
 
 							// Update objects with latest info
 							answers = databaseHelper.qaHelper.getAllAnswers();
-							questions = databaseHelper.qaHelper.getAllQuestions();					
+							questions = databaseHelper.qaHelper.getAllQuestions();
 
 							// Refresh contents of tables manually
 							answerObservableList.clear();
@@ -577,7 +695,7 @@ public class StudentHomePage {
 					// rTable.setItems(relationObservableList);
 				});
 				// Send the details of the selection to the resultsBox to display to the user
-				resultsBox.setText(newSelection.toString());
+				// resultsBox.setText(newSelection.toString());
 			} else {
 				// If nothing is selected on the answer table then...
 				submitAnswerButton.setText("Submit Answer");
@@ -596,7 +714,8 @@ public class StudentHomePage {
 					// Check if inputs are empty or null
 					try {
 						if (textInput != null && !textInput.isEmpty()) {
-							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is registered for
+							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is
+																					// registered for
 
 							// Clear input fields for new inputs
 							titleField.clear();
@@ -607,7 +726,7 @@ public class StudentHomePage {
 
 							// Update objects with latest info
 							answers = databaseHelper.qaHelper.getAllAnswers();
-							questions = databaseHelper.qaHelper.getAllQuestions();					
+							questions = databaseHelper.qaHelper.getAllQuestions();
 
 							// Refresh contents of tables manually
 							answerObservableList.clear();
@@ -627,31 +746,35 @@ public class StudentHomePage {
 				});
 			}
 		});
-		
+
 		// Use containers to position and hold many different UI components
 
 		// Container to hold the table
-		VBox result = new VBox(5, titleBox5, resultsBox);
+		/*
+		 * VBox result = new VBox(5, titleBox5, resultsBox);
+		 * result.setAlignment(Pos.BOTTOM_RIGHT);
+		 */
 
-		HBox hboxTop = new HBox(10, questionInputBox, questionDB, answerDB);
-		hboxTop.setAlignment(Pos.CENTER);
+		HBox hboxTop = new HBox(10, questionInputBox, answerDB);
+		hboxTop.setAlignment(Pos.TOP_CENTER);
 
 		VBox vboxTop = new VBox(10, hboxTop);
 		vboxTop.setAlignment(Pos.TOP_CENTER);
 
-		HBox hboxBottom = new HBox(10, result);
-		hboxBottom.setAlignment(Pos.CENTER);
-
-		VBox vboxBottom = new VBox(10, hboxBottom, errorLabel);
-		vboxBottom.setAlignment(Pos.BOTTOM_CENTER);
-
-		VBox vbox = new VBox(10, vboxTop, vboxBottom);
+		VBox vbox = new VBox(10, vboxTop, resultsTable);
 		vbox.setAlignment(Pos.CENTER);
 
 		VBox vbox1 = new VBox(10, vbox, quitButton);
 		vbox1.setAlignment(Pos.CENTER);
 
-		StackPane root = new StackPane(vbox1);
+		resultsTable.prefHeightProperty().bind(vbox1.widthProperty());
+		contentColumn.prefWidthProperty().bind(vbox1.widthProperty());
+
+		HBox hbox1 = new HBox(5, questionDB, vbox1);
+
+		VBox vbox2 = new VBox(hbox1, errorLabel);
+
+		StackPane root = new StackPane(vbox2);
 		root.setStyle("-fx-background-color: derive(gray, 60%);");
 
 		Scene scene = new Scene(root, 1900, 1000);
@@ -663,4 +786,5 @@ public class StudentHomePage {
 		primaryStage.setMaximized(true);
 		primaryStage.show();
 	}
+
 }

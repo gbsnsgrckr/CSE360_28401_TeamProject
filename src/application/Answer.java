@@ -2,25 +2,37 @@ package application;
 
 import java.util.List;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 public class Answer {
 	private Integer id;
 	private String text;
-	private Integer author;
+	private Integer authorId;
 	private LocalDateTime createdOn;
 	private LocalDateTime updatedOn;
+	private User author;
 
-	public Answer(Integer id, String text, Integer author, LocalDateTime createdOn, LocalDateTime updatedOn) {
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
+			User author) {
 		this.id = id;
 		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
 		this.author = author;
+	}
+
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn) {
+		this.id = id;
+		this.text = text;
+		this.authorId = authorId;
 		this.createdOn = createdOn;
 		this.updatedOn = updatedOn;
 	}
 
-	public Answer(String text, Integer author) {
+	public Answer(String text, Integer authorId) {
 		this.text = text;
-		this.author = author;
+		this.authorId = authorId;
 	}
 
 	public Answer(String text) {
@@ -36,8 +48,8 @@ public class Answer {
 		return text;
 	}
 
-	public Integer getAuthor() {
-		return author;
+	public Integer getAuthorId() {
+		return authorId;
 	}
 
 	public LocalDateTime getCreatedOn() {
@@ -46,6 +58,17 @@ public class Answer {
 
 	public LocalDateTime getUpdatedOn() {
 		return updatedOn;
+	}
+
+	public User getAuthor() {
+		return author;
+	}
+
+	public int getDaysSinceCreated() {
+		if (createdOn == null) {
+			return 0;
+		}
+		return (int) ChronoUnit.DAYS.between(createdOn, LocalDateTime.now());
 	}
 
 	// Setters
@@ -57,8 +80,8 @@ public class Answer {
 		this.text = text;
 	}
 
-	public void setAuthor(Integer author) {
-		this.author = author;
+	public void setAuthorId(Integer authorId) {
+		this.authorId = authorId;
 	}
 
 	public void setCreatedOn(LocalDateTime createdOn) {
@@ -69,9 +92,35 @@ public class Answer {
 		this.updatedOn = updatedOn;
 	}
 
+	public void setAuthor(User author) {
+		this.author = author;
+	}
+
 	public String toString() {
-		return String.format("\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthor:\n	%s\nCreated On:\n	%s\nUpdated On:\n	%s\n", id, text, author,
-				createdOn, updatedOn);
+		return String.format(
+				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nAuthor:\n 	%s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				id, text, authorId, author, createdOn, updatedOn);
+	}
+
+	public String toDisplay() {
+		String displayAuthor;
+		int daysSinceCreated = getDaysSinceCreated();
+
+		// If title is empty then return an empty string
+		if (text == "") {
+			return "";
+		} else {
+			// If author returns null(In case of test cases or populated database without
+			// proper users)
+			// then an empty sting is display for the author.
+			if (author == null) {
+				displayAuthor = "User";
+			} else {
+				displayAuthor = author.getName();
+			}
+
+			return String.format("%s\n%s               %sd", text, displayAuthor, daysSinceCreated);
+		}
 	}
 
 }
