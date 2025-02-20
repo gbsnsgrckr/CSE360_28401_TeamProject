@@ -364,18 +364,17 @@ public class StudentHomePage {
 
 		RadioButton unansweredButton = new RadioButton("Unanswered");
 		unansweredButton.setToggleGroup(filter);
-		unansweredButton.setSelected(true);
+		;
 
 		RadioButton answeredButton = new RadioButton("Answered");
 		answeredButton.setToggleGroup(filter);
-		answeredButton.setSelected(true);
 
 		HBox filterBox = new HBox(10, allButton, unansweredButton, answeredButton);
 		filterBox.setAlignment(Pos.CENTER);
 
 		filter.selectedToggleProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
-				RadioButton selected = (RadioButton)newSelection;
+				RadioButton selected = (RadioButton) newSelection;
 				String selection = selected.getText();
 
 				try {
@@ -385,15 +384,14 @@ public class StudentHomePage {
 						questions = databaseHelper.qaHelper.getAllUnansweredQuestions();
 					} else if (selection.equalsIgnoreCase("Answered")) {
 						questions = databaseHelper.qaHelper.getAllAnsweredQuestions();
-					}					
+					}
 				} catch (SQLException e) {
 					e.printStackTrace();
 					System.err.println("Error trying to update question table via radio buttons");
 					return;
 				}
-
-				ObservableList<Question> questionsObsList = FXCollections.observableArrayList(questions);
-				qTable.setItems(questionsObsList);
+				questionObservableList.setAll(questions);
+				qTable.setItems(questionObservableList);
 				qTable.refresh();
 			}
 		});
@@ -407,57 +405,6 @@ public class StudentHomePage {
 
 		// Set height of table to adjust to container
 		qTable.prefHeightProperty().bind(questionDB.heightProperty());
-
-		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-			if (newSelection != null) {
-				// Clear the observable list
-				resultsObservableList.clear();
-				// Retrieve an updated answer list of answers related to selected question from
-				// the qtable
-				try {
-					answers = databaseHelper.qaHelper.getAllAnswersForQuestion(newSelection.getId());
-					// question = qTable.getSelectionModel().getSelectedItem();
-
-					// Put the selected question in the first row
-					resultsObservableList
-							.add(new QATableRow(QATableRow.RowType.QUESTION, newSelection.toString(), null));
-
-					// After that, if there are any, add each answer as its own row
-					for (Answer answer : answers) {
-						resultsObservableList
-								.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toString(), answer.getId()));
-					}
-
-					// Check if selected question has a preferred answer and put that in row 2 if so
-					if (newSelection.getPreferredAnswer() > 0) {
-						resultsObservableList.sort((row1, row2) -> {
-							if (row1.getType() == QATableRow.RowType.QUESTION) {
-								return -1;
-							}
-							if (row2.getType() == QATableRow.RowType.QUESTION) {
-								return 1;
-							}
-
-							if (row1.getAnswerId() != null
-									&& row1.getAnswerId().equals(newSelection.getPreferredAnswer())) {
-								return -1;
-							} else if (row2.getAnswerId() != null
-									&& row2.getAnswerId().equals(newSelection.getPreferredAnswer())) {
-								return 1;
-							}
-
-							return 0;
-						});
-					}
-
-				} catch (SQLException e) {
-					e.printStackTrace();
-					System.err.println(
-							"Error trying to .getAllAnswers() within qTable.getSelectionModel... on line 327 in StudentHomePage.java");
-					return;
-				}
-			}
-		});
 
 		// Label to display error messages
 		Label errorLabel = new Label();
@@ -529,6 +476,134 @@ public class StudentHomePage {
 			}
 		});
 
+		// Button to submit an answer or question from the input fields
+		submitButton.setOnAction(a -> {
+			String titleInput = titleField.getText();
+			String textInput = inputField.getText();
+
+			// Check if titleInput is empty or null
+			if (titleInput == null || titleInput.trim().isEmpty()) {
+				errorLabel.setText("Error, question-title field is blank.");
+				return;
+			}
+
+			// Check if textInput is empty or null
+			if (textInput == null || textInput.trim().isEmpty()) {
+				errorLabel.setText("Error, question-body field is blank.");
+				return;
+			}
+
+			// Check if inputs are empty or null
+			try {
+				Question newSelection = qTable.getSelectionModel().getSelectedItem();
+
+				if (newSelection != null) {
+					// Update the currently selected question
+					newSelection.setTitle(titleInput);
+					newSelection.setText(textInput);
+					databaseHelper.qaHelper.updateQuestion(newSelection);
+				} else {
+					// Register a new question in the database
+					Question newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
+					databaseHelper.qaHelper.registerQuestion(newQuestion);
+				}
+
+				// Clear input fields for new inputs
+				titleField.clear();
+				inputField.clear();
+
+				// Retrieve an updated list of questions from the database
+				questions = databaseHelper.qaHelper.getAllQuestions();
+
+				// Refresh contents of tables manually
+				questionObservableList.clear();
+				questionObservableList.addAll(questions);
+				qTable.setItems(questionObservableList);
+
+			} catch (SQLException e) {
+				e.printStackTrace();
+				System.err.println("Error trying to register new question into database via submit button");
+				;
+				return;
+			}
+
+		});
+
+		// Button to submit an answer or question from the input fields
+		submitAnswerButton.setOnAction(a -> {
+			String textInput = inputField.getText();
+
+			// Check if textInput is empty or null
+			if (textInput == null || textInput.trim().isEmpty()) {
+				errorLabel.setText("Error, answer-body field is blank.");
+				return;
+			}
+
+			// Check if inputs are empty or null
+			try {
+				Question newSelection = qTable.getSelectionModel().getSelectedItem();
+				Answer answerSelection = aTable.getSelectionModel().getSelectedItem();
+
+				if (newSelection == null && answerSelection != null) {
+					// Update the currently selected answer
+					answerSelection.setText(textInput);
+					databaseHelper.qaHelper.updateAnswer(answerSelection);
+				} else if (newSelection != null && answerSelection == null) {
+					// Register a new question in the database
+					Answer newAnswer = new Answer(textInput, databaseHelper.currentUser.getUserId());
+					databaseHelper.qaHelper.registerAnswer(newAnswer, newSelection.getId());
+				}
+
+				// Clear input fields for new inputs
+				titleField.clear();
+				inputField.clear();
+
+				// Retrieve an updated list of questions from the database
+				questions = databaseHelper.qaHelper.getAllQuestions();
+
+				// Refresh contents of tables manually
+				questionObservableList.clear();
+				questionObservableList.addAll(questions);
+				qTable.setItems(questionObservableList);
+
+			} catch (SQLException e) {
+				e.printStackTrace();
+				System.err.println("Error trying to register new question into database via submit button");
+				;
+				return;
+			}
+
+		});
+
+		// Modify setOnAction for deleteButton to delete selected Question from Question
+		// database
+		deleteButton.setOnAction(a -> {
+			try {
+				Question newSelection = qTable.getSelectionModel().getSelectedItem();
+				Answer answerSelection = aTable.getSelectionModel().getSelectedItem();
+
+				if (newSelection != null && answerSelection == null) {
+					// Delete selected question
+					databaseHelper.qaHelper.deleteQuestion(newSelection.getId());
+				} else if (newSelection == null && answerSelection != null) {
+					// Delete selected answer
+					databaseHelper.qaHelper.deleteAnswer(answerSelection.getId());
+				}
+
+				// Retrieve an updated list of questions from the database
+				questions = databaseHelper.qaHelper.getAllQuestions();
+			} catch (SQLException e) {
+				e.printStackTrace();
+				System.err.println("Error trying update question object via getALLUsers() in qTable");
+			}
+
+			// Refresh contents of tables manually
+			questionObservableList.clear();
+			questionObservableList.addAll(questions);
+			qTable.setItems(questionObservableList);
+
+		});
+
 		// Add listener to the resultsTable to allow dynamic selection of objects from
 		// the table
 		resultsTable.getSelectionModel().selectedItemProperty().addListener((obs, oldRow, newRow) -> {
@@ -557,197 +632,66 @@ public class StudentHomePage {
 				aTable.getSelectionModel().clearSelection();
 			}
 		});
-		
-		// POSSIBLE FIX FOR WHEN DATABASE IS EMTPY TO ADD ONE QUESTION, MIGHT NOT BE NECESSARY 
-		/////////////////////////////////////////////////////////////////////////////////////////////////////////////
-//		submitButton.setOnAction(a -> {
-//					String titleInput = titleField.getText();
-//					String textInput = inputField.getText();
-//
-//					// Check if titleInput is empty or null
-//					if (titleInput == null || titleInput.isEmpty()) {
-//						errorLabel.setText("Error, question-title field is blank.");
-//						return;
-//					}
-//
-//					// Check if textInput is empty or null
-//					if (textInput == null || textInput.isEmpty()) {
-//						errorLabel.setText("Error, question-body field is blank.");
-//						return;
-//					}
-//
-//					// Check if inputs are empty or null
-//					try {
-//						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-//							Question newQuestion = new Question(titleInput, textInput,
-//									databaseHelper.currentUser.getUserId());
-//
-//							// Clear input fields for new inputs
-//							titleField.clear();
-//							inputField.clear();
-//
-//							// Register the new question object into the database
-//							databaseHelper.qaHelper.registerQuestion(newQuestion);
-//
-//							// Retrieve an updated list of questions from the database
-//							questions = databaseHelper.qaHelper.getAllQuestions();
-//
-//							// Refresh contents of tables manually
-//							questionObservableList.clear();
-//							questionObservableList.addAll(questions);
-//							qTable.setItems(questionObservableList);
-//
-//						} else {
-//							System.out.println("Title and/or Question fields are blank");
-//							return;
-//						}
-//					} catch (SQLException e) {
-//						e.printStackTrace();
-//						System.err.println("Error trying to register new question into database via submit button");
-//						;
-//						return;
-//					}
-//
-//				});
-//
-//		///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		
+
 		// Add listeners for table selections to read selected objects from tables
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
 				// Clear selections on the other tables
 				aTable.getSelectionModel().clearSelection();
 
+				// Clear the observable list
+				resultsObservableList.clear();
+				// Retrieve an updated answer list of answers related to selected question from
+				// the qtable
+				try {
+					answers = databaseHelper.qaHelper.getAllAnswersForQuestion(newSelection.getId());
+					// question = qTable.getSelectionModel().getSelectedItem();
+
+					// Put the selected question in the first row
+					resultsObservableList
+							.add(new QATableRow(QATableRow.RowType.QUESTION, newSelection.toString(), null));
+
+					// After that, if there are any, add each answer as its own row
+					for (Answer answer : answers) {
+						resultsObservableList
+								.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toString(), answer.getId()));
+					}
+
+					// Check if selected question has a preferred answer and put that in row 2 if so
+					if (newSelection.getPreferredAnswer() > 0) {
+						resultsObservableList.sort((row1, row2) -> {
+							if (row1.getType() == QATableRow.RowType.QUESTION) {
+								return -1;
+							}
+							if (row2.getType() == QATableRow.RowType.QUESTION) {
+								return 1;
+							}
+
+							if (row1.getAnswerId() != null
+									&& row1.getAnswerId().equals(newSelection.getPreferredAnswer())) {
+								return -1;
+							} else if (row2.getAnswerId() != null
+									&& row2.getAnswerId().equals(newSelection.getPreferredAnswer())) {
+								return 1;
+							}
+
+							return 0;
+						});
+					}
+
+				} catch (SQLException e) {
+					e.printStackTrace();
+					System.err.println(
+							"Error trying to .getAllAnswers() within qTable.getSelectionModel... on line 327 in StudentHomePage.java");
+					return;
+				}
+
+				// Update text for buttons
 				submitButton.setText("Update Question");
-
-				// Button to submit an answer or question from the input fields
-				submitButton.setOnAction(a -> {
-					String titleInput = titleField.getText();
-					String textInput = inputField.getText();
-
-					// Check if titleInput is empty or null
-					if (titleInput == null || titleInput.isEmpty()) {
-						errorLabel.setText("Error, question-title field is blank.");
-						return;
-					}
-
-					// Check if textInput is empty or null
-					if (textInput == null || textInput.isEmpty()) {
-						errorLabel.setText("Error, question-body field is blank.");
-						return;
-					}
-
-					// Check if inputs are empty or null
-					try {
-						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-							//Question newQuestion = new Question(titleInput, textInput,
-									//databaseHelper.currentUser.getUserId());
-
-							// Clear input fields for new inputs
-							titleField.clear();
-							inputField.clear();
-							
-							Question newQuestion = newSelection;
-							newQuestion.setTitle(titleInput);
-							newQuestion.setText(textInput);
-							
-							// Register the new question object into the database
-							databaseHelper.qaHelper.updateQuestion(newQuestion);
-
-							// Retrieve an updated list of questions from the database
-							questions = databaseHelper.qaHelper.getAllQuestions();
-
-							// Refresh contents of tables manually
-							questionObservableList.clear();
-							questionObservableList.addAll(questions);
-							qTable.setItems(questionObservableList);
-
-						} else {
-							System.out.println("Title and/or Question fields are blank");
-							return;
-						}
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying to register new question into database via submit button");
-						;
-						return;
-					}
-
-				});
-
 				deleteButton.setText("Delete Question");
-
-				// Modify setOnAction for deleteButton to delete selected Question from Question
-				// database
-				deleteButton.setOnAction(a -> {
-					try {
-						databaseHelper.qaHelper.deleteQuestion(newSelection.getId());
-
-						questions = databaseHelper.qaHelper.getAllQuestions();
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying update question object via getALLUsers() in qTable");
-					}
-
-					// Refresh contents of tables manually
-					questionObservableList.clear();
-					questionObservableList.addAll(questions);
-					qTable.setItems(questionObservableList);
-
-				});
 			} else {
-				// If nothing is selected on the question table, then....
+				// Update the text of the submitButton
 				submitButton.setText("Submit Question");
-				// Button to submit an answer or question from the input fields
-				submitButton.setOnAction(a -> {
-					String titleInput = titleField.getText();
-					String textInput = inputField.getText();
-
-					// Check if titleInput is empty or null
-					if (titleInput == null || titleInput.isEmpty()) {
-						errorLabel.setText("Error, question-title field is blank.");
-						return;
-					}
-
-					// Check if textInput is empty or null
-					if (textInput == null || textInput.isEmpty()) {
-						errorLabel.setText("Error, question-body field is blank.");
-						return;
-					}
-
-					// Check if inputs are empty or null
-					try {
-						if (titleInput != null && textInput != null && !titleInput.isEmpty() && !textInput.isEmpty()) {
-							Question newQuestion = new Question(titleInput, textInput,
-									databaseHelper.currentUser.getUserId());
-
-							// Clear input fields for new inputs
-							titleField.clear();
-							inputField.clear();
-
-							// Register the new question object into the database
-							databaseHelper.qaHelper.registerQuestion(newQuestion);
-
-							// Retrieve an updated list of questions from the database
-							questions = databaseHelper.qaHelper.getAllQuestions();
-
-							// Refresh contents of tables manually
-							questionObservableList.clear();
-							questionObservableList.addAll(questions);
-							qTable.setItems(questionObservableList);
-
-						} else {
-							System.out.println("Title and/or Question fields are blank");
-							return;
-						}
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying to register new question into database via submit button");
-						;
-						return;
-					}
-
-				});
 			}
 		});
 
@@ -757,129 +701,16 @@ public class StudentHomePage {
 				// Clear selections on the other tables
 				qTable.getSelectionModel().clearSelection();
 
+				// Update text on buttons
 				submitAnswerButton.setText("Update Answer");
-
-				// Button to submit an answer to answer database. Must be located after qtable
-				// to allow selections of question to pass
-				submitAnswerButton.setOnAction(a -> {
-					titleField.clear();
-					String textInput = inputField.getText();
-					Answer selectedAnswer = aTable.getSelectionModel().getSelectedItem();
-
-					if (textInput == null || textInput.isEmpty()) {
-						errorLabel.setText("Error, answer field is blank.");
-						return;
-					}
-
-					// Check if inputs are empty or null
-					try {
-						if (textInput != null && !textInput.isEmpty()) {
-							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is
-																					// registered for
-							newAnswer.setId(selectedAnswer.getId());
-
-							// Clear input fields for new inputs
-							titleField.clear();
-							inputField.clear();
-
-							// Register new answer into database with question relation
-							databaseHelper.qaHelper.updateAnswer(newAnswer);
-
-							// Update objects with latest info
-							answers = databaseHelper.qaHelper.getAllAnswers();
-							questions = databaseHelper.qaHelper.getAllQuestions();
-
-							// Refresh contents of tables manually
-							answerObservableList.clear();
-							answerObservableList.addAll(answers);
-							aTable.setItems(answerObservableList);
-
-						} else {
-							System.out.println("Answer fields is blank");
-							return;
-						}
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying to register new answer into database via submit button");
-						return;
-					}
-
-				});
-
 				deleteButton.setText("Delete Answer");
-
-				// Modify setOnAction for deleteButton to delete selected Answer from Answer
-				// database
-				deleteButton.setOnAction(a -> {
-					try {
-						databaseHelper.qaHelper.deleteAnswer(newSelection.getId());
-
-						answers = databaseHelper.qaHelper.getAllAnswers();
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying to refresh answers within aTable listener calls");
-					}
-
-					// Refresh contents of tables manually
-					answerObservableList.clear();
-					answerObservableList.addAll(answers);					
-					aTable.setItems(answerObservableList);					
-				});				
 			} else {
 				// If nothing is selected on the answer table then...
 				submitAnswerButton.setText("Submit Answer");
-				// Button to submit an answer to answer database. Must be located after qtable
-				// to allow selections of question to pass
-				submitAnswerButton.setOnAction(a -> {
-					titleField.clear();
-					String textInput = inputField.getText();
-					Question selectedQuestion = qTable.getSelectionModel().getSelectedItem();
-
-					if (textInput == null || textInput.isEmpty()) {
-						errorLabel.setText("Error, answer field is blank.");
-						return;
-					}
-
-					// Check if inputs are empty or null
-					try {
-						if (textInput != null && !textInput.isEmpty()) {
-							Answer newAnswer = new Answer(textInput, currentUser); // Placeholder no author is
-																					// registered for
-
-							// Clear input fields for new inputs
-							titleField.clear();
-							inputField.clear();
-
-							// Register new answer into database with question relation
-							databaseHelper.qaHelper.registerAnswer(newAnswer, selectedQuestion.getId());
-
-							// Update objects with latest info
-							answers = databaseHelper.qaHelper.getAllAnswers();
-							questions = databaseHelper.qaHelper.getAllQuestions();
-
-							// Refresh contents of tables manually
-							answerObservableList.clear();
-							answerObservableList.addAll(answers);
-							aTable.setItems(answerObservableList);
-
-						} else {
-							System.out.println("Answer fields is blank");
-							return;
-						}
-					} catch (SQLException e) {
-						e.printStackTrace();
-						System.err.println("Error trying to register new answer into database via submit button");
-						return;
-					}
-
-				});
 			}
 		});
 
 		// Use containers to position and hold many different UI components
-
-	
-
 		HBox hboxTop = new HBox(10, questionInputBox, answerDB);
 		hboxTop.setAlignment(Pos.TOP_CENTER);
 

@@ -75,18 +75,6 @@ public class QAHelper1 {
 				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP)";
 //				+ "FOREIGN KEY (author) REFERENCES cse360users(id))";		// Currently not linked to user database
 		statement.execute(answerTable);
-
-		/*
-		 * Eliminating the relation database and integrating the functionality into the
-		 * question database // Create the relation database String relationTable =
-		 * "CREATE TABLE IF NOT EXISTS cse360relation (" + "question_id INT NOT NULL, "
-		 * + "answer_id INT NOT NULL, " + "preferred_answer BOOLEAN DEFAULT NULL, " +
-		 * "FOREIGN KEY (question_id) REFERENCES cse360question(id) ON DELETE CASCADE, "
-		 * // +
-		 * "FOREIGN KEY (answer_id) REFERENCES cse360answer(id) ON DELETE CASCADE, " //
-		 * + "PRIMARY KEY (question_id, answer_id), " +
-		 * "UNIQUE (question_id, preferred_answer))"; statement.execute(relationTable);
-		 */
 	}
 
 	// Check if the database is empty - Only checks the question database at the
