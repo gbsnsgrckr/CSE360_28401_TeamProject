@@ -183,20 +183,19 @@ public class StudentHomePage {
 
 		// Table display of the question database
 
-		// Label to display title to user
-		Label prompt2 = new Label("Question Database");
-		prompt2.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
-
-		// Hbox to position the title
-		HBox titleBox2 = new HBox(prompt2);
-		titleBox2.setAlignment(Pos.CENTER);
+		/*
+		 * // Label to display title to user Label prompt2 = new
+		 * Label("Question Database"); prompt2.
+		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
+		 * );
+		 */
 
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
 		// Styling for the table
 		qTable.setPrefWidth(350);
 		qTable.setFixedCellSize(-1);
-		
+
 		qTable.setRowFactory(a -> new TableRow<Question>() {
 			@Override
 			protected void updateItem(Question item, boolean flag) {
@@ -204,7 +203,8 @@ public class StudentHomePage {
 				if (flag || item == null) {
 					setStyle("-fx-border-color: transparent;");
 				} else {
-					setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+					setStyle(
+							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
 				}
 			}
 		});
@@ -250,12 +250,6 @@ public class StudentHomePage {
 				titleBar.setManaged(false);
 			}
 		});
-
-		// Container to hold the table
-		VBox questionDB = new VBox(5, titleBox2, qTable);
-
-		// Set height of table to adjust to container
-		qTable.prefHeightProperty().bind(questionDB.heightProperty());		
 
 		// Table display of the answer database
 		// Label to display title to user
@@ -315,14 +309,6 @@ public class StudentHomePage {
 		HBox titleBox5 = new HBox(prompt5);
 		titleBox5.setAlignment(Pos.CENTER);
 
-		/*
-		 * // Text area to display results for search/selection functions TextArea
-		 * resultsBox = new TextArea(); resultsBox.setStyle(
-		 * "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
-		 * ); resultsBox.setPrefWidth(900); resultsBox.setPrefHeight(400);
-		 * resultsBox.setWrapText(true);
-		 */
-
 		ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
 
 		TableView<QATableRow> resultsTable = new TableView<>();
@@ -334,27 +320,29 @@ public class StudentHomePage {
 				if (flag || item == null) {
 					setStyle("-fx-border-color: transparent;");
 				} else {
-					setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+					setStyle(
+							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
 				}
 			}
 		});
 
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
 		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
-		
+
 		// Add cell factory to deal with text runoff and disable horizontal scrolling
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
 			Label textLabel = new Label();
-					@Override
-					protected void updateItem(String item, boolean flag) {
-						super.updateItem(item, flag);
-						setGraphic(flag || item == null ? null : textLabel);
-						if (!flag && item != null) {
-							textLabel.setText(item);
-							textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
-						}
-					}
-				});
+
+			@Override
+			protected void updateItem(String item, boolean flag) {
+				super.updateItem(item, flag);
+				setGraphic(flag || item == null ? null : textLabel);
+				if (!flag && item != null) {
+					textLabel.setText(item);
+					textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+				}
+			}
+		});
 
 		// Set columns to resultsTable
 		resultsTable.getColumns().setAll(contentColumn);
@@ -366,8 +354,59 @@ public class StudentHomePage {
 				titleBar.setManaged(false);
 			}
 		});
-		
-		
+
+		// Create filter button to adjust question table database view
+		ToggleGroup filter = new ToggleGroup();
+
+		RadioButton allButton = new RadioButton("All");
+		allButton.setToggleGroup(filter);
+		allButton.setSelected(true);
+
+		RadioButton unansweredButton = new RadioButton("Unanswered");
+		unansweredButton.setToggleGroup(filter);
+		unansweredButton.setSelected(true);
+
+		RadioButton answeredButton = new RadioButton("Answered");
+		answeredButton.setToggleGroup(filter);
+		answeredButton.setSelected(true);
+
+		HBox filterBox = new HBox(10, allButton, unansweredButton, answeredButton);
+		filterBox.setAlignment(Pos.CENTER);
+
+		filter.selectedToggleProperty().addListener((obs, oldSelection, newSelection) -> {
+			if (newSelection != null) {
+				RadioButton selected = (RadioButton)newSelection;
+				String selection = selected.getText();
+
+				try {
+					if (selection.equalsIgnoreCase("All")) {
+						questions = databaseHelper.qaHelper.getAllQuestions();
+					} else if (selection.equalsIgnoreCase("Unanswered")) {
+						questions = databaseHelper.qaHelper.getAllUnansweredQuestions();
+					} else if (selection.equalsIgnoreCase("Answered")) {
+						questions = databaseHelper.qaHelper.getAllAnsweredQuestions();
+					}					
+				} catch (SQLException e) {
+					e.printStackTrace();
+					System.err.println("Error trying to update question table via radio buttons");
+					return;
+				}
+
+				ObservableList<Question> questionsObsList = FXCollections.observableArrayList(questions);
+				qTable.setItems(questionsObsList);
+				qTable.refresh();
+			}
+		});
+
+		// Hbox to position the filter button
+		HBox titleBox2 = new HBox(5, filterBox);
+		titleBox2.setAlignment(Pos.CENTER_RIGHT);
+
+		// Container to hold the table
+		VBox questionDB = new VBox(5, titleBox2, qTable);
+
+		// Set height of table to adjust to container
+		qTable.prefHeightProperty().bind(questionDB.heightProperty());
 
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
@@ -725,13 +764,9 @@ public class StudentHomePage {
 
 					// Refresh contents of tables manually
 					answerObservableList.clear();
-					answerObservableList.addAll(answers);
-					// qTable.setItems(questionObservableList);
-					aTable.setItems(answerObservableList);
-					// rTable.setItems(relationObservableList);
-				});
-				// Send the details of the selection to the resultsBox to display to the user
-				// resultsBox.setText(newSelection.toString());
+					answerObservableList.addAll(answers);					
+					aTable.setItems(answerObservableList);					
+				});				
 			} else {
 				// If nothing is selected on the answer table then...
 				submitAnswerButton.setText("Submit Answer");
@@ -785,11 +820,7 @@ public class StudentHomePage {
 
 		// Use containers to position and hold many different UI components
 
-		// Container to hold the table
-		/*
-		 * VBox result = new VBox(5, titleBox5, resultsBox);
-		 * result.setAlignment(Pos.BOTTOM_RIGHT);
-		 */
+	
 
 		HBox hboxTop = new HBox(10, questionInputBox, answerDB);
 		hboxTop.setAlignment(Pos.TOP_CENTER);

@@ -359,6 +359,76 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
+	
+	public List<Question> getAllUnansweredQuestions() throws SQLException {
+		String query = "SELECT * FROM cse360question WHERE answer_id IS NULL OR answer_id = ''"; // selecting all of the rows in the database
+		List<Question> questions = new ArrayList<>();											// that don't have an answer id
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title"); // for each row, get all of the user attributes
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_On");
+				// Convert to LocalDateTime format
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_On");
+				// Convert to LocalDateTime format
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				int preferredAnswer = rs.getInt("preferred_answer");
+
+				List<String> comp = textDeserial(text);
+				
+				User author = databaseHelper.getUser(authorId);
+
+				// Create a new question object with the pulled info
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+
+				// Add question object to the list questions
+				questions.add(question);
+			}
+		}
+		// Return the assembled list of question objects
+		return questions;
+	}
+	
+	public List<Question> getAllAnsweredQuestions() throws SQLException {
+		String query = "SELECT * FROM cse360question WHERE answer_id IS NOT NULL AND answer_id <> ''"; // selecting all of the rows in the database
+		List<Question> questions = new ArrayList<>();											// that don't have an answer id
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title"); // for each row, get all of the user attributes
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_On");
+				// Convert to LocalDateTime format
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_On");
+				// Convert to LocalDateTime format
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				int preferredAnswer = rs.getInt("preferred_answer");
+
+				List<String> comp = textDeserial(text);
+				
+				User author = databaseHelper.getUser(authorId);
+
+				// Create a new question object with the pulled info
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+
+				// Add question object to the list questions
+				questions.add(question);
+			}
+		}
+		// Return the assembled list of question objects
+		return questions;
+	}
 
 	// Retrieve all answers from the answer database
 	public List<Answer> getAllAnswers() throws SQLException {
@@ -512,5 +582,4 @@ public class QAHelper1 {
 			System.out.println("Error trying to update question in updateAnswer method.");
 		}
 	}
-
 }
