@@ -168,8 +168,8 @@ public class Question {
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s  \nAuthor:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
-				id, title, text, authorId, author, createdOn, updatedOn, preferredAnswer);
+				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
+				id, title, text, authorId, createdOn, updatedOn, preferredAnswer);
 	}
 
 	public String toDisplay() {

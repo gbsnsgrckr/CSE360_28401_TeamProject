@@ -98,8 +98,8 @@ public class Answer {
 
 	public String toString() {
 		return String.format(
-				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nAuthor:\n 	%s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
-				id, text, authorId, author, createdOn, updatedOn);
+				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				id, text, authorId, createdOn, updatedOn);
 	}
 
 	public String toDisplay() {

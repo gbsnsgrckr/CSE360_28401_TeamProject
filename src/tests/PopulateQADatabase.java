@@ -34,7 +34,8 @@ public class PopulateQADatabase {
 				"There is just one \"Student Question and Answer System - Initial User Stories\" for now.  You find them in the module entitled: \"Individual Homeworks and Team Projects\".",
 				404);
 		try {
-			qaHelper.registerAnswer(answer, 1); // Register answer in relation to question id 1 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 1); // Register answer in relation to question id 1 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 1");
 			e.printStackTrace();
@@ -57,7 +58,8 @@ public class PopulateQADatabase {
 						+ "\r\n" + "Can you delete questions and relies in Ed Discussions?",
 				404);
 		try {
-			qaHelper.registerAnswer(answer, 2); // Register answer in relation to question id 2 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 2); // Register answer in relation to question id 2 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 2");
 			e.printStackTrace();
@@ -76,7 +78,8 @@ public class PopulateQADatabase {
 		// Populate Answer 3
 		answer = new Answer("Makes sense to me.", 404);
 		try {
-			qaHelper.registerAnswer(answer, 3); // Register answer in relation to question id 3 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 3); // Register answer in relation to question id 3 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 3");
 			e.printStackTrace();
@@ -98,7 +101,8 @@ public class PopulateQADatabase {
 				"You do not need much of HW1 for HW2.  Copy what you believe is important, but read the HW2 requirements carefully.  HW2 is about getting four classes defined and basic CRUD operations implemented to set the stage for what you will need to do in Team Project Phase 2.",
 				404);
 		try {
-			qaHelper.registerAnswer(answer, 4); // Register answer in relation to question id 4 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 4); // Register answer in relation to question id 4 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 4");
 			e.printStackTrace();
@@ -121,7 +125,8 @@ public class PopulateQADatabase {
 		// Populate Answer 5
 		answer = new Answer("The live event is Tuesday at 7 PM MST.", 404);
 		try {
-			qaHelper.registerAnswer(answer, 5); // Register answer in relation to question id 5 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 5); // Register answer in relation to question id 5 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 5");
 			e.printStackTrace();
@@ -143,7 +148,8 @@ public class PopulateQADatabase {
 				"What happens with Ed Discussion of you try to paste a gigabyte of data into an input field?  Google Drives have upper limits.",
 				404);
 		try {
-			qaHelper.registerAnswer(answer, 6); // Register answer in relation to question id 6 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 6); // Register answer in relation to question id 6 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 6");
 			e.printStackTrace();
@@ -162,7 +168,8 @@ public class PopulateQADatabase {
 		// Populate Answer 7
 		answer = new Answer("Does the word \"Astah\" appear in the assignment?", 404);
 		try {
-			qaHelper.registerAnswer(answer, 7); // Register answer in relation to question id 7 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 7); // Register answer in relation to question id 7 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 7");
 			e.printStackTrace();
@@ -213,7 +220,8 @@ public class PopulateQADatabase {
 				+ "The goal is for you to create the four classes, the methods to make them work, the validation to ensure they are not given invalid data, and a set of tests to show they are working properly.\r\n"
 				+ "\r\n" + "Right?", 404);
 		try {
-			qaHelper.registerAnswer(answer, 8); // Register answer in relation to question id 8 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 8); // Register answer in relation to question id 8 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 8");
 			e.printStackTrace();
@@ -233,7 +241,8 @@ public class PopulateQADatabase {
 		// Populate Answer 9
 		answer = new Answer("Can you see it now?", 404);
 		try {
-			qaHelper.registerAnswer(answer, 9); // Register answer in relation to question id 9 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 9); // Register answer in relation to question id 9 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 9");
 			e.printStackTrace();
@@ -255,7 +264,8 @@ public class PopulateQADatabase {
 				"You may use parts of HW1 to produce HW2 if you wish, but HW2 is not a logical continuation of HW1.  You are not required to produce a user friendly user interface.  You are not required to implement roles.  Read the assignment deliverables carefully.",
 				404);
 		try {
-			qaHelper.registerAnswer(answer, 10); // Register answer in relation to question id 10 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 10); // Register answer in relation to question id 10 for the
+																// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 10");
 			e.printStackTrace();
@@ -264,7 +274,8 @@ public class PopulateQADatabase {
 		// Add additional Answer 11
 		answer = new Answer("Thats a great response!!!", 404);
 		try {
-			qaHelper.registerAnswer(answer, 2); // Register answer in relation to question id 2 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 2); // Register answer in relation to question id 2 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 11");
 			e.printStackTrace();
@@ -273,7 +284,8 @@ public class PopulateQADatabase {
 		// Add additional Answer 12
 		answer = new Answer("Thank you so much!!!", 1337);
 		try {
-			qaHelper.registerAnswer(answer, 2); // Register answer in relation to question id 2 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 2); // Register answer in relation to question id 2 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 12");
 			e.printStackTrace();
@@ -282,7 +294,8 @@ public class PopulateQADatabase {
 		// Add additional Answer 13
 		answer = new Answer("Woweeeeeeee", 1337);
 		try {
-			qaHelper.registerAnswer(answer, 4); // Register answer in relation to question id 4 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 4); // Register answer in relation to question id 4 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 13");
 			e.printStackTrace();
@@ -291,7 +304,8 @@ public class PopulateQADatabase {
 		// Add additional Answer 14
 		answer = new Answer("Well that raises some interesting questions.", 404);
 		try {
-			qaHelper.registerAnswer(answer, 5); // Register answer in relation to question id 5 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 5); // Register answer in relation to question id 5 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 14");
 			e.printStackTrace();
@@ -300,9 +314,30 @@ public class PopulateQADatabase {
 		// Add additional Answer 15
 		answer = new Answer("Oh well", 1919);
 		try {
-			qaHelper.registerAnswer(answer, 9); // Register answer in relation to question id 9 for the relation table
+			qaHelper.registerAnswerWithQuestion(answer, 9); // Register answer in relation to question id 9 for the
+															// relation table
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 15");
+			e.printStackTrace();
+		}
+
+		// Add additional Answer 16
+		answer = new Answer("Oh well another test happened", 1);
+		try {
+			qaHelper.registerAnswerWithQuestion(answer, 1); // Register answer in relation to question id 9 for the
+															// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering answer 16");
+			e.printStackTrace();
+		}
+
+		// Add additional Answer 17
+		answer = new Answer("Another one bites the dust.... ", 1);
+		try {
+			qaHelper.registerAnswerWithQuestion(answer, 2); // Register answer in relation to question id 9 for the
+															// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering answer 17");
 			e.printStackTrace();
 		}
 	}
