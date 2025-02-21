@@ -1,57 +1,41 @@
 package application;
 
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Pos;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-
-import javafx.scene.control.*;
-import javafx.scene.control.cell.PropertyValueFactory;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
-import javafx.stage.Stage;
-import javafx.stage.StageStyle;
-import tests.PopulateQADatabase;
-
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.time.format.DateTimeFormatter;
 
 import databasePart1.DatabaseHelper;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 /**
  * This page displays a simple welcome message for the user.
  */
 public class StudentHomePage {
-	private final DatabaseHelper databaseHelper;
-	private Question question;
-	private Answer answer;
-	private List<Question> questions;
-	private List<Answer> answers;
-	private List<QuestionsSet> questionsSet;
-	private List<AnswersSet> answersSet;
-	private ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
-	private TableView<Question> qTable;
-	private TableView<QATableRow> resultsTable;
-
-	public StudentHomePage(DatabaseHelper databaseHelper) {
-		this.databaseHelper = databaseHelper;
-	}
-
 	// Class to allow for dynamic rows within a table
 	public class QATableRow {
 		public enum RowType {
@@ -63,13 +47,6 @@ public class StudentHomePage {
 		private final Integer answerId;
 		private final Integer authorId;
 
-		public QATableRow(RowType type, String text, Integer answerId, Integer authorId) {
-			this.type = type;
-			this.text = text;
-			this.answerId = answerId;
-			this.authorId = authorId;
-		}
-
 		// Wrapper class for resultsTable to allow for dynamic rows
 		public QATableRow(RowType type, String text, Integer answerId) {
 			this.type = type;
@@ -78,12 +55,11 @@ public class StudentHomePage {
 			this.authorId = null;
 		}
 
-		public RowType getType() {
-			return type;
-		}
-
-		public String getText() {
-			return text;
+		public QATableRow(RowType type, String text, Integer answerId, Integer authorId) {
+			this.type = type;
+			this.text = text;
+			this.answerId = answerId;
+			this.authorId = authorId;
 		}
 
 		public Integer getAnswerId() {
@@ -94,17 +70,36 @@ public class StudentHomePage {
 			return authorId;
 		}
 
+		public String getText() {
+			return text;
+		}
+
+		public RowType getType() {
+			return type;
+		}
+
 		@Override
 		public String toString() {
 			return text;
 		}
 	}
+	private final DatabaseHelper databaseHelper;
+	private Question question;
+	private Answer answer;
+	private List<Question> questions;
+	private List<Answer> answers;
+	private List<QuestionsSet> questionsSet;
+	private List<AnswersSet> answersSet;
+	private ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
+	private TableView<Question> qTable;
+
+	private TableView<QATableRow> resultsTable;
+
+	public StudentHomePage(DatabaseHelper databaseHelper) {
+		this.databaseHelper = databaseHelper;
+	}
 
 	public void show(Stage primaryStage) {
-
-		// Use statement below to populate databases
-		// new PopulateQADatabase(databaseHelper.qaHelper).execute();
-
 		try {
 			questions = databaseHelper.qaHelper.getAllQuestions();
 		} catch (SQLException e) {
@@ -133,7 +128,7 @@ public class StudentHomePage {
 
 		// Input box for a title
 		TextArea titleField = new TextArea();
-		titleField.setPromptText("Enter a title for your question.\nThis should be a question");
+		titleField.setPromptText("Enter a title for your question.");
 		// Styling for the titleField
 		titleField.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;");
@@ -467,14 +462,17 @@ public class StudentHomePage {
 		ToggleGroup filter = new ToggleGroup();
 
 		RadioButton allButton = new RadioButton("All");
+		allButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		allButton.setToggleGroup(filter);
 		allButton.setSelected(true);
 
 		RadioButton unansweredButton = new RadioButton("Unanswered");
+		unansweredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		unansweredButton.setToggleGroup(filter);
 		;
 
 		RadioButton answeredButton = new RadioButton("Answered");
+		answeredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		answeredButton.setToggleGroup(filter);
 
 		HBox filterBox = new HBox(10, allButton, unansweredButton, answeredButton);
@@ -547,6 +545,7 @@ public class StudentHomePage {
 		// Create an inputField to initiate and type search
 		TextField searchField = new TextField();
 		searchField.setPromptText("Search questions...");
+		searchField.setStyle("-fx-alignment: center-left; -fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
 		searchField.setPrefWidth(250);
 
 		// Create an observable list of questions and assign to the table
@@ -578,6 +577,26 @@ public class StudentHomePage {
 				}
 			}
 		});
+		
+		// Add cell factory to deal with text wrapping and styling
+		searchColumn.setCellFactory(a -> new TableCell<Question, String>() {
+					private final Label textLabel = new Label();
+
+					{
+						textLabel.setWrapText(true);
+						textLabel.setStyle("-fx-padding: 1px;");
+					}
+
+					@Override
+					protected void updateItem(String item, boolean flag) {
+						super.updateItem(item, flag);
+						setGraphic(flag || item == null ? null : textLabel);
+						if (!flag && item != null) {
+							textLabel.setText(item);
+							textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+						}
+					}
+				});
 
 		// Add searchColumn to searchTable
 		searchTable.getColumns().add(searchColumn);
@@ -601,9 +620,7 @@ public class StudentHomePage {
 			String input = searchField.getText().trim();
 			if (!input.isEmpty()) {
 
-				System.out.println("test made it here"); // debugKapiKap
-
-				searchField.setMinWidth(1300);
+				searchField.setMinWidth(searchTable.getWidth());
 
 				// Make table visible
 				searchBox.setVisible(true);
@@ -817,9 +834,15 @@ public class StudentHomePage {
 
 		VBox vbox = new VBox(10, vboxTop, root2);
 		vbox.setAlignment(Pos.CENTER);
+		
+		HBox reviewerButtonBox = new HBox(findReviewerButton);
+		reviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
+		
+		HBox quitButtonBox = new HBox(quitButton);
+		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
-		HBox buttonBox1 = new HBox(quitButton, findReviewerButton);
-		quitButton.setAlignment(Pos.BOTTOM_CENTER);
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox);
+		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 
 		VBox vbox1 = new VBox(10, vbox, buttonBox1);
@@ -868,6 +891,7 @@ public class StudentHomePage {
 		questionInputBox.prefWidthProperty().bind(qTable.widthProperty());
 		questionInputBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
 		topLabelBox.prefWidthProperty().bind(vbox2.widthProperty());
+		buttonBox1.prefWidthProperty().bind(resultsTable.widthProperty());
 
 		// Set the scene to primary stage
 		primaryStage.setScene(scene);

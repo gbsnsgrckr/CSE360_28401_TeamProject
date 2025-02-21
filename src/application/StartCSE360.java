@@ -17,7 +17,7 @@ public class StartCSE360 extends Application {
 	public void start(Stage primaryStage) {
 		try {
 			databaseHelper.connectToDatabase(); // Connect to the database
-			databaseHelper.qaHelper.connectToDatabase();
+			//databaseHelper.qaHelper.connectToDatabase();
 			if (databaseHelper.isDatabaseEmpty()) {
 
 				new AdminSetupPage(databaseHelper).show(primaryStage);

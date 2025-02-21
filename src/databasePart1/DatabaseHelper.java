@@ -13,6 +13,7 @@ import java.util.UUID;
 import application.Answer;
 import application.Question;
 import application.User;
+import tests.*;
 
 /**
  * The DatabaseHelper class is responsible for managing the connection to the
@@ -44,21 +45,59 @@ public class DatabaseHelper {
 
 	public void connectToDatabase() throws SQLException {
 		try {
+			qaHelper.connectToDatabase();
+
 			Class.forName(JDBC_DRIVER); // Load the JDBC driver
 			System.out.println("Connecting to database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
 			statement = connection.createStatement();
-			// You can use this command to clear the database and restart from fresh.
-			// statement.execute("DROP ALL OBJECTS");
-			// System.out.println("Database cleared successfully.");
+			/*------------------------------------------------------------------------------------------------*/
+			/* You can use this command to clear the databases and restart from fresh. */
 
-			createTables();
+			boolean resetUserDatabase = true; // Set to true if you want to reset the User Database
+			boolean resetQADatabase = true; // Set to true if you want to reset the QA Database
+
+			int a = 1; // If above is true, set this to 1 if you wish to populate User Database(0 or 1)
+			int b = 20; // If above is true, set this to the number of times you want to populate the QA
+						// Database(0 or greater)
+
+			/*------------------------------------------------------------------------------------------------*/
+
+			// If set to true, then clear User Database
+			if (resetUserDatabase) {
+				statement.execute("DROP ALL OBJECTS");
+				System.out.println("User Database cleared successfully.");
+			}
+
+			// If set to true, then clear QA Database
+			if (resetQADatabase) {
+				qaHelper.statement.execute("DROP ALL OBJECTS");
+				System.out.println("Question/Answer Database cleared successfully.");
+			}
+
+			// Create tables for Users Database
+			this.createTables();
+
+			// Populate the User Database if set to above
+			for (int i = 0; i < a; i++) {
+				new PopulateUserDatabase(this).execute();
+			}
+
+			// Create tables for QA Database
+			qaHelper.createTables();
+
+			// Populate the QA Database if set to above
+			for (int n = 0; n < b; n++) {
+				new PopulateQADatabase(qaHelper).execute();
+			}
+
 		} catch (ClassNotFoundException e) {
 			System.err.println("JDBC Driver not found: " + e.getMessage());
 		}
 	}
 
+	// Create the tables for the User Database
 	private void createTables() throws SQLException {
 		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" + "id INT AUTO_INCREMENT PRIMARY KEY, "
 				+ "userName VARCHAR(255) UNIQUE, " + "name VARCHAR(255), " + "password VARCHAR(255), " // added in

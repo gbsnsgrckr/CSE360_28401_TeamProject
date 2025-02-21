@@ -32,8 +32,8 @@ public class QAHelper1 {
 	static final String USER = "sa";
 	static final String PASS = "";
 
-	private Connection connection = null;
-	private Statement statement = null;
+	public Connection connection = null;
+	public Statement statement = null;
 
 	public QAHelper1(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
@@ -46,13 +46,7 @@ public class QAHelper1 {
 			System.out.println("Connecting to database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
-			statement = connection.createStatement();
-			// You can use this command to clear the Question/Answer database and restart
-			// from fresh.
-			// statement.execute("DROP ALL OBJECTS");
-			// System.out.println("Database cleared successfully.");
-
-			createTables();
+			statement = connection.createStatement();			
 		} catch (ClassNotFoundException e) {
 			System.err.println("JDBC Driver not found: " + e.getMessage());
 		}
@@ -64,17 +58,15 @@ public class QAHelper1 {
 		String questionTable = "CREATE TABLE IF NOT EXISTS cse360question ("
 				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "title VARCHAR(255), " + "text TEXT DEFAULT NULL, "
 				+ "author INT, " + "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
-				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "answer_id VARCHAR(255) DEFAULT NULL, "
+				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "answer_id VARCHAR(MAX) DEFAULT NULL, "
 				+ "preferred_answer INT DEFAULT NULL)";
-//				+ "FOREIGN KEY (author) REFERENCES cse360users(id))";		// Currently not linked to user database
 		statement.execute(questionTable);
 
 		// Create the answer database
 		String answerTable = "CREATE TABLE IF NOT EXISTS cse360answer ("
 				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "text TEXT DEFAULT NULL, " + "author INT, "
 				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
-				+ "answer_id VARCHAR(255) DEFAULT NULL)";
-//				+ "FOREIGN KEY (author) REFERENCES cse360users(id))";		// Currently not linked to user database
+				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
 	}
 

@@ -206,13 +206,16 @@ public class FindReviewerForQuestionPage {
 		ToggleGroup filter = new ToggleGroup();
 
 		RadioButton allButton = new RadioButton("All");
+		allButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		allButton.setToggleGroup(filter);
 
 		RadioButton unansweredButton = new RadioButton("Unanswered");
+		unansweredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		unansweredButton.setToggleGroup(filter);
 		unansweredButton.setSelected(true);
 
 		RadioButton answeredButton = new RadioButton("Answered");
+		answeredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		answeredButton.setToggleGroup(filter);
 
 		HBox filterBox = new HBox(10, allButton, unansweredButton, answeredButton);
@@ -263,9 +266,11 @@ public class FindReviewerForQuestionPage {
 		ToggleGroup reviewerFilter = new ToggleGroup();
 
 		RadioButton reviewerAllButton = new RadioButton("All");
+		reviewerAllButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		reviewerAllButton.setToggleGroup(reviewerFilter);
 
 		RadioButton reviewerPreferredButton = new RadioButton("Preferred");
+		reviewerPreferredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		reviewerPreferredButton.setToggleGroup(reviewerFilter);
 		reviewerPreferredButton.setSelected(true);
 
