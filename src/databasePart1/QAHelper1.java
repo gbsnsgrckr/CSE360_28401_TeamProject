@@ -333,6 +333,45 @@ public class QAHelper1 {
 		}
 		return null;
 	}
+	
+	// Get a question object with a provided question title
+		public Question getQuestion(String questionTitle) throws SQLException {
+			// Search the question database for a match to the question id
+			String query = "SELECT * FROM cse360question AS c WHERE c.title = ?	";
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setString(1, questionTitle);
+				ResultSet rs = pstmt.executeQuery();
+
+				if (rs.next()) {
+					int id = rs.getInt("id");
+					String title = rs.getString("title"); // for each row, get all of the user attributes
+					String text = rs.getString("text");
+					int authorId = rs.getInt("author");
+					Timestamp created = rs.getTimestamp("created_On");
+					// Convert to LocalDateTime format
+					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+					Timestamp updated = rs.getTimestamp("updated_On");
+					// Convert to LocalDateTime format
+					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+					List<String> comp = textDeserial(title + text);
+
+					int preferredAnswer = rs.getInt("preferred_answer");
+
+					User author = databaseHelper.getUser(authorId);
+					String authorName = author.getName();
+
+					// Create a new question object with the pulled info
+					Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+							author, authorName);
+
+					// Return the question object
+					return question;
+				}
+			}
+			return null;
+		}
 
 	// Get an answer object with a provided answer id
 	public Answer getAnswer(Integer answerID) throws SQLException {

@@ -119,24 +119,28 @@ public class StudentHomePage {
 			e.printStackTrace();
 		}
 
+		// Label to display title of the page to the user
+		Label topLabel = new Label("Student Home Page");
+		topLabel.setStyle(
+				"-fx-text-fill: black; -fx-font-size: 18px; -fx-font-weight: bold; -fx-background-color: derive(gray, -20%)");
+
+		VBox topLabelBox = new VBox(topLabel);
+		topLabelBox.setStyle(" -fx-background-color: derive(gray, -20%)");
+
 		// Label to display title of area to the user
 		Label prompt = new Label("Entry Box");
 		prompt.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
 
-		// Hbox to hold and position the title
-		HBox titleBox = new HBox(prompt);
-		// Set alignment of box
-		titleBox.setAlignment(Pos.CENTER);
-
 		// Input box for a title
 		TextArea titleField = new TextArea();
-		titleField.setPromptText("Enter a title for your question. This should be a question");
+		titleField.setPromptText("Enter a title for your question.\nThis should be a question");
 		// Styling for the titleField
 		titleField.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;");
 		titleField.setMaxWidth(600);
 		titleField.setPrefWidth(600);
-		titleField.setMaxHeight(20);
+		titleField.setMaxHeight(60);
+		titleField.setPrefHeight(60);
 
 		// Input box for body of question
 		TextArea inputField = new TextArea();
@@ -146,23 +150,13 @@ public class StudentHomePage {
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;");
 		inputField.setMaxWidth(600);
 		inputField.setPrefWidth(600);
-		inputField.setMaxHeight(300);
-		inputField.setPrefHeight(300);
+		inputField.setMaxHeight(900);
+		inputField.setPrefHeight(900);
 		inputField.setWrapText(true);
-
-		// Button search using text in input fields
-		Button deleteButton = new Button("Delete");
-		deleteButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Button to submit question text in input fields to database
 		Button submitButton = new Button("Submit Question");
 		submitButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-
-		// Button to submit answer text in input fields to database
-		Button submitAnswerButton = new Button("Submit Answer");
-		submitAnswerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Button to return to the login screen
@@ -175,12 +169,17 @@ public class StudentHomePage {
 		findReviewerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
-		// Container to hold search and submit boxes horizontally to each other
-		HBox buttonBox = new HBox(5, submitButton, submitAnswerButton, deleteButton);
-		buttonBox.setAlignment(Pos.CENTER);
+		// Button to open the ui to submit a new question
+		Button newQuestionButton = new Button("New");
+		newQuestionButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+		newQuestionButton.setMinWidth(20);
+		;
 
-		// Container to hold the two input boxes for questions and their title together
-		VBox questionInputBox = new VBox(5, titleBox, titleField, inputField, buttonBox);
+		// Button to open the ui to submit a new question
+		Button closeButton = new Button("Close");
+		closeButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Table display of the question database
 		// Create table to display the question database within
@@ -313,22 +312,22 @@ public class StudentHomePage {
 							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
 				}
 			}
-		});		
+		});
 
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
-		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));		
+		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
 
 		// Add cell factory to deal with text runoff and disable horizontal scrolling
-		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {			
+		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
 			private final Button replyButton = new Button("Reply");
 			private final TextArea replyArea = new TextArea();
-			private final Button submitReplyButton = new Button("Submit");			
+			private final Button submitReplyButton = new Button("Submit");
 			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
-			private final VBox cellContent = new VBox(5);			
+			private final VBox cellContent = new VBox(5);
 
 			{
-				
-				replyBox.setStyle("-fx-padding: 1px;");				
+
+				replyBox.setStyle("-fx-padding: 1px;");
 				replyButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 
 				// Set prompt text for replyArea
@@ -372,20 +371,20 @@ public class StudentHomePage {
 
 				// Clear graphic
 				setGraphic(null);
-				if (flag && item == null) {					
+				if (flag && item == null) {
 					setText(null);
-				} else {					
+				} else {
 					// Get current QATableRow
 					QATableRow row = getTableView().getItems().get(getIndex());
 					// Create a label to hold the text
 					Label displayLabel = new Label(item);
 					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 					displayLabel.setWrapText(true);
-					
-					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(10));					
+
+					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(10));
 
 					// Set the preferred height of the cell
-					displayLabel.setPrefHeight(250);					
+					displayLabel.setPrefHeight(250);
 
 					// Add components to container
 					cellContent.getChildren().addAll(replyBox); //
@@ -432,10 +431,10 @@ public class StudentHomePage {
 						});
 
 						HBox buttonBox = new HBox(1, editButton, deleteButton);
-						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);						
+						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
-						displayLabel.setAlignment(Pos.CENTER_LEFT);						
-						
+						displayLabel.setAlignment(Pos.CENTER_LEFT);
+
 						HBox resultsHbox = new HBox(0, displayLabel, buttonBox);
 
 						cellContent.getChildren().add(0, resultsHbox);
@@ -447,8 +446,6 @@ public class StudentHomePage {
 						setGraphic(cellContent);
 						setText(null);
 					}
-					
-					
 
 				}
 			}
@@ -508,7 +505,7 @@ public class StudentHomePage {
 		});
 
 		// Hbox to position the filter button
-		HBox titleBox2 = new HBox(5, filterBox);
+		HBox titleBox2 = new HBox(30, newQuestionButton, filterBox);
 		titleBox2.setAlignment(Pos.CENTER_RIGHT);
 
 		// Container to hold the table
@@ -534,6 +531,18 @@ public class StudentHomePage {
 
 			new UserLoginPage(databaseHelper).show(newStage);
 		});
+
+		// Hbox to hold and position the title
+		HBox titleBox = new HBox(135, submitButton, closeButton);
+		// Set alignment of box
+		closeButton.setAlignment(Pos.TOP_RIGHT);
+		submitButton.setAlignment(Pos.TOP_LEFT);
+
+		// Container to hold the two input boxes for questions and their title together
+		VBox questionInputBox = new VBox(5, titleBox, titleField, inputField);
+		questionInputBox.setStyle("-fx-background-color: derive(gray, 80%)");
+
+		VBox submitBox = new VBox(questionInputBox);
 
 		// Create an inputField to initiate and type search
 		TextField searchField = new TextField();
@@ -594,7 +603,7 @@ public class StudentHomePage {
 
 				System.out.println("test made it here"); // debugKapiKap
 
-				searchField.setMinWidth(1000);
+				searchField.setMinWidth(1300);
 
 				// Make table visible
 				searchBox.setVisible(true);
@@ -691,8 +700,10 @@ public class StudentHomePage {
 				return;
 			}
 
+			
 			// Check if inputs are empty or null
 			try {
+				Question newQuestion;
 				Question newSelection = qTable.getSelectionModel().getSelectedItem();
 
 				if (newSelection != null) {
@@ -700,10 +711,14 @@ public class StudentHomePage {
 					newSelection.setTitle(titleInput);
 					newSelection.setText(textInput);
 					databaseHelper.qaHelper.updateQuestion(newSelection);
+					newQuestion = newSelection;
 				} else {
 					// Register a new question in the database
-					Question newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
+					newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
 					databaseHelper.qaHelper.registerQuestion(newQuestion);
+					
+					// Retrieve full question object for new question
+					newQuestion = databaseHelper.qaHelper.getQuestion(newQuestion.getTitle());
 				}
 
 				// Clear input fields for new inputs
@@ -717,6 +732,8 @@ public class StudentHomePage {
 				questionObservableList.clear();
 				questionObservableList.addAll(questions);
 				qTable.setItems(questionObservableList);
+				
+				qTable.getSelectionModel().select(newQuestion);
 
 			} catch (SQLException e) {
 				e.printStackTrace();
@@ -725,84 +742,9 @@ public class StudentHomePage {
 				return;
 			}
 
-		});
-
-		// Button to submit an answer or question from the input fields
-		submitAnswerButton.setOnAction(a -> {
-			String textInput = inputField.getText();
-
-			// Check if textInput is empty or null
-			if (textInput == null || textInput.trim().isEmpty()) {
-				errorLabel.setText("Error, answer-body field is blank.");
-				return;
-			}
-
-			// Check if inputs are empty or null
-			try {
-				Question newSelection = qTable.getSelectionModel().getSelectedItem();
-				Answer answerSelection = aTable.getSelectionModel().getSelectedItem();
-
-				if (newSelection == null && answerSelection != null) {
-					// Update the currently selected answer
-					answerSelection.setText(textInput);
-					databaseHelper.qaHelper.updateAnswer(answerSelection);
-				} else if (newSelection != null && answerSelection == null) {
-					// Register a new question in the database
-					Answer newAnswer = new Answer(textInput, databaseHelper.currentUser.getUserId());
-					databaseHelper.qaHelper.registerAnswerWithQuestion(newAnswer, newSelection.getId());
-				}
-
-				// Clear input fields for new inputs
-				titleField.clear();
-				inputField.clear();
-
-				// Retrieve an updated list of questions from the database
-				question = qTable.getSelectionModel().getSelectedItem();
-				questions = databaseHelper.qaHelper.getAllQuestions();
-
-				// Refresh contents of tables manually
-				questionObservableList.clear();
-				questionObservableList.addAll(questions);
-				qTable.setItems(questionObservableList);
-
-			} catch (SQLException e) {
-				e.printStackTrace();
-				System.err.println("Error trying to register new question into database via submit button");
-				;
-				return;
-			}
-
-			// Update results table
-			updateResultsTableForQuestion(question);
-
-		});
-
-		// Modify setOnAction for deleteButton to delete selected Question from Question
-		// database
-		deleteButton.setOnAction(a -> {
-			try {
-				Question newSelection = qTable.getSelectionModel().getSelectedItem();
-				Answer answerSelection = aTable.getSelectionModel().getSelectedItem();
-
-				if (newSelection != null && answerSelection == null) {
-					// Delete selected question
-					databaseHelper.qaHelper.deleteQuestion(newSelection.getId());
-				} else if (newSelection == null && answerSelection != null) {
-					// Delete selected answer
-					databaseHelper.qaHelper.deleteAnswer(answerSelection.getId());
-				}
-
-				// Retrieve an updated list of questions from the database
-				questions = databaseHelper.qaHelper.getAllQuestions();
-			} catch (SQLException e) {
-				e.printStackTrace();
-				System.err.println("Error trying update question object via getALLUsers() in qTable");
-			}
-
-			// Refresh contents of tables manually
-			questionObservableList.clear();
-			questionObservableList.addAll(questions);
-			qTable.setItems(questionObservableList);
+			// Hide submitBox
+			submitBox.setVisible(false);
+			submitBox.setManaged(false);
 
 		});
 
@@ -851,7 +793,6 @@ public class StudentHomePage {
 
 				// Update text for buttons
 				submitButton.setText("Update Question");
-				deleteButton.setText("Delete Question");
 
 				// Update results table
 				updateResultsTableForQuestion(newSelection);
@@ -862,36 +803,21 @@ public class StudentHomePage {
 			}
 		});
 
-		// Add listeners for table selections to read selected objects from tables
-		aTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-			if (newSelection != null) {
-				// Clear selections on the other tables
-				qTable.getSelectionModel().clearSelection();
-
-				// Update text on buttons
-				submitAnswerButton.setText("Update Answer");
-				deleteButton.setText("Delete Answer");
-			} else {
-				// If nothing is selected on the answer table then...
-				submitAnswerButton.setText("Submit Answer");
-			}
-		});
-
 		searchField.setAlignment(Pos.TOP_RIGHT);
 		searchBox.setAlignment(Pos.BOTTOM_RIGHT);
 
 		// Use containers to position and hold many different UI components
-		HBox hboxTop = new HBox(10, questionInputBox, answerDB, searchField);
-		hboxTop.setAlignment(Pos.TOP_CENTER);
+		HBox hboxTop = new HBox(10, searchField);
+		hboxTop.setAlignment(Pos.CENTER_RIGHT);
 
 		VBox vboxTop = new VBox(10, hboxTop);
-		vboxTop.setAlignment(Pos.TOP_CENTER);
+		vboxTop.setAlignment(Pos.CENTER_RIGHT);
 
 		StackPane root2 = new StackPane(resultsTable, searchBox);
 
 		VBox vbox = new VBox(10, vboxTop, root2);
 		vbox.setAlignment(Pos.CENTER);
-		
+
 		HBox buttonBox1 = new HBox(quitButton, findReviewerButton);
 		quitButton.setAlignment(Pos.BOTTOM_CENTER);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
@@ -899,9 +825,28 @@ public class StudentHomePage {
 		VBox vbox1 = new VBox(10, vbox, buttonBox1);
 		vbox1.setAlignment(Pos.CENTER);
 
-		HBox hbox1 = new HBox(5, questionDB, vbox1);
+		// Hide submitBox unit needed
+		submitBox.setVisible(false);
+		submitBox.setManaged(false);
 
-		VBox vbox2 = new VBox(hbox1, errorLabel);
+		newQuestionButton.setOnAction(a -> {
+			// Show submitBox
+			submitBox.setVisible(true);
+			submitBox.setManaged(true);
+
+		});
+
+		closeButton.setOnAction(a -> {
+			// Hide submitBox
+			submitBox.setVisible(false);
+			submitBox.setManaged(false);
+		});
+
+		StackPane root3 = new StackPane(questionDB, submitBox);
+
+		HBox hbox1 = new HBox(5, root3, vbox1);
+
+		VBox vbox2 = new VBox(topLabelBox, hbox1, errorLabel);
 
 		StackPane root = new StackPane(vbox2);
 		root.setStyle("-fx-background-color: derive(gray, 60%);");
@@ -909,13 +854,20 @@ public class StudentHomePage {
 		Scene scene = new Scene(root, 1900, 1000);
 
 		resultsTable.prefWidthProperty().bind(hbox1.widthProperty());
-		resultsTable.prefHeightProperty().bind(vbox.heightProperty().subtract(50));
+		resultsTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		qTable.prefWidthProperty().bind(root3.widthProperty());
+		qTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
 		contentColumn.prefWidthProperty().bind(vbox1.widthProperty().subtract(19));
 		detailsColumn.prefWidthProperty().bind(questionDB.widthProperty().subtract(19));
 		searchTable.prefWidthProperty().bind(vbox.widthProperty());
-		searchTable.prefHeightProperty().bind(hbox1.heightProperty().subtract(50));
+		searchTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
 		searchBox.prefWidthProperty().bind(vbox.widthProperty());
-		searchBox.prefHeightProperty().bind(hbox1.heightProperty().subtract(50));
+		searchBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		submitBox.prefWidthProperty().bind(qTable.widthProperty());
+		submitBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		questionInputBox.prefWidthProperty().bind(qTable.widthProperty());
+		questionInputBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		topLabelBox.prefWidthProperty().bind(vbox2.widthProperty());
 
 		// Set the scene to primary stage
 		primaryStage.setScene(scene);
@@ -935,7 +887,6 @@ public class StudentHomePage {
 		try {
 
 			answers = databaseHelper.qaHelper.getAllAnswersForQuestion(question.getId());
-			// question = qTable.getSelectionModel().getSelectedItem();
 
 			// Put the selected question in the first row
 			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(), null));

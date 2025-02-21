@@ -306,15 +306,15 @@ public class DatabaseHelper {
 		}
 		return users;
 	}
-	
+
 	// Retrieves all users with a specified role
 	public List<User> getAllUsersWithRole(String role) throws SQLException {
 		String query = "SELECT * FROM cse360users WHERE roles LIKE ?";
 		List<User> users = new ArrayList<>();
 
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setString(1,  "%" + role + "%");
-			
+			pstmt.setString(1, "%" + role + "%");
+
 			ResultSet rs = pstmt.executeQuery();
 
 			while (rs.next()) {
@@ -328,12 +328,12 @@ public class DatabaseHelper {
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
 				boolean otp = rs.getBoolean("otp");
-				
+
 				if (roles.contains(role)) {
-				User user = new User(id, username, name, password, email, roles, otp); // create new user				
-																						
-				System.out.println("USERS: " + user.toString());
-				users.add(user); // add new user to the list of users
+					User user = new User(id, username, name, password, email, roles, otp); // create new user
+
+					System.out.println("USERS: " + user.toString());
+					users.add(user); // add new user to the list of users
 				}
 			}
 		}
@@ -528,7 +528,7 @@ public class DatabaseHelper {
 		}
 	}
 
-	// 
+	//
 	public class QAHelper {
 
 		// Initialize connection to database
@@ -592,6 +592,11 @@ public class DatabaseHelper {
 			return qaHelper.getQuestion(questionID);
 		}
 
+		// Get a question object with a provided question title
+		public Question getQuestion(String questionTitle) throws SQLException {
+			return qaHelper.getQuestion(questionTitle);
+		}
+
 		// Get an answer object with a provided answer id
 		public Answer getAnswer(Integer answerID) throws SQLException {
 			return qaHelper.getAnswer(answerID);
@@ -644,5 +649,5 @@ public class DatabaseHelper {
 		public void updateAnswer(Answer answer) {
 			qaHelper.updateAnswer(answer);
 		}
-	}	
+	}
 }
