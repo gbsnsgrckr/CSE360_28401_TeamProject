@@ -80,7 +80,7 @@ public class FindReviewerForQuestionPage {
 
 		if (questions == null || questions.isEmpty()) {
 			try {
-				questions = databaseHelper.qaHelper.getAllQuestions();
+				questions = databaseHelper.qaHelper.getAllUnansweredQuestions();
 			} catch (SQLException e) {
 				e.printStackTrace();
 				System.err
@@ -207,11 +207,10 @@ public class FindReviewerForQuestionPage {
 
 		RadioButton allButton = new RadioButton("All");
 		allButton.setToggleGroup(filter);
-		allButton.setSelected(true);
 
 		RadioButton unansweredButton = new RadioButton("Unanswered");
 		unansweredButton.setToggleGroup(filter);
-		;
+		unansweredButton.setSelected(true);
 
 		RadioButton answeredButton = new RadioButton("Answered");
 		answeredButton.setToggleGroup(filter);
@@ -265,11 +264,10 @@ public class FindReviewerForQuestionPage {
 
 		RadioButton reviewerAllButton = new RadioButton("All");
 		reviewerAllButton.setToggleGroup(reviewerFilter);
-		reviewerAllButton.setSelected(true);
 
 		RadioButton reviewerPreferredButton = new RadioButton("Preferred");
 		reviewerPreferredButton.setToggleGroup(reviewerFilter);
-		;
+		reviewerPreferredButton.setSelected(true);
 
 		HBox reviewerFilterBox = new HBox(10, reviewerAllButton, reviewerPreferredButton);
 		reviewerFilterBox.setAlignment(Pos.CENTER);
@@ -287,6 +285,9 @@ public class FindReviewerForQuestionPage {
 						 * PLACEHOLDER FOR METHOD TO RETURN PREFERRED USERS FROM DATABASE users =
 						 * databaseHelper.getPreferredReviewers(databaseHelper.currentUser);
 						 */
+						
+						// REMOVE THIS WHEN YOU ADD PROPER LOGIC
+						users = databaseHelper.getAllUsersWithRole("Reviewer");						
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
