@@ -14,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -216,7 +217,7 @@ public class StudentHomePage {
 				textLabel.setWrapText(false);
 				textLabel.setEllipsisString("...");
 				textLabel.setMaxWidth(Double.MAX_VALUE);
-				textLabel.setStyle("-fx-text-overrun: ellipsis; -fx-padding: 5px;");
+				textLabel.setStyle("-fx-text-overrun: ellipsis; -fx-padding: 2px;");
 			}
 
 			@Override
@@ -312,22 +313,22 @@ public class StudentHomePage {
 							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
 				}
 			}
-		});
+		});		
 
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
-		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
+		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));		
 
 		// Add cell factory to deal with text runoff and disable horizontal scrolling
-		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
-			private final Label label = new Label();
+		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {			
 			private final Button replyButton = new Button("Reply");
 			private final TextArea replyArea = new TextArea();
-			private final Button submitReplyButton = new Button("Submit");
+			private final Button submitReplyButton = new Button("Submit");			
 			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
-			private final VBox cellContent = new VBox(5);
+			private final VBox cellContent = new VBox(5);			
 
 			{
-				label.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+				
+				replyBox.setStyle("-fx-padding: 1px;");				
 				replyButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 
 				// Set prompt text for replyArea
@@ -357,7 +358,7 @@ public class StudentHomePage {
 						}
 					}
 				});
-				cellContent.getChildren().addAll(label, replyBox);
+				cellContent.getChildren().addAll(replyBox);
 				cellContent.setAlignment(Pos.CENTER_LEFT);
 
 			}
@@ -371,15 +372,20 @@ public class StudentHomePage {
 
 				// Clear graphic
 				setGraphic(null);
-				if (flag && item == null) {
+				if (flag && item == null) {					
 					setText(null);
-				} else {
-					cellContent.getChildren().addAll(label);
+				} else {					
 					// Get current QATableRow
 					QATableRow row = getTableView().getItems().get(getIndex());
 					// Create a label to hold the text
-					Label textLabel = new Label(item);
-					textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+					Label displayLabel = new Label(item);
+					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+					displayLabel.setWrapText(true);
+					
+					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(10));					
+
+					// Set the preferred height of the cell
+					displayLabel.setPrefHeight(250);					
 
 					// Add components to container
 					cellContent.getChildren().addAll(replyBox); //
@@ -393,10 +399,10 @@ public class StudentHomePage {
 						// Styling for buttons
 						editButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
-										+ "-fx-font-weight: bold; -fx-padding: 0;");
+										+ "-fx-font-weight: bold; -fx-padding: 1px;");
 						deleteButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
-										+ "-fx-font-weight: bold; -fx-padding: 0;");
+										+ "-fx-font-weight: bold; -fx-padding: 1px;");
 
 						editButton.setOnAction(a -> {
 							// Edit selected answer
@@ -423,26 +429,26 @@ public class StudentHomePage {
 							questionObservableList.addAll(questions);
 							qTable.setItems(questionObservableList);
 
-							// Update results table
-							// updateResultsTableForQuestion(question);
 						});
 
-						HBox buttonBox = new HBox(5, editButton, deleteButton);
-						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
+						HBox buttonBox = new HBox(1, editButton, deleteButton);
+						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);						
 
-						label.setAlignment(Pos.CENTER_LEFT);
+						displayLabel.setAlignment(Pos.CENTER_LEFT);						
+						
+						HBox resultsHbox = new HBox(0, displayLabel, buttonBox);
 
-						HBox resultsHbox = new HBox(5, textLabel, buttonBox);
-
-						cellContent.getChildren().add(resultsHbox);
+						cellContent.getChildren().add(0, resultsHbox);
 
 						setGraphic(cellContent);
 						setText(null);
 					} else {
-						cellContent.getChildren().add(0, textLabel);
+						cellContent.getChildren().add(0, displayLabel);
 						setGraphic(cellContent);
 						setText(null);
 					}
+					
+					
 
 				}
 			}
@@ -932,18 +938,18 @@ public class StudentHomePage {
 			// question = qTable.getSelectionModel().getSelectedItem();
 
 			// Put the selected question in the first row
-			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toString(), null));
+			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(), null));
 
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toString(), answer.getId(),
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
 						answer.getAuthorId()));
 
 				// Look for related answers to selected answer
 				List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(answer.getId());
 				if (relatedAnswers != null && !relatedAnswers.isEmpty()) {
 					for (Answer temp : relatedAnswers) {
-						resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, temp.toString(),
+						resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, temp.toDisplay(),
 								temp.getId(), temp.getAuthorId()));
 					}
 				}

@@ -14,8 +14,23 @@ public class Question {
 	private List<String> comp;
 	private int preferredAnswer;
 	private User author;
+	private String authorName;
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;
+	}
+	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author) {
 		this.id = id;
@@ -128,6 +143,10 @@ public class Question {
 		}
 		return (int) ChronoUnit.DAYS.between(createdOn, LocalDateTime.now());
 	}
+	
+	public String getAuthorName() {
+		return authorName;
+	}
 
 	// Setters
 	public void setId(Integer id) {
@@ -165,11 +184,15 @@ public class Question {
 	public void setAuthor(User author) {
 		this.author = author;
 	}
+	
+	public void setAuthorName(String authorName) {
+		this.authorName = authorName;
+	}
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
-				id, title, text, authorId, createdOn, updatedOn, preferredAnswer);
+				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s\nAuthor Name:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
+				id, title, text, authorId, authorName, createdOn, updatedOn, preferredAnswer);
 	}
 
 	public String toDisplay() {
@@ -186,7 +209,7 @@ public class Question {
 			if (author == null) {
 				displayAuthor = "User";
 			} else {
-				displayAuthor = author.getName();
+				displayAuthor = authorName;
 			}
 
 			return String.format("%s\n%s               %sd", title, displayAuthor, daysSinceCreated);
@@ -210,7 +233,7 @@ public class Question {
 				displayAuthor = author.getName();
 			}
 
-			return String.format("%s\n%s\n%s               %sd", title, text,  displayAuthor, daysSinceCreated);
+			return String.format("%s\n\n%s\n\n\n%s           									    %sd", title, text,  displayAuthor, daysSinceCreated);
 		}
 	}
 

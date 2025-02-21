@@ -154,6 +154,9 @@ public class DatabaseHelper {
 			if (rs.next()) {
 				int id = rs.getInt("id");
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
@@ -173,6 +176,9 @@ public class DatabaseHelper {
 			if (rs.next()) {
 				String username = rs.getString("userName");
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
@@ -285,6 +291,9 @@ public class DatabaseHelper {
 				int id = rs.getInt("id");
 				String username = rs.getString("username"); // for each row, get all of the user attributes
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
@@ -312,6 +321,9 @@ public class DatabaseHelper {
 				int id = rs.getInt("id");
 				String username = rs.getString("username"); // for each row, get all of the user attributes
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));

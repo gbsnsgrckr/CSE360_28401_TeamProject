@@ -11,7 +11,19 @@ public class Answer {
 	private LocalDateTime createdOn;
 	private LocalDateTime updatedOn;
 	private User author;
+	private String authorName;
 
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
+			User author, String authorName) {
+		this.id = id;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.author = author;
+		this.authorName = authorName;
+	}
+	
 	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
 			User author) {
 		this.id = id;
@@ -70,6 +82,10 @@ public class Answer {
 		}
 		return (int) ChronoUnit.DAYS.between(createdOn, LocalDateTime.now());
 	}
+	
+	public String getAuthorName() {
+		return authorName;
+	}
 
 	// Setters
 	public void setId(Integer id) {
@@ -95,11 +111,15 @@ public class Answer {
 	public void setAuthor(User author) {
 		this.author = author;
 	}
+	
+	public void setAuthorName(String authorName) {
+		this.authorName = authorName;
+	}			
 
 	public String toString() {
 		return String.format(
-				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
-				id, text, authorId, createdOn, updatedOn);
+				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				id, text, authorId, authorName, createdOn, updatedOn);
 	}
 
 	public String toDisplay() {
@@ -116,10 +136,10 @@ public class Answer {
 			if (author == null) {
 				displayAuthor = "User";
 			} else {
-				displayAuthor = author.getName();
+				displayAuthor = getAuthorName();
 			}
 
-			return String.format("%s\n%s               %sd", text, displayAuthor, daysSinceCreated);
+			return String.format("%s\n\n\n%s             					  					%sd", text, displayAuthor, daysSinceCreated);
 		}
 	}
 
