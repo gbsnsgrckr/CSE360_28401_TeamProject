@@ -46,7 +46,7 @@ public class QAHelper1 {
 			System.out.println("Connecting to database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
-			statement = connection.createStatement();			
+			statement = connection.createStatement();
 		} catch (ClassNotFoundException e) {
 			System.err.println("JDBC Driver not found: " + e.getMessage());
 		}
@@ -110,24 +110,24 @@ public class QAHelper1 {
 		}
 		System.out.println("Answer registered successfully.");
 	}
-	
+
 	// Registers a new answer in the database.
-		public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
-			String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
-			try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
-				pstmt.setString(1, answer.getText());
-				pstmt.setInt(2, answer.getAuthorId());
-				pstmt.executeUpdate();
+	public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
+		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
+		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
+			pstmt.setString(1, answer.getText());
+			pstmt.setInt(2, answer.getAuthorId());
+			pstmt.executeUpdate();
 
-				ResultSet newID = pstmt.getGeneratedKeys();
-				if (newID.next()) {
-					int answerID = newID.getInt(1);
-					addRelationToQuestion(relatedID, answerID);
-				}
-
+			ResultSet newID = pstmt.getGeneratedKeys();
+			if (newID.next()) {
+				int answerID = newID.getInt(1);
+				addRelationToQuestion(relatedID, answerID);
 			}
-			System.out.println("Answer registered successfully.");
+
 		}
+		System.out.println("Answer registered successfully.");
+	}
 
 	// Deletes a question row from the SQL table
 	public boolean deleteQuestion(int id) {
@@ -205,39 +205,39 @@ public class QAHelper1 {
 			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
 		}
 	}
-	
+
 	// Add a relation to the answer database
-		public void addRelationToAnswer(int answerID, int relatedID) {
-			String selectQuery = "SELECT answer_id FROM cse360answer WHERE id = ?";
-			String updateQuery = "UPDATE cse360answer SET answer_id = ? WHERE id = ?";
-			try (PreparedStatement pstmt = connection.prepareStatement(selectQuery)) {
-				pstmt.setInt(1, answerID);
-				ResultSet rs = pstmt.executeQuery();
+	public void addRelationToAnswer(int answerID, int relatedID) {
+		String selectQuery = "SELECT answer_id FROM cse360answer WHERE id = ?";
+		String updateQuery = "UPDATE cse360answer SET answer_id = ? WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(selectQuery)) {
+			pstmt.setInt(1, answerID);
+			ResultSet rs = pstmt.executeQuery();
 
-				if (rs.next()) {
-					String answerIDs = rs.getString("answer_id");
-					String newAnswerIDs;
+			if (rs.next()) {
+				String answerIDs = rs.getString("answer_id");
+				String newAnswerIDs;
 
-					// Check if null or empty
-					if (answerIDs == null || answerIDs.trim().isEmpty()) {
-						newAnswerIDs = String.valueOf(relatedID);
-					} else {
-						// If it is not empty or null, then add a comma and space
-						newAnswerIDs = answerIDs + ", " + relatedID;
-					}
-
-					try (PreparedStatement upstmt = connection.prepareStatement(updateQuery)) {
-						upstmt.setString(1, newAnswerIDs);
-						upstmt.setInt(2, answerID);
-						upstmt.executeUpdate();
-					}
+				// Check if null or empty
+				if (answerIDs == null || answerIDs.trim().isEmpty()) {
+					newAnswerIDs = String.valueOf(relatedID);
 				} else {
-					System.err.println("Could not find an answer with id: " + answerID);
+					// If it is not empty or null, then add a comma and space
+					newAnswerIDs = answerIDs + ", " + relatedID;
 				}
-			} catch (SQLException e) {
-				System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
+
+				try (PreparedStatement upstmt = connection.prepareStatement(updateQuery)) {
+					upstmt.setString(1, newAnswerIDs);
+					upstmt.setInt(2, answerID);
+					upstmt.executeUpdate();
+				}
+			} else {
+				System.err.println("Could not find an answer with id: " + answerID);
 			}
+		} catch (SQLException e) {
+			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
 		}
+	}
 
 	// Delete a relation from the relation database
 	public boolean deleteRelation(int questionID, int answerID) {
@@ -313,7 +313,11 @@ public class QAHelper1 {
 				int preferredAnswer = rs.getInt("preferred_answer");
 
 				User author = databaseHelper.getUser(authorId);
-				String authorName = author.getName();
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
@@ -325,45 +329,49 @@ public class QAHelper1 {
 		}
 		return null;
 	}
-	
+
 	// Get a question object with a provided question title
-		public Question getQuestion(String questionTitle) throws SQLException {
-			// Search the question database for a match to the question id
-			String query = "SELECT * FROM cse360question AS c WHERE c.title = ?	";
+	public Question getQuestion(String questionTitle) throws SQLException {
+		// Search the question database for a match to the question id
+		String query = "SELECT * FROM cse360question AS c WHERE c.title = ?	";
 
-			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-				pstmt.setString(1, questionTitle);
-				ResultSet rs = pstmt.executeQuery();
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, questionTitle);
+			ResultSet rs = pstmt.executeQuery();
 
-				if (rs.next()) {
-					int id = rs.getInt("id");
-					String title = rs.getString("title"); // for each row, get all of the user attributes
-					String text = rs.getString("text");
-					int authorId = rs.getInt("author");
-					Timestamp created = rs.getTimestamp("created_On");
-					// Convert to LocalDateTime format
-					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
-					Timestamp updated = rs.getTimestamp("updated_On");
-					// Convert to LocalDateTime format
-					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+			if (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title"); // for each row, get all of the user attributes
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_On");
+				// Convert to LocalDateTime format
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_On");
+				// Convert to LocalDateTime format
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
-					List<String> comp = textDeserial(title + text);
+				List<String> comp = textDeserial(title + text);
 
-					int preferredAnswer = rs.getInt("preferred_answer");
+				int preferredAnswer = rs.getInt("preferred_answer");
 
-					User author = databaseHelper.getUser(authorId);
-					String authorName = author.getName();
+				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
 
-					// Create a new question object with the pulled info
-					Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-							author, authorName);
-
-					// Return the question object
-					return question;
+				if (author != null) {
+					authorName = author.getName();
 				}
+
+				// Create a new question object with the pulled info
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName);
+
+				// Return the question object
+				return question;
 			}
-			return null;
 		}
+		return null;
+	}
 
 	// Get an answer object with a provided answer id
 	public Answer getAnswer(Integer answerID) throws SQLException {
@@ -386,7 +394,11 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
 				User author = databaseHelper.getUser(authorId);
-				String authorName = author.getName();
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
 
 				// Create a new answer object with the pulled info
 				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName);
@@ -423,9 +435,9 @@ public class QAHelper1 {
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
-				
-				if (author != null) {				
-				authorName = author.getName();
+
+				if (author != null) {
+					authorName = author.getName();
 				}
 
 				// Create a new question object with the pulled info
@@ -466,9 +478,9 @@ public class QAHelper1 {
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
-				
-				if (author != null) {				
-				authorName = author.getName();
+
+				if (author != null) {
+					authorName = author.getName();
 				}
 
 				// Create a new question object with the pulled info
@@ -510,9 +522,9 @@ public class QAHelper1 {
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
-				
-				if (author != null) {				
-				authorName = author.getName();
+
+				if (author != null) {
+					authorName = author.getName();
 				}
 
 				// Create a new question object with the pulled info
@@ -549,9 +561,9 @@ public class QAHelper1 {
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
-				
-				if (author != null) {				
-				authorName = author.getName();
+
+				if (author != null) {
+					authorName = author.getName();
 				}
 
 				// Create a new answer object with the pulled info
@@ -607,12 +619,12 @@ public class QAHelper1 {
 						Timestamp updated = newRs.getTimestamp("updated_On");
 						// Convert to LocalDateTime format
 						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-						
+
 						User author = databaseHelper.getUser(authorId);
 						String authorName = "User";
-						
-						if (author != null) {				
-						authorName = author.getName();
+
+						if (author != null) {
+							authorName = author.getName();
 						}
 
 						// Create a new answer object with the pulled info
@@ -672,12 +684,12 @@ public class QAHelper1 {
 						Timestamp updated = newRs.getTimestamp("updated_On");
 						// Convert to LocalDateTime format
 						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-						
+
 						User author = databaseHelper.getUser(authorId);
 						String authorName = "User";
-						
-						if (author != null) {				
-						authorName = author.getName();
+
+						if (author != null) {
+							authorName = author.getName();
 						}
 
 						// Create a new answer object with the pulled info

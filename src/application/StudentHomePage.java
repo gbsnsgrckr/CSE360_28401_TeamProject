@@ -44,26 +44,32 @@ public class StudentHomePage {
 
 		private final RowType type;
 		private final String text;
-		private final Integer answerId;
+		private final Integer contentId;
 		private final Integer authorId;
 
 		// Wrapper class for resultsTable to allow for dynamic rows
-		public QATableRow(RowType type, String text, Integer answerId) {
+		public QATableRow(RowType type, String text, Integer contentId) {
 			this.type = type;
 			this.text = text;
-			this.answerId = answerId;
+			this.contentId = contentId;
 			this.authorId = null;
+
 		}
 
-		public QATableRow(RowType type, String text, Integer answerId, Integer authorId) {
+		public QATableRow(RowType type, String text, Integer contentId, Integer authorId) {
 			this.type = type;
 			this.text = text;
-			this.answerId = answerId;
+			this.contentId = contentId;
 			this.authorId = authorId;
+
+		}
+
+		public Integer getQuestionId() {
+			return contentId;
 		}
 
 		public Integer getAnswerId() {
-			return answerId;
+			return contentId;
 		}
 
 		public Integer getAuthorId() {
@@ -83,6 +89,7 @@ public class StudentHomePage {
 			return text;
 		}
 	}
+
 	private final DatabaseHelper databaseHelper;
 	private Question question;
 	private Answer answer;
@@ -92,6 +99,9 @@ public class StudentHomePage {
 	private List<AnswersSet> answersSet;
 	private ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
 	private TableView<Question> qTable;
+	private List<Question> sortedList;
+	private boolean updatingAnswer = false;
+	private boolean updatingQuestion = false;
 
 	private TableView<QATableRow> resultsTable;
 
@@ -309,6 +319,18 @@ public class StudentHomePage {
 			}
 		});
 
+		// Hbox to hold and position the title
+		HBox titleBox = new HBox(135, submitButton, closeButton);
+		// Set alignment of box
+		closeButton.setAlignment(Pos.TOP_RIGHT);
+		submitButton.setAlignment(Pos.TOP_LEFT);
+
+		// Container to hold the two input boxes for questions and their title together
+		VBox questionInputBox = new VBox(5, titleBox, titleField, inputField);
+		questionInputBox.setStyle("-fx-background-color: derive(gray, 80%)");
+
+		VBox submitBox = new VBox(questionInputBox);
+
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
 		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
 
@@ -376,13 +398,10 @@ public class StudentHomePage {
 					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 					displayLabel.setWrapText(true);
 
-					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(10));
+					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(50));
 
 					// Set the preferred height of the cell
-					displayLabel.setPrefHeight(250);
-
-					// Add components to container
-					cellContent.getChildren().addAll(replyBox); //
+					displayLabel.setPrefHeight(225);
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
@@ -399,9 +418,27 @@ public class StudentHomePage {
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
 
 						editButton.setOnAction(a -> {
-							// Edit selected answer
-							// Add popup with TextArea that prepopulates the current answer text and has a
-							// submit and cancel button
+							// Set submit button text
+							submitButton.setText("Update Answer");
+
+							// Show the submitBox
+							submitBox.setVisible(true);
+							submitBox.setManaged(true);
+
+							// Set updating flag to true
+							updatingAnswer = true;
+
+							try {
+								// Set answer to current row object
+								answer = databaseHelper.qaHelper.getAnswer(row.getAnswerId());
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println("Error trying to get answer in results table via editButton");
+							}
+
+							// Set inputField to existing answer text to update
+							inputField.setText(answer.getText());
+
 						});
 
 						deleteButton.setOnAction(a -> {
@@ -422,6 +459,9 @@ public class StudentHomePage {
 							questionObservableList.clear();
 							questionObservableList.addAll(questions);
 							qTable.setItems(questionObservableList);
+							
+							// Set qTable to previous question
+							qTable.getSelectionModel().select(question);
 
 						});
 
@@ -430,17 +470,99 @@ public class StudentHomePage {
 
 						displayLabel.setAlignment(Pos.CENTER_LEFT);
 
-						HBox resultsHbox = new HBox(0, displayLabel, buttonBox);
-
-						cellContent.getChildren().add(0, resultsHbox);
+						cellContent.getChildren().addAll(displayLabel, buttonBox);
 
 						setGraphic(cellContent);
 						setText(null);
-					} else {
+						// Check if row is a question and the author matches current user
+					} else if (row.getType() == QATableRow.RowType.QUESTION && row.getAuthorId() != null
+							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
+						// Buttons to edit and delete the answer
+						Button editButton = new Button("Edit");
+						Button deleteButton = new Button("Delete");
+						// Styling for buttons
+						editButton.setStyle(
+								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+										+ "-fx-font-weight: bold; -fx-padding: 1px;");
+						deleteButton.setStyle(
+								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+										+ "-fx-font-weight: bold; -fx-padding: 1px;");
+
+						editButton.setOnAction(a -> {
+							// Set submit button text
+							submitButton.setText("Update Question");
+
+							// Show the submitBox
+							submitBox.setVisible(true);
+							submitBox.setManaged(true);
+
+							// Set updating flag to true
+							updatingQuestion = true;
+
+							try {
+								// Set answer to current row object
+								question = databaseHelper.qaHelper.getQuestion(row.getQuestionId());
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println("Error trying to get question in results table via editButton");
+							}
+
+							// Set titleField to existing answer text to update
+							titleField.setText(question.getTitle());
+
+							// Set inputField to existing answer text to update
+							inputField.setText(question.getText());
+						});
+
+						deleteButton.setOnAction(a -> {
+							// Delete selected question
+							databaseHelper.qaHelper.deleteQuestion(row.getQuestionId());
+
+							try {
+								// Retrieve an updated list of questions from the database
+								questions = databaseHelper.qaHelper.getAllQuestions();
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println(
+										"Error trying update answers object via getALLUsers() in resultsTable");
+							}
+
+							// Refresh contents of tables manually
+							questionObservableList.clear();
+							questionObservableList.addAll(questions);
+							qTable.setItems(questionObservableList);
+							
+							// Set qTable to previous question
+							qTable.getSelectionModel().select(question);
+
+						});
+
+						HBox buttonBox = new HBox(1, editButton, deleteButton);
+						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
+
+						displayLabel.setAlignment(Pos.CENTER_LEFT);
+
+						cellContent.getChildren().addAll(displayLabel, buttonBox);
+
+						setGraphic(cellContent);
+						setText(null);
+					} else if (row.getType() == QATableRow.RowType.QUESTION) {
+						
+						// This will make sure the first question in row 1 is saved to a question object for updating an answer object later
+						try {
+							// Set question to current row object
+							question = databaseHelper.qaHelper.getQuestion(row.getQuestionId());
+						} catch (SQLException e) {
+							e.printStackTrace();
+							System.err.println("Error trying to get question in results table via editButton");
+						}	
+						
+					} else {					
 						cellContent.getChildren().add(0, displayLabel);
 						setGraphic(cellContent);
 						setText(null);
 					}
+					cellContent.getChildren().add(replyBox);
 
 				}
 			}
@@ -530,22 +652,11 @@ public class StudentHomePage {
 			new UserLoginPage(databaseHelper).show(newStage);
 		});
 
-		// Hbox to hold and position the title
-		HBox titleBox = new HBox(135, submitButton, closeButton);
-		// Set alignment of box
-		closeButton.setAlignment(Pos.TOP_RIGHT);
-		submitButton.setAlignment(Pos.TOP_LEFT);
-
-		// Container to hold the two input boxes for questions and their title together
-		VBox questionInputBox = new VBox(5, titleBox, titleField, inputField);
-		questionInputBox.setStyle("-fx-background-color: derive(gray, 80%)");
-
-		VBox submitBox = new VBox(questionInputBox);
-
 		// Create an inputField to initiate and type search
 		TextField searchField = new TextField();
 		searchField.setPromptText("Search questions...");
-		searchField.setStyle("-fx-alignment: center-left; -fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
+		searchField.setStyle(
+				"-fx-alignment: center-left; -fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
 		searchField.setPrefWidth(250);
 
 		// Create an observable list of questions and assign to the table
@@ -577,26 +688,26 @@ public class StudentHomePage {
 				}
 			}
 		});
-		
+
 		// Add cell factory to deal with text wrapping and styling
 		searchColumn.setCellFactory(a -> new TableCell<Question, String>() {
-					private final Label textLabel = new Label();
+			private final Label textLabel = new Label();
 
-					{
-						textLabel.setWrapText(true);
-						textLabel.setStyle("-fx-padding: 1px;");
-					}
+			{
+				textLabel.setWrapText(true);
+				textLabel.setStyle("-fx-padding: 1px;");
+			}
 
-					@Override
-					protected void updateItem(String item, boolean flag) {
-						super.updateItem(item, flag);
-						setGraphic(flag || item == null ? null : textLabel);
-						if (!flag && item != null) {
-							textLabel.setText(item);
-							textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
-						}
-					}
-				});
+			@Override
+			protected void updateItem(String item, boolean flag) {
+				super.updateItem(item, flag);
+				setGraphic(flag || item == null ? null : textLabel);
+				if (!flag && item != null) {
+					textLabel.setText(item);
+					textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+				}
+			}
+		});
 
 		// Add searchColumn to searchTable
 		searchTable.getColumns().add(searchColumn);
@@ -658,7 +769,7 @@ public class StudentHomePage {
 				}
 
 				// Sort based on similarity score
-				List<Question> sortedList = similarity.entrySet().stream()
+				sortedList = similarity.entrySet().stream()
 						.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
 						.collect(Collectors.toList());
 
@@ -696,7 +807,24 @@ public class StudentHomePage {
 		searchTable.setOnMouseClicked(a -> {
 			Question selection = searchTable.getSelectionModel().getSelectedItem();
 			if (selection != null) {
+
+				// Clear questionObservableList
+				questionObservableList.clear();
+
+				// Set the sortedList which has the recent search results saved to the
+				// questionObservableList
+				questionObservableList.setAll(sortedList);
+
+				// Set the observable list to the qTable
+				qTable.setItems(questionObservableList);
+
+				// Select the choice on the qTable
 				qTable.getSelectionModel().select(selection);
+
+				// Deselect filter buttons after sending custom search to table
+				allButton.setSelected(false);
+				unansweredButton.setSelected(false);
+				answeredButton.setSelected(false);
 			}
 		});
 
@@ -705,53 +833,94 @@ public class StudentHomePage {
 			String titleInput = titleField.getText();
 			String textInput = inputField.getText();
 
-			// Check if titleInput is empty or null
-			if (titleInput == null || titleInput.trim().isEmpty()) {
-				errorLabel.setText("Error, question-title field is blank.");
-				return;
-			}
-
 			// Check if textInput is empty or null
 			if (textInput == null || textInput.trim().isEmpty()) {
 				errorLabel.setText("Error, question-body field is blank.");
 				return;
 			}
-
-			
-			// Check if inputs are empty or null
 			try {
-				Question newQuestion;
-				Question newSelection = qTable.getSelectionModel().getSelectedItem();
+				if (!updatingQuestion && !updatingAnswer) {
 
-				if (newSelection != null) {
-					// Update the currently selected question
-					newSelection.setTitle(titleInput);
-					newSelection.setText(textInput);
-					databaseHelper.qaHelper.updateQuestion(newSelection);
-					newQuestion = newSelection;
-				} else {
-					// Register a new question in the database
-					newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
-					databaseHelper.qaHelper.registerQuestion(newQuestion);
-					
-					// Retrieve full question object for new question
-					newQuestion = databaseHelper.qaHelper.getQuestion(newQuestion.getTitle());
+					// Check if titleInput is empty or null
+					if (titleInput == null || titleInput.trim().isEmpty()) {
+						errorLabel.setText("Error, question-title field is blank.");
+						return;
+					}
+
+					// Check if inputs are empty or null
+					Question newQuestion;
+					Question newSelection = qTable.getSelectionModel().getSelectedItem();
+
+					if (newSelection != null) {
+						// Update the currently selected question
+						newSelection.setTitle(titleInput);
+						newSelection.setText(textInput);
+						databaseHelper.qaHelper.updateQuestion(newSelection);
+						newQuestion = newSelection;
+					} else {
+						// Register a new question in the database
+						newQuestion = new Question(titleInput, textInput, databaseHelper.currentUser.getUserId());
+						databaseHelper.qaHelper.registerQuestion(newQuestion);
+
+						// Retrieve full question object for new question
+						newQuestion = databaseHelper.qaHelper.getQuestion(newQuestion.getTitle());
+					}
+
+					// Clear input fields for new inputs
+					titleField.clear();
+					inputField.clear();
+
+					// Retrieve an updated list of questions from the database
+					questions = databaseHelper.qaHelper.getAllQuestions();
+
+					// Refresh contents of tables manually
+					questionObservableList.clear();
+					questionObservableList.addAll(questions);
+					qTable.setItems(questionObservableList);
+
+					qTable.getSelectionModel().select(newQuestion);
+
+				} else if (updatingAnswer) {
+
+					// Add updated text to answer object
+					answer.setText(textInput);
+
+					// Update answer
+					databaseHelper.qaHelper.updateAnswer(answer);
+
+					// Retrieve an updated list of questions from the database
+					questions = databaseHelper.qaHelper.getAllQuestions();
+
+					// Refresh contents of tables manually
+					questionObservableList.clear();
+					questionObservableList.addAll(questions);
+					qTable.setItems(questionObservableList);
+
+					// Set qTable selection to previous question
+					qTable.getSelectionModel().select(question);
+
+				} else if (updatingQuestion) {
+
+					// Add updated title to question object
+					question.setTitle(titleInput);
+
+					// Add updated text to question object
+					question.setText(textInput);
+
+					// Update answer
+					databaseHelper.qaHelper.updateQuestion(question);
+
+					// Retrieve an updated list of questions from the database
+					questions = databaseHelper.qaHelper.getAllQuestions();
+
+					// Refresh contents of tables manually
+					questionObservableList.clear();
+					questionObservableList.addAll(questions);
+					qTable.setItems(questionObservableList);
+
+					// Set qTable selection to previous selection
+					qTable.getSelectionModel().select(question);
 				}
-
-				// Clear input fields for new inputs
-				titleField.clear();
-				inputField.clear();
-
-				// Retrieve an updated list of questions from the database
-				questions = databaseHelper.qaHelper.getAllQuestions();
-
-				// Refresh contents of tables manually
-				questionObservableList.clear();
-				questionObservableList.addAll(questions);
-				qTable.setItems(questionObservableList);
-				
-				qTable.getSelectionModel().select(newQuestion);
-
 			} catch (SQLException e) {
 				e.printStackTrace();
 				System.err.println("Error trying to register new question into database via submit button");
@@ -762,6 +931,10 @@ public class StudentHomePage {
 			// Hide submitBox
 			submitBox.setVisible(false);
 			submitBox.setManaged(false);
+
+			// Set both updating flags to false
+			updatingQuestion = false;
+			updatingAnswer = false;
 
 		});
 
@@ -813,10 +986,6 @@ public class StudentHomePage {
 
 				// Update results table
 				updateResultsTableForQuestion(newSelection);
-
-			} else {
-				// Update the text of the submitButton
-				submitButton.setText("Submit Question");
 			}
 		});
 
@@ -834,10 +1003,10 @@ public class StudentHomePage {
 
 		VBox vbox = new VBox(10, vboxTop, root2);
 		vbox.setAlignment(Pos.CENTER);
-		
+
 		HBox reviewerButtonBox = new HBox(findReviewerButton);
 		reviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
-		
+
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
@@ -853,6 +1022,9 @@ public class StudentHomePage {
 		submitBox.setManaged(false);
 
 		newQuestionButton.setOnAction(a -> {
+			// Set submit button text
+			submitButton.setText("Submit Question");
+
 			// Show submitBox
 			submitBox.setVisible(true);
 			submitBox.setManaged(true);
@@ -913,7 +1085,8 @@ public class StudentHomePage {
 			answers = databaseHelper.qaHelper.getAllAnswersForQuestion(question.getId());
 
 			// Put the selected question in the first row
-			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(), null));
+			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(),
+					question.getId(), question.getAuthorId()));
 
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
