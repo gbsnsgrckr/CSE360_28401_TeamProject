@@ -336,16 +336,17 @@ public class StudentHomePage {
 
 		// Add cell factory to deal with text runoff and disable horizontal scrolling
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
-			private final Button replyButton = new Button("Reply");
 			private final TextArea replyArea = new TextArea();
-			private final Button submitReplyButton = new Button("Submit");
+			private final Button submitReplyButton = new Button("Submit");			
 			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
 			private final VBox cellContent = new VBox(5);
 
 			{
-
+				submitReplyButton.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				replyBox.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 				replyBox.setStyle("-fx-padding: 1px;");
-				replyButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 
 				// Set prompt text for replyArea
 				replyArea.setPromptText("Enter your answer here...");
@@ -402,6 +403,8 @@ public class StudentHomePage {
 
 					// Set the preferred height of the cell
 					displayLabel.setPrefHeight(225);
+					
+					//displayLabel.setText("" + row.getType() + "\n\n" + row.getAuthorId());	// Use this to show QATableRow Info in resultsTable
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
@@ -555,8 +558,11 @@ public class StudentHomePage {
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err.println("Error trying to get question in results table via editButton");
-						}	
+						}
 						
+						cellContent.getChildren().add(0, displayLabel);
+						setGraphic(cellContent);
+						setText(null);						
 					} else {					
 						cellContent.getChildren().add(0, displayLabel);
 						setGraphic(cellContent);
