@@ -316,7 +316,7 @@ public class QAHelper1 {
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
-				List<String> comp = textDeserial(text);
+				List<String> comp = textDeserial(title + text);
 
 				int preferredAnswer = rs.getInt("preferred_answer");
 
@@ -386,7 +386,7 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 				int preferredAnswer = rs.getInt("preferred_answer");
 
-				List<String> comp = textDeserial(text);
+				List<String> comp = textDeserial(title + text);
 
 				User author = databaseHelper.getUser(authorId);
 

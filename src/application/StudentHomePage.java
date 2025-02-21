@@ -69,6 +69,7 @@ public class StudentHomePage {
 			this.authorId = authorId;
 		}
 
+		// Wrapper class for resultsTable to allow for dynamic rows
 		public QATableRow(RowType type, String text, Integer answerId) {
 			this.type = type;
 			this.text = text;
@@ -116,26 +117,6 @@ public class StudentHomePage {
 			System.out.println("Should never reach here, can't get all ANSWERS");
 			e.printStackTrace();
 		}
-
-		/*
-		 * // Debug to check database contents try {
-		 * System.out.println("Fetching all questions..."); List<Question>
-		 * questionsFromDb = databaseHelper.getAllQuestions(); if (questionsFromDb ==
-		 * null || questionsFromDb.isEmpty()) {
-		 * System.out.println("No questions found in the database."); } else {
-		 * System.out.println("Questions found: " + questionsFromDb.size());
-		 * System.out.println(questionsFromDb); }
-		 * 
-		 * System.out.println("Fetching all answers..."); List<Answer> answersFromDb =
-		 * databaseHelper.getAllAnswers(); if (answersFromDb == null ||
-		 * answersFromDb.isEmpty()) {
-		 * System.out.println("No answers found in the database."); } else {
-		 * System.out.println("Answers found: " + answersFromDb.size());
-		 * System.out.println(answersFromDb); } } catch (SQLException e) {
-		 * e.printStackTrace();
-		 * System.err.println("Error trying to check contents of databases"); ; return;
-		 * }
-		 */
 
 		// Label to display title of area to the user
 		Label prompt = new Label("Entry Box");
@@ -186,6 +167,11 @@ public class StudentHomePage {
 		// Button to return to the login screen
 		Button quitButton = new Button("Back to login");
 		quitButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+
+		// Button to find reviewers for your questions
+		Button findReviewerButton = new Button("Find Reviewer");
+		findReviewerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Container to hold search and submit boxes horizontally to each other
@@ -244,6 +230,7 @@ public class StudentHomePage {
 			}
 		});
 
+		// Add columns to the qTable
 		qTable.getColumns().addAll(detailsColumn);
 
 		// Listener to dynamically hide the title bar of the Question Details table
@@ -304,8 +291,6 @@ public class StudentHomePage {
 		// Container to hold the table
 		VBox answerDB = new VBox(5, titleBox3, aTable);
 
-		// Area to display results of searches
-
 		// Label to display title to user
 		Label prompt5 = new Label("Details");
 		prompt5.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
@@ -345,28 +330,15 @@ public class StudentHomePage {
 				label.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 				replyButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 
-				// Set replyBox invisible to start
-				//replyBox.setVisible(false);
-				//replyBox.setManaged(false);				
-
 				// Set prompt text for replyArea
 				replyArea.setPromptText("Enter your answer here...");
-				replyArea.setPrefRowCount(3);				
-
-				/*
-				// Show the replyBox when replyButton is pressed
-				replyButton.setOnAction(a -> {
-					//boolean flag = !replyBox.isVisible();
-					replyBox.setVisible(!replyBox.isVisible());
-					replyBox.setManaged(!replyBox.isVisible());
-				});
-				*/
+				replyArea.setPrefRowCount(3);
 
 				submitReplyButton.setOnAction(a -> {
 					String inputText = replyArea.getText().trim();
 					QATableRow.RowType rowType = getTableView().getItems().get(getIndex()).getType();
 					if (!inputText.isEmpty()) {
-						try {							
+						try {
 							if (rowType == QATableRow.RowType.QUESTION) {
 								databaseHelper.qaHelper.registerAnswerWithQuestion(
 										new Answer(inputText, databaseHelper.currentUser.getUserId()),
@@ -387,15 +359,13 @@ public class StudentHomePage {
 				});
 				cellContent.getChildren().addAll(label, replyBox);
 				cellContent.setAlignment(Pos.CENTER_LEFT);
-				
-				// Update results table
-				//updateResultsTableForQuestion(question);
+
 			}
 
 			@Override
 			protected void updateItem(String item, boolean flag) {
 				super.updateItem(item, flag);
-				
+
 				// Clear container
 				cellContent.getChildren().clear();
 
@@ -410,10 +380,10 @@ public class StudentHomePage {
 					// Create a label to hold the text
 					Label textLabel = new Label(item);
 					textLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
-					
+
 					// Add components to container
-					cellContent.getChildren().addAll(replyBox);	//
-					
+					cellContent.getChildren().addAll(replyBox); //
+
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
 							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
@@ -454,7 +424,7 @@ public class StudentHomePage {
 							qTable.setItems(questionObservableList);
 
 							// Update results table
-							//updateResultsTableForQuestion(question);
+							// updateResultsTableForQuestion(question);
 						});
 
 						HBox buttonBox = new HBox(5, editButton, deleteButton);
@@ -549,7 +519,7 @@ public class StudentHomePage {
 		// "Back to login" button will bring user back to the login screen
 		quitButton.setOnAction(a -> {
 
-			// Create new stage to get rid of transparency for following pages
+			// Create new stage to add transparency for following pages
 			Stage newStage = new Stage();
 			newStage.initStyle(StageStyle.TRANSPARENT);
 
@@ -559,11 +529,71 @@ public class StudentHomePage {
 			new UserLoginPage(databaseHelper).show(newStage);
 		});
 
-		// Event to allow searching of question database for similar entries while the
-		// user types into the inputField
-		inputField.setOnKeyReleased(a -> {
-			String input = inputField.getText().trim();
+		// Create an inputField to initiate and type search
+		TextField searchField = new TextField();
+		searchField.setPromptText("Search questions...");
+		searchField.setPrefWidth(250);
+
+		// Create an observable list of questions and assign to the table
+		ObservableList<Question> searchObservableList = FXCollections.observableArrayList(questions);
+
+		// Create table to display the search results
+		TableView<Question> searchTable = new TableView<>();
+		searchTable.setItems(searchObservableList);
+		searchTable.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+
+		// Create container to hold searchTable and allow for hiding and showing of it
+		HBox searchBox = new HBox(searchTable);
+
+		// Create a column for the searchTable that will hold the content
+		TableColumn<Question, String> searchColumn = new TableColumn<>();
+		searchColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().toDisplayWithText()));
+
+		// Style the searchTable with bold lines and black fonts etc..
+		searchTable.setRowFactory(a -> new TableRow<Question>() {
+			@Override
+			protected void updateItem(Question item, boolean flag) {
+				super.updateItem(item, flag);
+				if (flag || item == null) {
+					setStyle("-fx-border-color: transparent;");
+				} else {
+					setStyle(
+							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+				}
+			}
+		});
+
+		// Add searchColumn to searchTable
+		searchTable.getColumns().add(searchColumn);
+
+		// Hide header for searchTable
+		searchTable.widthProperty().addListener((obs, oldVal, newVal) -> {
+			Node titleBar = searchTable.lookup("TableHeaderRow");
+			if (titleBar != null) {
+				titleBar.setVisible(false);
+				titleBar.setManaged(false);
+				titleBar.setStyle("-fx-pref-height: 0; -fx-min-height: 0; -fx-max-height: 0;");
+			}
+		});
+
+		// Hide table until needed
+		searchBox.setVisible(false);
+		searchBox.setManaged(false);
+
+		// Search question database for similar entries after/while typing
+		searchField.setOnKeyReleased(a -> {
+			String input = searchField.getText().trim();
 			if (!input.isEmpty()) {
+
+				System.out.println("test made it here"); // debugKapiKap
+
+				searchField.setMinWidth(1000);
+
+				// Make table visible
+				searchBox.setVisible(true);
+				searchBox.setManaged(true);
+
 				// Get list words from current text input string
 				List<String> entry = databaseHelper.qaHelper.textDeserial(input);
 				try {
@@ -600,14 +630,41 @@ public class StudentHomePage {
 						.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
 						.collect(Collectors.toList());
 
-				// Create QuestionsSet to hold sort list of questions
-				QuestionsSet searchResults = new QuestionsSet();
-				for (Question temp : sortedList) {
-					searchResults.addQuestion(temp);
-				}
+				// Set the observable list
+				searchObservableList.setAll(sortedList);
 
-				// Display results of updating similarity search in resultsBox
-				// resultsBox.setText(searchResults.toString());
+				// Make table visible if it isn't
+				if (!searchBox.isVisible()) {
+					searchBox.setVisible(true);
+					searchBox.setManaged(true);
+				}
+			} else {
+				// Clear searchObservableList and hide searchTable
+				searchObservableList.clear();
+				searchBox.setVisible(false);
+				searchBox.setManaged(false);
+
+				// Set searchField width to default
+				searchField.setMinWidth(250);
+				searchField.setPrefWidth(250);
+
+				// Reset searchField position
+				searchField.setAlignment(Pos.TOP_RIGHT);
+			}
+		});
+
+		searchField.setOnMouseClicked(a -> {
+			qTable.getSelectionModel().clearSelection();
+
+			// Show searchTable
+			searchBox.setVisible(true);
+			searchBox.setManaged(true);
+		});
+
+		searchTable.setOnMouseClicked(a -> {
+			Question selection = searchTable.getSelectionModel().getSelectedItem();
+			if (selection != null) {
+				qTable.getSelectionModel().select(selection);
 			}
 		});
 
@@ -743,15 +800,13 @@ public class StudentHomePage {
 
 		});
 
-		/*
-		 * // Add listener to the resultsTable to allow dynamic selection of objects
-		 * from // the table
-		 * resultsTable.getSelectionModel().selectedItemProperty().addListener((obs,
-		 * oldRow, newRow) -> { if (newRow != null) {
-		 * 
-		 * if (newRow.getType() == QATableRow.RowType.QUESTION) { // Question specific
-		 * actions } else { // Answer specific actions } } });
-		 */
+		findReviewerButton.setOnAction(a -> {
+
+			Stage newStage = new Stage();
+
+			new FindReviewerForQuestionPage(databaseHelper).show(newStage);
+
+		});
 
 		// Add listeners for the textArea title field
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
@@ -774,7 +829,18 @@ public class StudentHomePage {
 			if (newSelection != null) {
 				// Clear selections on the other tables
 				aTable.getSelectionModel().clearSelection();
-				
+
+				// Hide the searchBox when using the qTable
+				searchBox.setVisible(false);
+				searchBox.setManaged(false);
+
+				// Reset position of the searchField
+				searchField.setAlignment(Pos.TOP_RIGHT);
+
+				// Set searchField width back to default
+				searchField.setMinWidth(250);
+				searchField.setPrefWidth(250);
+
 				this.question = newSelection;
 
 				// Update text for buttons
@@ -805,17 +871,26 @@ public class StudentHomePage {
 			}
 		});
 
+		searchField.setAlignment(Pos.TOP_RIGHT);
+		searchBox.setAlignment(Pos.BOTTOM_RIGHT);
+
 		// Use containers to position and hold many different UI components
-		HBox hboxTop = new HBox(10, questionInputBox, answerDB);
+		HBox hboxTop = new HBox(10, questionInputBox, answerDB, searchField);
 		hboxTop.setAlignment(Pos.TOP_CENTER);
 
 		VBox vboxTop = new VBox(10, hboxTop);
 		vboxTop.setAlignment(Pos.TOP_CENTER);
 
-		VBox vbox = new VBox(10, vboxTop, resultsTable);
-		vbox.setAlignment(Pos.CENTER);
+		StackPane root2 = new StackPane(resultsTable, searchBox);
 
-		VBox vbox1 = new VBox(10, vbox, quitButton);
+		VBox vbox = new VBox(10, vboxTop, root2);
+		vbox.setAlignment(Pos.CENTER);
+		
+		HBox buttonBox1 = new HBox(quitButton, findReviewerButton);
+		quitButton.setAlignment(Pos.BOTTOM_CENTER);
+		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
+
+		VBox vbox1 = new VBox(10, vbox, buttonBox1);
 		vbox1.setAlignment(Pos.CENTER);
 
 		HBox hbox1 = new HBox(5, questionDB, vbox1);
@@ -828,9 +903,13 @@ public class StudentHomePage {
 		Scene scene = new Scene(root, 1900, 1000);
 
 		resultsTable.prefWidthProperty().bind(hbox1.widthProperty());
-		resultsTable.prefHeightProperty().bind(vbox1.heightProperty());
+		resultsTable.prefHeightProperty().bind(vbox.heightProperty().subtract(50));
 		contentColumn.prefWidthProperty().bind(vbox1.widthProperty().subtract(19));
 		detailsColumn.prefWidthProperty().bind(questionDB.widthProperty().subtract(19));
+		searchTable.prefWidthProperty().bind(vbox.widthProperty());
+		searchTable.prefHeightProperty().bind(hbox1.heightProperty().subtract(50));
+		searchBox.prefWidthProperty().bind(vbox.widthProperty());
+		searchBox.prefHeightProperty().bind(hbox1.heightProperty().subtract(50));
 
 		// Set the scene to primary stage
 		primaryStage.setScene(scene);
@@ -840,6 +919,7 @@ public class StudentHomePage {
 		primaryStage.show();
 	}
 
+	// Helper class to update reultsTable contents
 	private void updateResultsTableForQuestion(Question question) {
 		// Clear the observable list
 		resultsObservableList.clear();

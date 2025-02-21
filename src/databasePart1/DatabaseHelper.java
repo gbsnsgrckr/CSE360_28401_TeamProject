@@ -297,6 +297,36 @@ public class DatabaseHelper {
 		}
 		return users;
 	}
+	
+	// Retrieves all users with a specified role
+	public List<User> getAllUsersWithRole(String role) throws SQLException {
+		String query = "SELECT * FROM cse360users WHERE roles LIKE ?";
+		List<User> users = new ArrayList<>();
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1,  "%" + role + "%");
+			
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String username = rs.getString("username"); // for each row, get all of the user attributes
+				String name = rs.getString("name");
+				String password = rs.getString("password");
+				String email = rs.getString("email");
+				List<String> roles = rolesDeserial(rs.getString("roles"));
+				boolean otp = rs.getBoolean("otp");
+				
+				if (roles.contains(role)) {
+				User user = new User(id, username, name, password, email, roles, otp); // create new user				
+																						
+				System.out.println("USERS: " + user.toString());
+				users.add(user); // add new user to the list of users
+				}
+			}
+		}
+		return users;
+	}
 
 	// Validates a user's login credentials.
 	public User login(String username, String password) throws SQLException {

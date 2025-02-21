@@ -192,5 +192,26 @@ public class Question {
 			return String.format("%s\n%s               %sd", title, displayAuthor, daysSinceCreated);
 		}
 	}
+	
+	public String toDisplayWithText() {
+		String displayAuthor;
+		int daysSinceCreated = getDaysSinceCreated();
+
+		// If title is empty then return an empty string
+		if (title == "") {
+			return "";
+		} else {
+			// If author returns null(In case of test cases or populated database without
+			// proper users)
+			// then an empty sting is display for the author.
+			if (author == null) {
+				displayAuthor = "User";
+			} else {
+				displayAuthor = author.getName();
+			}
+
+			return String.format("%s\n%s\n%s               %sd", title, text,  displayAuthor, daysSinceCreated);
+		}
+	}
 
 }
