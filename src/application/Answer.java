@@ -146,13 +146,17 @@ public class Answer {
 
 	public String toString() {
 		return String.format(
-				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
-				id, text, authorId, authorName, createdOn, updatedOn);
+				"\nANSWER: \nID:\n	%s\nText:\n		%s\nRelatedIDs:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				id, text, relatedId, authorId, authorName, createdOn, updatedOn);
 	}
 
 	public String toDisplay() {
 		String displayAuthor;
 		int daysSinceCreated = getDaysSinceCreated();
+		
+		if (relatedId == null || relatedId.isEmpty()) {
+			relatedId = List.of("");
+		}
 
 		// If title is empty then return an empty string
 		if (text == "") {
@@ -167,7 +171,7 @@ public class Answer {
 				displayAuthor = getAuthorName();
 			}
 
-			return String.format("%s\n\n\n%s             					  					%sd", text, displayAuthor, daysSinceCreated);
+			return String.format("AnswerId: %s\n%s\nRelatedIds: %s\n\n%s             					  					%sd", id, text, relatedId, displayAuthor, daysSinceCreated);
 		}
 	}
 

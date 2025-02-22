@@ -94,7 +94,7 @@ public class QAHelper1 {
 	}
 
 	// Registers a new answer in the database.
-	public void registerAnswerWithQuestion(Answer answer, int questionID) throws SQLException {
+	public void registerAnswerWithQuestion(Answer answer, int relatedID) throws SQLException {
 		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
 		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
 			pstmt.setString(1, answer.getText());
@@ -104,7 +104,7 @@ public class QAHelper1 {
 			ResultSet newID = pstmt.getGeneratedKeys();
 			if (newID.next()) {
 				int answerID = newID.getInt(1);
-				addRelationToQuestion(questionID, answerID);
+				addRelationToQuestion(relatedID, answerID);
 			}
 
 		}
@@ -120,9 +120,10 @@ public class QAHelper1 {
 			pstmt.executeUpdate();
 
 			ResultSet newID = pstmt.getGeneratedKeys();
+
 			if (newID.next()) {
 				int answerID = newID.getInt(1);
-				addRelationToQuestion(relatedID, answerID);
+				addRelationToAnswer(relatedID, answerID);
 			}
 
 		}
@@ -201,6 +202,7 @@ public class QAHelper1 {
 			} else {
 				System.err.println("Could not find a question with id: " + questionID);
 			}
+
 		} catch (SQLException e) {
 			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
 		}
@@ -234,9 +236,11 @@ public class QAHelper1 {
 			} else {
 				System.err.println("Could not find an answer with id: " + answerID);
 			}
+
 		} catch (SQLException e) {
 			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
 		}
+
 	}
 
 	// Delete a relation from the relation database
@@ -318,7 +322,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -365,7 +369,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -407,7 +411,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -451,8 +455,8 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
-				String answerIDs = rs.getString("answer_id");				
+
+				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
@@ -498,7 +502,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -546,7 +550,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -589,7 +593,7 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
-				
+
 				String answerIDs = rs.getString("answer_id");
 				// convert comma separated list into an array
 				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
@@ -619,7 +623,7 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					//System.err.println("Error: There are no answers related to this question."); // Debug
+					// System.err.println("Error: There are no answers related to this question.");	// Debug
 					return answers;
 				}
 
@@ -627,7 +631,7 @@ public class QAHelper1 {
 				String[] answerIdArray = answerIDs.split(",\\s");
 
 				String temp = String.join(",", Collections.nCopies(answerIdArray.length, "?"));
-				String newQuery = "SELECT id, text, author, created_On, updated_On FROM cse360answer WHERE id IN ("
+				String newQuery = "SELECT id, text, author, created_On, updated_On, answer_id FROM cse360answer WHERE id IN ("
 						+ temp + ")";
 				try (PreparedStatement upstmt = connection.prepareStatement(newQuery)) {
 
@@ -655,8 +659,13 @@ public class QAHelper1 {
 							authorName = author.getName();
 						}
 
+						String subAnswerIDs = newRs.getString("answer_id");
+						// convert comma separated list into an array
+						List<String> relatedId = subAnswerIDs != null ? List.of(subAnswerIDs.split(",\\s")) : null;
+
 						// Create a new answer object with the pulled info
-						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName);
+						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName,
+								relatedId);
 
 						// Add the new answer object to the list of answer objects
 						answers.add(answer);
@@ -684,7 +693,7 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					//System.err.println("Error: There are no answers related to this answer.");	// Debug
+					// System.err.println("Error: There are no answers related to this answer."); 			// Debug
 					return answers;
 				}
 
@@ -692,7 +701,7 @@ public class QAHelper1 {
 				String[] answerIdArray = answerIDs.split(",\\s");
 
 				String temp = String.join(",", Collections.nCopies(answerIdArray.length, "?"));
-				String newQuery = "SELECT id, text, author, created_On, updated_On FROM cse360answer WHERE id IN ("
+				String newQuery = "SELECT id, text, author, created_On, updated_On, answer_id FROM cse360answer WHERE id IN ("
 						+ temp + ")";
 				try (PreparedStatement upstmt = connection.prepareStatement(newQuery)) {
 
@@ -720,8 +729,13 @@ public class QAHelper1 {
 							authorName = author.getName();
 						}
 
+						String subAnswerIDs = newRs.getString("answer_id");
+						// convert comma separated list into an array
+						List<String> relatedId = subAnswerIDs != null ? List.of(subAnswerIDs.split(",\\s")) : null;
+
 						// Create a new answer object with the pulled info
-						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName);
+						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName,
+								relatedId);
 
 						// Add the new answer object to the list of answer objects
 						answers.add(answer);

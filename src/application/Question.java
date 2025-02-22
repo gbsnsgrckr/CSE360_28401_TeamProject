@@ -217,8 +217,8 @@ public class Question {
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s\nAuthor Name:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
-				id, title, text, authorId, authorName, createdOn, updatedOn, preferredAnswer);
+				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nRelatedIds:\n	%s\n	%s\nAuthorId:\n	%s\nAuthor Name:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
+				id, title, text, relatedId, authorId, authorName, createdOn, updatedOn, preferredAnswer);
 	}
 
 	public String toDisplay() {
@@ -245,6 +245,10 @@ public class Question {
 	public String toDisplayWithText() {
 		String displayAuthor;
 		int daysSinceCreated = getDaysSinceCreated();
+		
+		if (relatedId == null || relatedId.isEmpty()) {
+			relatedId = List.of("");
+		}
 
 		// If title is empty then return an empty string
 		if (title == "") {
@@ -259,7 +263,7 @@ public class Question {
 				displayAuthor = author.getName();
 			}
 
-			return String.format("%s\n\n%s\n\n\n%s           									    %sd", title, text,  displayAuthor, daysSinceCreated);
+			return String.format("QuestionId: %s\n%s\n\n%s\n\nRelatedIDs: %s\n\n%s           									    %sd", id, title, text, relatedId,  displayAuthor, daysSinceCreated);
 		}
 	}
 

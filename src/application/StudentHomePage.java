@@ -374,7 +374,7 @@ public class StudentHomePage {
 							if (rowType == QATableRow.RowType.QUESTION) {
 								databaseHelper.qaHelper.registerAnswerWithQuestion(
 										new Answer(inputText, databaseHelper.currentUser.getUserId()),
-										question.getId());
+										getTableView().getItems().get(getIndex()).getAnswerId());
 								replyArea.clear();
 							} else {
 								databaseHelper.qaHelper.registerAnswerWithAnswer(
@@ -382,6 +382,7 @@ public class StudentHomePage {
 										getTableView().getItems().get(getIndex()).getAnswerId());
 								replyArea.clear();
 							}
+							
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err
@@ -393,7 +394,6 @@ public class StudentHomePage {
 				});
 				cellContent.getChildren().addAll(replyBox);
 				cellContent.setAlignment(Pos.CENTER_LEFT);
-
 			}
 
 			@Override
@@ -439,10 +439,17 @@ public class StudentHomePage {
 											.contains(getTableView().getItems().get(getIndex()).getAnswerId())) {
 								for (int i = -1; i < indent; i++) {
 									// Pad cell
-									cellBox.setPadding(new Insets(0, 0, 0, 30));
-									// Increment indent
-									indent++;
+									//cellBox.setPadding(new Insets(0, 0, 0, 30));
+									Region subSpacer = new Region();
+									spacer.setStyle("-fx-border-color: black;");
+									spacer.setMinSize(50, 5);
+									spacer.setMaxSize(50, 5);
+									
+									cellBox.getChildren().add(subSpacer);
+									
 								}
+								// Increment indent
+								indent++;
 							} else {
 								// Reset indent counter
 								indent = 0;
@@ -1249,57 +1256,74 @@ public class StudentHomePage {
 		// Retrieve an updated answer list of answers related to selected question from
 		// the qtable
 		try {
-
+			question = databaseHelper.qaHelper.getQuestion(question.getId());
 			answers = databaseHelper.qaHelper.getAllAnswersForQuestion(question.getId());
 
 			// Put the selected question in the first row
 			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(),
 					question.getId(), question.getAuthorId(), question.getRelatedId()));
 
-			// After that, if there are any, add each answer as its own row
-			for (Answer answer : answers) {
+			// Check if selected question has a preferred answer and put that in row 2 if so
+			// Check if question has a preferred answer
+			if (question.getPreferredAnswer() > 0) {
+				// Retrieve the preferred answer object
+				answer = databaseHelper.qaHelper.getAnswer(question.getPreferredAnswer());
+				// Remove the preferred answer from the answers list so it is not duplicated
+				answers.remove(answer);
+				// Put the preferred answer in the second row
 				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
 						answer.getAuthorId(), answer.getRelatedId()));
 
-				// Look for related answers to selected answer
-				List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(answer.getId());
-				if (relatedAnswers != null && !relatedAnswers.isEmpty()) {
-					for (Answer temp : relatedAnswers) {
-						resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, temp.toDisplay(),
-								temp.getId(), temp.getAuthorId(), temp.getRelatedId()));
-					}
-				}
+				// Recursively call addRelatedAnswers and store the list thats left
+				answers = addRelatedAnswers(answer.getId(), answers);
+
 			}
 
-			// Check if selected question has a preferred answer and put that in row 2 if so
-			if (question.getPreferredAnswer() > 0) {
-				resultsObservableList.sort((row1, row2) -> {
-					if (row1.getType() == QATableRow.RowType.QUESTION) {
-						return -1;
-					}
-					if (row2.getType() == QATableRow.RowType.QUESTION) {
-						return 1;
-					}
+			// After that, if there are any, add each answer as its own row
+			for (Answer answer : answers) {
+				// Add answer to the observable list
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
+						answer.getAuthorId(), answer.getRelatedId()));
 
-					if (row1.getAnswerId() != null && row1.getAnswerId().equals(question.getPreferredAnswer())) {
-						return -1;
-					} else if (row2.getAnswerId() != null && row2.getAnswerId().equals(question.getPreferredAnswer())) {
-						return 1;
-					}
-
-					return 0;
-				});
+				// Recursively call addRelatedAnswers and store the list thats left
+				answers = addRelatedAnswers(answer.getId(), answers);
 			}
 
 		} catch (SQLException e) {
 			e.printStackTrace();
-			System.err.println(
-					"Error trying to .getAllAnswers() within updateResultsTableForQuestion() method");
+			System.err.println("Error trying to .getAllAnswers() within updateResultsTableForQuestion() method");
 			return;
 		}
 
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
+	}
+
+	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
+		try {
+			// Retrieve related answers
+			List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(parentId);
+
+			// Iterate through each answer in relatedAnswers
+			for (Answer subAnswer : relatedAnswers) {
+
+				// Remove subAnswer from the list of answers
+				answers.remove(subAnswer);
+
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, subAnswer.toDisplay(),
+						subAnswer.getId(), subAnswer.getAuthorId(), subAnswer.getRelatedId()));
+
+				// Recursively call the function to process nested related answers
+				addRelatedAnswers(subAnswer.getId(), answers);
+
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Error retrieving related answers in addRelatedAnswers()");
+		}
+		// Return list of answers that is left
+		return answers;
 	}
 
 }
