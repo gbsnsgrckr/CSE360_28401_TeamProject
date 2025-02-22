@@ -952,7 +952,9 @@ public class StudentHomePage {
 
 		findReviewerButton.setOnAction(a -> {
 
+			// Create a new stage in order to popup new window and keep this one
 			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
 
 			new FindReviewerForQuestionPage(databaseHelper).show(newStage);
 
@@ -1156,8 +1158,7 @@ public class StudentHomePage {
 		// Container to hold the three buttons min, max, and close
 		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
 		buttonBar.setAlignment(Pos.TOP_RIGHT);
-		buttonBar.setPadding(new Insets(0));
-		buttonBar.setStyle("-fx-border-color: black;");	
+		buttonBar.setPadding(new Insets(0));	
 		buttonBar.setMaxHeight(27);		
 		buttonBar.setMaxWidth(80);		
 		

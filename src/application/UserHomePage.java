@@ -157,29 +157,13 @@ public class UserHomePage {
 		buttonBar.setMaxHeight(27);		
 		buttonBar.setMaxWidth(80);
 		
-		// Spacer to push buttonBar to the far right
-		HBox spacer = new HBox(buttonBar);
-		HBox.setHgrow(spacer, Priority.ALWAYS);
-
-		HBox titleBar = new HBox(spacer, buttonBar);			
-
-		titleBar.setMinHeight(35);
-		titleBar.setMaxHeight(35);
-		
-		titleBar.setMaxWidth(600);	
-		
 		// Spacer to push the titleBar to the top
-		Region spacer1 = new Region();
-		spacer1.setMinHeight(26);
-		spacer1.setMaxHeight(26);
+		Region spacer = new Region();
+		spacer.setMinHeight(26);
+		spacer.setMaxHeight(26);
 		
-		VBox layoutBox = new VBox(spacer1, layout);
+		VBox layoutBox = new VBox(spacer, layout);
 		layoutBox.setAlignment(Pos.CENTER);
-
-		// Set position of container within titleBar
-		titleBar.setAlignment(Pos.TOP_CENTER);
-		spacer.setAlignment(Pos.TOP_LEFT);
-		buttonBar.setAlignment(Pos.TOP_RIGHT);
 
 		// StackPane to control layout sizing
 		StackPane root = new StackPane(layoutBox, buttonBar);

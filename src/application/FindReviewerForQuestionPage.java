@@ -10,8 +10,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
@@ -258,10 +260,9 @@ public class FindReviewerForQuestionPage {
 				errorLabel.setText("Error, you must select a QUESTION AND a REVIEWER");
 				return;
 			} else {
-				
+
 				// Insert logic to assign a question to a reviewer
-				
-				
+
 			}
 
 		});
@@ -294,9 +295,9 @@ public class FindReviewerForQuestionPage {
 						 * PLACEHOLDER FOR METHOD TO RETURN PREFERRED USERS FROM DATABASE users =
 						 * databaseHelper.getPreferredReviewers(databaseHelper.currentUser);
 						 */
-						
+
 						// REMOVE THIS WHEN YOU ADD PROPER LOGIC
-						users = databaseHelper.getAllUsersWithRole("Reviewer");						
+						users = databaseHelper.getAllUsersWithRole("Reviewer");
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -335,6 +336,11 @@ public class FindReviewerForQuestionPage {
 		HBox bottomBox = new HBox(buttonBox2);
 
 		VBox layout = new VBox(5, topBox, middleBox, bottomBox);
+		layout.setMinSize(1300, 900);
+		layout.setMaxSize(1300, 900);
+		layout.setStyle("-fx-padding: 20; -fx-background-color: derive(gray, 80%); -fx-background-radius: 100;"
+				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
+				+ "-fx-border-width: 2, 2, 1; -fx-border-radius: 100, 100, 100;" + "-fx-border-insets: 0, 2, 4");
 
 		layout.setOnMousePressed(a -> {
 			offsetX[0] = a.getSceneX();
@@ -438,38 +444,22 @@ public class FindReviewerForQuestionPage {
 		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
 		buttonBar.setAlignment(Pos.TOP_RIGHT);
 		buttonBar.setPadding(new Insets(0));
-		
-		// Spacer to push buttonBar to the far right
-		HBox spacer = new HBox(buttonBar);
-		HBox.setHgrow(spacer, Priority.ALWAYS);
+		buttonBar.setMaxHeight(27);		
+		buttonBar.setMaxWidth(80);
 
-		HBox titleBar = new HBox(spacer, buttonBar);			
-
-		titleBar.setMinHeight(35);
-		titleBar.setMaxHeight(35);
-		
-		titleBar.setMaxWidth(600);	
-		
 		// Spacer to push the titleBar to the top
-		VBox spacer1 = new VBox();
-		spacer1.setAlignment(Pos.BOTTOM_CENTER);
-		VBox.setVgrow(spacer1, Priority.ALWAYS);
-		
-		VBox titleBox = new VBox(titleBar, spacer1);
-		titleBox.setAlignment(Pos.CENTER);
+		Region spacer = new Region();
+		spacer.setMinHeight(26);
+		spacer.setMaxHeight(26);
 
-		// Set position of container within titleBar
-		titleBar.setAlignment(Pos.TOP_CENTER);
-		spacer.setAlignment(Pos.TOP_LEFT);
-		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		VBox layoutBox = new VBox(spacer, layout);
+		layoutBox.setAlignment(Pos.CENTER);
 
 		// StackPane to control layout sizing
-		StackPane root = new StackPane(titleBox, layout);
+		StackPane root = new StackPane(layoutBox, buttonBar);
+		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
 		root.setStyle("-fx-background-color: transparent;");
 		root.setPadding(new Insets(0));
-		
-		titleBox.prefWidthProperty().bind(root.widthProperty());
-		titleBox.prefHeightProperty().bind(root.heightProperty());
 
 		questionBox.setAlignment(Pos.CENTER_LEFT);
 		reviewerBox.setAlignment(Pos.CENTER_RIGHT);
@@ -480,7 +470,7 @@ public class FindReviewerForQuestionPage {
 		middleBox.setAlignment(Pos.CENTER);
 		bottomBox.setAlignment(Pos.CENTER);
 		layout.setAlignment(Pos.CENTER);
-		topBox.setAlignment(Pos.CENTER);		
+		topBox.setAlignment(Pos.CENTER);
 
 		// Adjust errorLabel downward just a bit
 		errorLabel.setTranslateY(22);
@@ -491,19 +481,16 @@ public class FindReviewerForQuestionPage {
 		detailsColumn.prefWidthProperty().bind(questionBox.widthProperty().subtract(19));
 		reviewerColumn.prefWidthProperty().bind(reviewerBox.widthProperty().subtract(19));
 
-		Scene scene = new Scene(root, 1600, 1000);
+		Scene scene = new Scene(root, 1300, 930);
+		scene.setFill(Color.TRANSPARENT);
 
 		middleBox.prefWidthProperty().bind(root.widthProperty());
-		// searchBox.prefHeightProperty().bind(hbox1.heightProperty().subtract(50));
-
-		// Removes icon from title bar in alert window
-		primaryStage.getIcons().clear();
 
 		// Set the scene to primary stage
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("");
+		primaryStage.setMaxWidth(Double.MAX_VALUE);
 		primaryStage.centerOnScreen();
-		// primaryStage.setMaximized(true);
 		primaryStage.show();
 	}
 }
