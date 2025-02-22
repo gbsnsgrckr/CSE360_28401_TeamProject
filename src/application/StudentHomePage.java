@@ -49,21 +49,24 @@ public class StudentHomePage {
 		private final String text;
 		private final Integer contentId;
 		private final Integer authorId;
+		private final List<String> relatedId;
 
 		// Wrapper class for resultsTable to allow for dynamic rows
-		public QATableRow(RowType type, String text, Integer contentId) {
+		public QATableRow(RowType type, String text, Integer contentId, List<String> relatedId) {
 			this.type = type;
 			this.text = text;
 			this.contentId = contentId;
 			this.authorId = null;
+			this.relatedId = relatedId;
 
 		}
 
-		public QATableRow(RowType type, String text, Integer contentId, Integer authorId) {
+		public QATableRow(RowType type, String text, Integer contentId, Integer authorId, List<String> relatedId) {
 			this.type = type;
 			this.text = text;
 			this.contentId = contentId;
 			this.authorId = authorId;
+			this.relatedId = relatedId;
 
 		}
 
@@ -85,6 +88,10 @@ public class StudentHomePage {
 
 		public RowType getType() {
 			return type;
+		}
+
+		public List<String> getRelatedId() {
+			return relatedId;
 		}
 
 		@Override
@@ -115,7 +122,7 @@ public class StudentHomePage {
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
 		double[] offsetY = { 0 };
-		
+
 		try {
 			questions = databaseHelper.qaHelper.getAllQuestions();
 		} catch (SQLException e) {
@@ -343,9 +350,10 @@ public class StudentHomePage {
 		// Add cell factory to deal with text runoff and disable horizontal scrolling
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
 			private final TextArea replyArea = new TextArea();
-			private final Button submitReplyButton = new Button("Submit");			
+			private final Button submitReplyButton = new Button("Submit");
 			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
 			private final VBox cellContent = new VBox(5);
+			private final HBox cellBox = new HBox();
 
 			{
 				submitReplyButton.setStyle(
@@ -379,6 +387,8 @@ public class StudentHomePage {
 							System.err
 									.println("Error trying to register answer in results table via submitReplyButton");
 						}
+						// Update the table after submitting new answer
+						updateResultsTableForQuestion(qTable.getSelectionModel().getSelectedItem());
 					}
 				});
 				cellContent.getChildren().addAll(replyBox);
@@ -392,25 +402,56 @@ public class StudentHomePage {
 
 				// Clear container
 				cellContent.getChildren().clear();
+				cellBox.getChildren().clear();
+
+				// variable to compound indents
+				int indent = 0;
 
 				// Clear graphic
 				setGraphic(null);
 				if (flag && item == null) {
 					setText(null);
 				} else {
+
 					// Get current QATableRow
 					QATableRow row = getTableView().getItems().get(getIndex());
 					// Create a label to hold the text
 					Label displayLabel = new Label(item);
-					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black;");
 					displayLabel.setWrapText(true);
 
 					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(50));
 
 					// Set the preferred height of the cell
 					displayLabel.setPrefHeight(225);
-					
-					//displayLabel.setText("" + row.getType() + "\n\n" + row.getAuthorId());	// Use this to show QATableRow Info in resultsTable
+
+					if (getIndex() > 0) {
+						Region spacer = new Region();
+						spacer.setStyle("-fx-border-color: black;");
+						spacer.setMinSize(50, 5);
+						spacer.setMaxSize(50, 5);
+						cellBox.getChildren().add(spacer);
+
+						if (getIndex() > 1) {
+							// Check if row item is in the relatedId list for the row item above
+							if (getTableView().getItems().get(getIndex() - 1).getRelatedId() != null
+									&& getTableView().getItems().get(getIndex() - 1).getRelatedId()
+											.contains(getTableView().getItems().get(getIndex()).getAnswerId())) {
+								for (int i = -1; i < indent; i++) {
+									// Pad cell
+									cellBox.setPadding(new Insets(0, 0, 0, 30));
+									// Increment indent
+									indent++;
+								}
+							} else {
+								// Reset indent counter
+								indent = 0;
+							}
+						}
+					}
+
+					// displayLabel.setText("" + row.getType() + "\n\n" + row.getAuthorId()); // Use
+					// this to show QATableRow Info in resultsTable
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
@@ -468,7 +509,7 @@ public class StudentHomePage {
 							questionObservableList.clear();
 							questionObservableList.addAll(questions);
 							qTable.setItems(questionObservableList);
-							
+
 							// Set qTable to previous question
 							qTable.getSelectionModel().select(question);
 
@@ -481,7 +522,7 @@ public class StudentHomePage {
 
 						cellContent.getChildren().addAll(displayLabel, buttonBox);
 
-						setGraphic(cellContent);
+						setGraphic(cellBox);
 						setText(null);
 						// Check if row is a question and the author matches current user
 					} else if (row.getType() == QATableRow.RowType.QUESTION && row.getAuthorId() != null
@@ -540,7 +581,7 @@ public class StudentHomePage {
 							questionObservableList.clear();
 							questionObservableList.addAll(questions);
 							qTable.setItems(questionObservableList);
-							
+
 							// Set qTable to previous question
 							qTable.getSelectionModel().select(question);
 
@@ -553,11 +594,12 @@ public class StudentHomePage {
 
 						cellContent.getChildren().addAll(displayLabel, buttonBox);
 
-						setGraphic(cellContent);
+						setGraphic(cellBox);
 						setText(null);
 					} else if (row.getType() == QATableRow.RowType.QUESTION) {
-						
-						// This will make sure the first question in row 1 is saved to a question object for updating an answer object later
+
+						// This will make sure the first question in row 1 is saved to a question object
+						// for updating an answer object later
 						try {
 							// Set question to current row object
 							question = databaseHelper.qaHelper.getQuestion(row.getQuestionId());
@@ -565,16 +607,17 @@ public class StudentHomePage {
 							e.printStackTrace();
 							System.err.println("Error trying to get question in results table via editButton");
 						}
-						
+
 						cellContent.getChildren().add(0, displayLabel);
-						setGraphic(cellContent);
-						setText(null);						
-					} else {					
+						setGraphic(cellBox);
+						setText(null);
+					} else {
 						cellContent.getChildren().add(0, displayLabel);
-						setGraphic(cellContent);
+						setGraphic(cellBox);
 						setText(null);
 					}
 					cellContent.getChildren().add(replyBox);
+					cellBox.getChildren().add(cellContent);
 
 				}
 			}
@@ -1158,10 +1201,10 @@ public class StudentHomePage {
 		// Container to hold the three buttons min, max, and close
 		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
 		buttonBar.setAlignment(Pos.TOP_RIGHT);
-		buttonBar.setPadding(new Insets(0));	
-		buttonBar.setMaxHeight(27);		
-		buttonBar.setMaxWidth(80);		
-		
+		buttonBar.setPadding(new Insets(0));
+		buttonBar.setMaxHeight(27);
+		buttonBar.setMaxWidth(80);
+
 		buttonBar.setAlignment(Pos.TOP_RIGHT);
 
 		// StackPane to control layout sizing
@@ -1169,7 +1212,7 @@ public class StudentHomePage {
 		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
 		root.setStyle("-fx-background-color: transparent;");
 		root.setStyle("-fx-background-color: derive(gray, 60%);");
-		root.setPadding(new Insets(0));		
+		root.setPadding(new Insets(0));
 
 		Scene scene = new Scene(root, 1900, 1000);
 
@@ -1211,19 +1254,19 @@ public class StudentHomePage {
 
 			// Put the selected question in the first row
 			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(),
-					question.getId(), question.getAuthorId()));
+					question.getId(), question.getAuthorId(), question.getRelatedId()));
 
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
 				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
-						answer.getAuthorId()));
+						answer.getAuthorId(), answer.getRelatedId()));
 
 				// Look for related answers to selected answer
 				List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(answer.getId());
 				if (relatedAnswers != null && !relatedAnswers.isEmpty()) {
 					for (Answer temp : relatedAnswers) {
 						resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, temp.toDisplay(),
-								temp.getId(), temp.getAuthorId()));
+								temp.getId(), temp.getAuthorId(), temp.getRelatedId()));
 					}
 				}
 			}
@@ -1251,7 +1294,7 @@ public class StudentHomePage {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			System.err.println(
-					"Error trying to .getAllAnswers() within qTable.getSelectionModel... on line 327 in StudentHomePage.java");
+					"Error trying to .getAllAnswers() within updateResultsTableForQuestion() method");
 			return;
 		}
 

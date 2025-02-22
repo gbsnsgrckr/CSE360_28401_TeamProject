@@ -318,10 +318,14 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-						author, authorName);
+						author, authorName, relatedId);
 
 				// Return the question object
 				return question;
@@ -361,10 +365,14 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-						author, authorName);
+						author, authorName, relatedId);
 
 				// Return the question object
 				return question;
@@ -399,9 +407,13 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
 
 				// Return the answer object
 				return answer;
@@ -439,10 +451,14 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");				
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-						author, authorName);
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -482,10 +498,14 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-						author, authorName);
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -526,10 +546,14 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
 				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
-						author, authorName);
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -565,9 +589,13 @@ public class QAHelper1 {
 				if (author != null) {
 					authorName = author.getName();
 				}
+				
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
 
 				// Add the new answer object to the list of answer objects
 				answers.add(answer);
@@ -591,7 +619,7 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					System.err.println("Error: There are no answers related to this question.");
+					//System.err.println("Error: There are no answers related to this question."); // Debug
 					return answers;
 				}
 
@@ -656,7 +684,7 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					System.err.println("Error: There are no answers related to this answer.");
+					//System.err.println("Error: There are no answers related to this answer.");	// Debug
 					return answers;
 				}
 

@@ -12,7 +12,20 @@ public class Answer {
 	private LocalDateTime updatedOn;
 	private User author;
 	private String authorName;
+	private List<String> relatedId;
 
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
+			User author, String authorName, List<String> relatedId) {
+		this.id = id;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.author = author;
+		this.authorName = authorName;
+		this.relatedId = relatedId;
+	}
+	
 	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
 			User author, String authorName) {
 		this.id = id;
@@ -40,6 +53,13 @@ public class Answer {
 		this.authorId = authorId;
 		this.createdOn = createdOn;
 		this.updatedOn = updatedOn;
+	}
+	
+	public Answer(String text, Integer authorId, List<String> relatedId) {
+		this.text = text;
+		this.authorId = authorId;
+		this.relatedId = relatedId;
+
 	}
 
 	public Answer(String text, Integer authorId) {
@@ -87,6 +107,10 @@ public class Answer {
 		return authorName;
 	}
 
+	public List<String> getRelatedId() {
+		return relatedId;
+	}
+	
 	// Setters
 	public void setId(Integer id) {
 		this.id = id;
@@ -114,7 +138,11 @@ public class Answer {
 	
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
-	}			
+	}
+	
+	public void setRelatedId(List<String> relatedId) {
+		this.relatedId = relatedId;
+	}
 
 	public String toString() {
 		return String.format(

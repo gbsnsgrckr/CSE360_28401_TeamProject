@@ -15,8 +15,25 @@ public class Question {
 	private int preferredAnswer;
 	private User author;
 	private String authorName;
+	private List<String> relatedId;
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;
+		this.relatedId = relatedId;
+	}
+	
+	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName) {
 		this.id = id;
@@ -28,8 +45,9 @@ public class Question {
 		this.comp = comp;
 		this.preferredAnswer = preferredAnswer;
 		this.author = author;
-		this.authorName = authorName;
+		this.authorName = authorName;		
 	}
+	
 	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author) {
@@ -147,6 +165,10 @@ public class Question {
 	public String getAuthorName() {
 		return authorName;
 	}
+	
+	public List<String> getRelatedId() {
+		return relatedId;
+	}
 
 	// Setters
 	public void setId(Integer id) {
@@ -187,6 +209,10 @@ public class Question {
 	
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
+	}
+	
+	public void setRelatedId(List<String> relatedId) {
+		this.relatedId = relatedId;
 	}
 
 	public String toString() {
