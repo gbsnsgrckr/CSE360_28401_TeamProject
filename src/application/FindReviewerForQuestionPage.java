@@ -3,11 +3,13 @@ package application;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -30,6 +32,8 @@ public class FindReviewerForQuestionPage {
 	}
 
 	public void show(Stage primaryStage) {
+		double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
 
 		// Label to display page title to the user
 		Label titleLabel = new Label("Find Reviewers For Your Question");
@@ -330,9 +334,142 @@ public class FindReviewerForQuestionPage {
 
 		HBox bottomBox = new HBox(buttonBox2);
 
-		VBox vbox = new VBox(5, topBox, middleBox, bottomBox);
+		VBox layout = new VBox(5, topBox, middleBox, bottomBox);
 
-		StackPane root = new StackPane(vbox);
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+		
+		// Spacer to push buttonBar to the far right
+		HBox spacer = new HBox(buttonBar);
+		HBox.setHgrow(spacer, Priority.ALWAYS);
+
+		HBox titleBar = new HBox(spacer, buttonBar);			
+
+		titleBar.setMinHeight(35);
+		titleBar.setMaxHeight(35);
+		
+		titleBar.setMaxWidth(600);	
+		
+		// Spacer to push the titleBar to the top
+		VBox spacer1 = new VBox();
+		spacer1.setAlignment(Pos.BOTTOM_CENTER);
+		VBox.setVgrow(spacer1, Priority.ALWAYS);
+		
+		VBox titleBox = new VBox(titleBar, spacer1);
+		titleBox.setAlignment(Pos.CENTER);
+
+		// Set position of container within titleBar
+		titleBar.setAlignment(Pos.TOP_CENTER);
+		spacer.setAlignment(Pos.TOP_LEFT);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+
+		// StackPane to control layout sizing
+		StackPane root = new StackPane(titleBox, layout);
+		root.setStyle("-fx-background-color: transparent;");
+		root.setPadding(new Insets(0));
+		
+		titleBox.prefWidthProperty().bind(root.widthProperty());
+		titleBox.prefHeightProperty().bind(root.heightProperty());
 
 		questionBox.setAlignment(Pos.CENTER_LEFT);
 		reviewerBox.setAlignment(Pos.CENTER_RIGHT);
@@ -342,7 +479,7 @@ public class FindReviewerForQuestionPage {
 		buttonBox2.setAlignment(Pos.CENTER);
 		middleBox.setAlignment(Pos.CENTER);
 		bottomBox.setAlignment(Pos.CENTER);
-		vbox.setAlignment(Pos.CENTER);
+		layout.setAlignment(Pos.CENTER);
 		topBox.setAlignment(Pos.CENTER);		
 
 		// Adjust errorLabel downward just a bit

@@ -55,11 +55,11 @@ public class DatabaseHelper {
 			/*------------------------------------------------------------------------------------------------*/
 			/* You can use this command to clear the databases and restart from fresh. */
 
-			boolean resetUserDatabase = false; // Set to true if you want to reset the User Database
-			boolean resetQADatabase = false; // Set to true if you want to reset the QA Database
+			boolean resetUserDatabase = true; // Set to true if you want to reset the User Database
+			boolean resetQADatabase = true; // Set to true if you want to reset the QA Database
 
 			int a = 0; // Set this to 1 if you wish to populate User Database(0 or 1)
-			int b = 0; // Set this to the number of times you want to populate the QA
+			int b = 20; // Set this to the number of times you want to populate the QA
 						// Database(0 or greater)
 
 			/*------------------------------------------------------------------------------------------------*/
@@ -339,7 +339,6 @@ public class DatabaseHelper {
 				boolean otp = rs.getBoolean("otp");
 				User user = new User(id, username, name, password, email, roles, otp); // create new user with all of
 																						// the attributes
-				System.out.println("USERS: " + user.toString());
 				users.add(user); // add new user to the list of users
 			}
 		}
@@ -371,7 +370,6 @@ public class DatabaseHelper {
 				if (roles.contains(role)) {
 					User user = new User(id, username, name, password, email, roles, otp); // create new user
 
-					System.out.println("USERS: " + user.toString());
 					users.add(user); // add new user to the list of users
 				}
 			}

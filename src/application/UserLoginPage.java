@@ -7,6 +7,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -29,7 +30,7 @@ public class UserLoginPage {
 
 	// Method to include direction to the necessary role pages
 	private void roleHomePage(User user, Stage newStage) {
-		
+
 		// Check if user has any roles, if so, send to that page
 		if (user.getRoles().size() > 0) {
 			switch (user.getRoles().get(0).toLowerCase()) {
@@ -71,13 +72,16 @@ public class UserLoginPage {
 	}
 
 	public void show(Stage primaryStage) {
+		double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
+
 		// Input field for the user's userName, password
 		TextField userNameField = new TextField();
 		userNameField.setPromptText("Enter Username");
 		userNameField.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;");
 		userNameField.setMaxWidth(200);
-		userNameField.setAlignment(Pos.CENTER);		
+		userNameField.setAlignment(Pos.CENTER);
 
 		PasswordField passwordField = new PasswordField();
 		passwordField.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
@@ -107,34 +111,6 @@ public class UserLoginPage {
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
 						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
 
-		// Button to replace X close button for transparent background
-		Button closeButton = new Button("X");
-		closeButton.setStyle(
-				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
-						+ "-fx-font-weight: bold; -fx-padding: 0;");
-		closeButton.setMinSize(25, 25);
-		closeButton.setMaxSize(25, 25);
-
-		closeButton.setOnMouseEntered(a -> {
-			closeButton.setStyle(
-					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
-							+ "-fx-font-weight: bold; -fx-padding: 0;");
-			closeButton.setMinSize(25, 25);
-			closeButton.setMaxSize(25, 25);
-		});
-
-		closeButton.setOnMouseExited(a -> {
-			closeButton.setStyle(
-					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
-							+ "-fx-font-weight: bold; -fx-padding: 0;");
-			closeButton.setMinSize(25, 25);
-			closeButton.setMaxSize(25, 25);
-		});
-
-		closeButton.setOnAction(a -> {
-			primaryStage.close();
-		});
-
 		// Set login button as default to allow pressing Enter to activate
 		loginButton.setDefaultButton(true);
 
@@ -155,45 +131,31 @@ public class UserLoginPage {
 				errorLabel.setText("Invalid password");
 				return;
 			}
-			
+
 			try {
 				User user = databaseHelper.login(userName, password);
-				
-				if(user == null) {
+
+				if (user == null) {
 					errorLabel.setText("Error loggin in. Contact an Administrator.");
 					return;
 				}
-				
-				// Create new stage to get rid of transparency for following pages
-				Stage newStage = new Stage();
-				newStage.initStyle(StageStyle.DECORATED);				
-				
-				System.out.println(user.toString());	
-				
-				// Close primaryStage before moving forward
-				primaryStage.close();
-
-				System.out.print("\n The otp value is " + user.getOTPFlag() + "\n");// debug
 
 				if (user.getOTPFlag()) {
-					System.out.print("Your if statement works\n");// debug
-					new NewPasswordPage(databaseHelper).show(newStage, user);					
+					new NewPasswordPage(databaseHelper).show(primaryStage, user);
 					return;
 				}
 
 				// If user has more than one role, send them to RoleSelectPage otherwise call
 				// roleHomePage() method
 				if (user.getRoles().size() > 1) {
-					System.out.println("MAde it to roleSelectPage");
-					new RoleSelectPage(databaseHelper).show(newStage);//
+					new RoleSelectPage(databaseHelper).show(primaryStage);//
 					return;
 				} else {
-					roleHomePage(user, newStage);
-					
-					System.out.println("Made it to if-statement checking number of roles"); // Debug
+					roleHomePage(user, primaryStage);
+
 					return;
-				}				
-				
+				}
+
 			} catch (SQLException e) {
 				System.err.println("Database error: " + e.getMessage());
 				e.printStackTrace();
@@ -202,22 +164,9 @@ public class UserLoginPage {
 
 		// Button to register a new account
 		setupButton.setOnAction(a -> {
-			
-			// Create new stage to get rid of transparency for following pages
-			Stage newStage = new Stage();
-			newStage.initStyle(StageStyle.DECORATED);
-			
-			// Close the existing stage
-			primaryStage.close();
-			
-			new SetupAccountPage(databaseHelper).show(newStage);
-		});
 
-		HBox closeButtonBox = new HBox(closeButton);
-		closeButtonBox.setAlignment(Pos.TOP_RIGHT);
-		closeButtonBox.setTranslateX(-275);
-		closeButtonBox.setTranslateY(65);
-		closeButtonBox.setPadding(new Insets(0));
+			new SetupAccountPage(databaseHelper).show(primaryStage);
+		});
 
 		HBox hbox = new HBox(5, loginButton, setupButton);
 		hbox.setAlignment(Pos.CENTER);
@@ -232,25 +181,152 @@ public class UserLoginPage {
 		layout.getChildren().addAll(prompt, userNameField, passwordField, hbox, errorLabel);
 		layout.setAlignment(Pos.CENTER);
 
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+		
+		// Spacer to push buttonBar to the far right
+		HBox spacer = new HBox(buttonBar);
+		HBox.setHgrow(spacer, Priority.ALWAYS);
+
+		HBox titleBar = new HBox(spacer, buttonBar);			
+
+		titleBar.setMinHeight(35);
+		titleBar.setMaxHeight(35);
+		
+		titleBar.setMaxWidth(600);	
+		
+		// Spacer to push the titleBar to the top
+		VBox spacer1 = new VBox();
+		spacer1.setAlignment(Pos.BOTTOM_CENTER);
+		VBox.setVgrow(spacer1, Priority.ALWAYS);
+		
+		VBox titleBox = new VBox(titleBar, spacer1);
+		titleBox.setAlignment(Pos.CENTER);
+
+		// Set position of container within titleBar
+		titleBar.setAlignment(Pos.TOP_CENTER);
+		spacer.setAlignment(Pos.TOP_LEFT);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+
 		// StackPane to control layout sizing
-		StackPane root = new StackPane(closeButtonBox, layout);
+		StackPane root = new StackPane(titleBox, layout);
 		root.setStyle("-fx-background-color: transparent;");
 		root.setPadding(new Insets(0));
-
-		// Removes icon from title bar in alert window
-		primaryStage.getIcons().clear();
-
-		primaryStage.initStyle(StageStyle.TRANSPARENT);
 		
+		titleBox.prefWidthProperty().bind(root.widthProperty());
+		titleBox.prefHeightProperty().bind(root.heightProperty());
+
 		primaryStage.setOnShown(a -> {
 			userNameField.requestFocus();
 		});
 
-		Scene scene = new Scene(root, 940, 400);
+		Scene scene = new Scene(root, 400, 300);
 		scene.setFill(Color.TRANSPARENT);
 
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("");
+		primaryStage.setMaxWidth(Double.MAX_VALUE);
+		primaryStage.centerOnScreen();
 		primaryStage.show();
 	}
 }

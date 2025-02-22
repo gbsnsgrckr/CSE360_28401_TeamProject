@@ -3,11 +3,14 @@ package application;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import databasePart1.DatabaseHelper;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 
 /**
@@ -31,6 +34,8 @@ public class RoleSelectPage {
 	 * @param primaryStage The primary stage where the scene will be displayed.
 	 */
 	public void show(Stage primaryStage) {
+		double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
 
 		// Create Next and Back buttons
 		Button nextButton = new Button("Next");
@@ -56,7 +61,7 @@ public class RoleSelectPage {
 		comboBox.setPromptText("Please select a role");
 		comboBox.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black, gray;"
 				+ "-fx-border-width: 2, 1; -fx-border-radius: 3, 1; -fx-border-inset: 0, 4;"
-				+ "-fx-prompt-text-fill: black;");				
+				+ "-fx-prompt-text-fill: black;");
 
 		// ComboBox allows selection of roles and deactivates Next button until
 		// selection
@@ -76,6 +81,10 @@ public class RoleSelectPage {
 			// Set currentRole in databaseHelper
 			databaseHelper.currentUser.setCurrentRole(selectedRole);
 
+			// Create new stage to get rid of transparency for following pages
+			// Stage newStage = new Stage();
+			// newStage.initStyle(StageStyle.DECORATED);
+
 			// Direct user to role's home page based on user selection
 			switch (selectedRole) {
 			case "Admin":
@@ -94,18 +103,15 @@ public class RoleSelectPage {
 				new ReviewerHomePage(databaseHelper).show(primaryStage);
 				break;
 			}
+
+			// Close primaryStage after moving forward
+			// primaryStage.close();
+
 		});
 
 		// Quit button to return to User Login Screen
 		quitButton.setOnAction(a -> {
-
-			// Create new stage to get rid of transparency for following pages
-			Stage newStage = new Stage();
-			newStage.initStyle(StageStyle.TRANSPARENT);
-
-			// Close the existing stage
-			primaryStage.close();
-
+			// Call UserLoginPage
 			new UserLoginPage(databaseHelper).show(primaryStage);
 		});
 
@@ -143,13 +149,23 @@ public class RoleSelectPage {
 		prompt.setAlignment(Pos.CENTER);
 
 		// Create layout for buttons and combobox
-		VBox layoutV = new VBox(10);
-		layoutV.setMinSize(400, 220);
-		layoutV.setMaxSize(400, 220);
-		layoutV.setStyle("-fx-padding: 20; -fx-background-color: gray; -fx-background-radius: 100;"
+		VBox layout = new VBox(10);
+		layout.setMinSize(400, 220);
+		layout.setMaxSize(400, 220);
+		layout.setStyle("-fx-padding: 20; -fx-background-color: derive(gray, 80%); -fx-background-radius: 100;"
 				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
 				+ "-fx-border-width: 2, 2, 1; -fx-border-radius: 100, 100, 100;" + "-fx-border-insets: 0, 2, 4");
-		layoutV.setAlignment(Pos.CENTER);
+		layout.setAlignment(Pos.CENTER);
+
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
 
 		HBox layoutH = new HBox(10);
 		layoutH.setStyle("-fx-padding: 20;");
@@ -159,19 +175,153 @@ public class RoleSelectPage {
 		layoutH.getChildren().addAll(nextButton, quitButton);
 
 		// Attach buttons and combobox to the same container
-		layoutV.getChildren().addAll(prompt, comboBox, layoutH);
+		layout.getChildren().addAll(prompt, comboBox, layoutH);
 
-		StackPane root = new StackPane(layoutV);
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+
+		// Spacer to push buttonBar to the far right
+		HBox spacer = new HBox(buttonBar);
+		HBox.setHgrow(spacer, Priority.ALWAYS);
+
+		HBox titleBar = new HBox(spacer, buttonBar);
+
+		titleBar.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX()/* - primaryStage.getX() */;
+			offsetY[0] = a.getSceneY()/* - primaryStage.getY() */;
+		});
+
+		titleBar.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		titleBar.setMinHeight(35);
+		titleBar.setMaxHeight(35);
+
+		titleBar.setMaxWidth(Double.MAX_VALUE);
+
+		// Spacer to push the titleBar to the top
+		VBox spacer1 = new VBox();
+		spacer1.setAlignment(Pos.BOTTOM_CENTER);
+		VBox.setVgrow(spacer1, Priority.ALWAYS);
+
+		VBox titleBox = new VBox(titleBar, spacer1);
+		titleBox.setAlignment(Pos.CENTER);
+		titleBox.setMaxWidth(Double.MAX_VALUE);
+
+		// Set position of container within titleBar
+		titleBar.setAlignment(Pos.TOP_CENTER);
+		spacer.setAlignment(Pos.TOP_LEFT);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+
+		// StackPane to control layout sizing
+		StackPane root = new StackPane(titleBox, layout);
+		root.setStyle("-fx-background-color: transparent;");
+		root.setPadding(new Insets(0));
+
+		titleBox.prefWidthProperty().bind(root.widthProperty());
+		titleBox.prefHeightProperty().bind(root.heightProperty());
 
 		// Create scene to hold UI objects
-		Scene roleSelectScene = new Scene(root, 940, 400);
-
-		// Removes icon from title bar in alert window
-		primaryStage.getIcons().clear();
+		Scene scene = new Scene(root, 400, 300);
+		scene.setFill(Color.TRANSPARENT);
 
 		// Set the scene to primary stage
-		primaryStage.setScene(roleSelectScene);
+		primaryStage.setScene(scene);
 		primaryStage.setTitle("");
+		primaryStage.setMaxWidth(Double.MAX_VALUE);
+		primaryStage.centerOnScreen();
 		primaryStage.show();
 	}
 }

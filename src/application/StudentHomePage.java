@@ -12,6 +12,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -27,6 +28,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -110,6 +113,9 @@ public class StudentHomePage {
 	}
 
 	public void show(Stage primaryStage) {
+		double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
+		
 		try {
 			questions = databaseHelper.qaHelper.getAllQuestions();
 		} catch (SQLException e) {
@@ -182,8 +188,8 @@ public class StudentHomePage {
 		;
 
 		// Button to open the ui to submit a new question
-		Button closeButton = new Button("Close");
-		closeButton.setStyle(
+		Button questionCloseButton = new Button("Close");
+		questionCloseButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Table display of the question database
@@ -320,13 +326,13 @@ public class StudentHomePage {
 		});
 
 		// Hbox to hold and position the title
-		HBox titleBox = new HBox(135, submitButton, closeButton);
+		HBox topTitleBox = new HBox(135, submitButton, questionCloseButton);
 		// Set alignment of box
-		closeButton.setAlignment(Pos.TOP_RIGHT);
+		questionCloseButton.setAlignment(Pos.TOP_RIGHT);
 		submitButton.setAlignment(Pos.TOP_LEFT);
 
 		// Container to hold the two input boxes for questions and their title together
-		VBox questionInputBox = new VBox(5, titleBox, titleField, inputField);
+		VBox questionInputBox = new VBox(5, topTitleBox, titleField, inputField);
 		questionInputBox.setStyle("-fx-background-color: derive(gray, 80%)");
 
 		VBox submitBox = new VBox(questionInputBox);
@@ -1037,7 +1043,7 @@ public class StudentHomePage {
 
 		});
 
-		closeButton.setOnAction(a -> {
+		questionCloseButton.setOnAction(a -> {
 			// Hide submitBox
 			submitBox.setVisible(false);
 			submitBox.setManaged(false);
@@ -1047,28 +1053,140 @@ public class StudentHomePage {
 
 		HBox hbox1 = new HBox(5, root3, vbox1);
 
-		VBox vbox2 = new VBox(topLabelBox, hbox1, errorLabel);
+		VBox layout = new VBox(topLabelBox, hbox1, errorLabel);
 
-		StackPane root = new StackPane(vbox2);
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+		buttonBar.setStyle("-fx-border-color: black;");	
+		buttonBar.setMaxHeight(27);		
+		buttonBar.setMaxWidth(80);		
+		
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+
+		// StackPane to control layout sizing
+		StackPane root = new StackPane(layout, buttonBar);
+		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
+		root.setStyle("-fx-background-color: transparent;");
 		root.setStyle("-fx-background-color: derive(gray, 60%);");
+		root.setPadding(new Insets(0));		
 
 		Scene scene = new Scene(root, 1900, 1000);
 
 		resultsTable.prefWidthProperty().bind(hbox1.widthProperty());
-		resultsTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		resultsTable.prefHeightProperty().bind(layout.heightProperty().subtract(50));
 		qTable.prefWidthProperty().bind(root3.widthProperty());
-		qTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		qTable.prefHeightProperty().bind(layout.heightProperty().subtract(50));
 		contentColumn.prefWidthProperty().bind(vbox1.widthProperty().subtract(19));
 		detailsColumn.prefWidthProperty().bind(questionDB.widthProperty().subtract(19));
 		searchTable.prefWidthProperty().bind(vbox.widthProperty());
-		searchTable.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		searchTable.prefHeightProperty().bind(layout.heightProperty().subtract(50));
 		searchBox.prefWidthProperty().bind(vbox.widthProperty());
-		searchBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		searchBox.prefHeightProperty().bind(layout.heightProperty().subtract(50));
 		submitBox.prefWidthProperty().bind(qTable.widthProperty());
-		submitBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
+		submitBox.prefHeightProperty().bind(layout.heightProperty().subtract(50));
 		questionInputBox.prefWidthProperty().bind(qTable.widthProperty());
-		questionInputBox.prefHeightProperty().bind(vbox2.heightProperty().subtract(50));
-		topLabelBox.prefWidthProperty().bind(vbox2.widthProperty());
+		questionInputBox.prefHeightProperty().bind(layout.heightProperty().subtract(50));
+		topLabelBox.prefWidthProperty().bind(layout.widthProperty());
 		buttonBox1.prefWidthProperty().bind(resultsTable.widthProperty());
 
 		// Set the scene to primary stage
