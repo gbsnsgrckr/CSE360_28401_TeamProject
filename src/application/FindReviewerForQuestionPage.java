@@ -68,6 +68,8 @@ public class FindReviewerForQuestionPage {
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
 		// Styling for the table
+		// Give qTable a bold outline
+		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 		qTable.setMinWidth(300);
 		qTable.setFixedCellSize(-1);
 
@@ -151,6 +153,8 @@ public class FindReviewerForQuestionPage {
 		// Create table to display the reviewers to the user
 		TableView<User> rTable = new TableView<>();
 		// Styling for the table
+		// Give resultsTable a bold outline
+		rTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 		rTable.setMinWidth(300);
 		rTable.setFixedCellSize(-1);
 
@@ -330,6 +334,8 @@ public class FindReviewerForQuestionPage {
 		VBox reviewerBox = new VBox(5, reviewerFilterBox, rTable);
 
 		HBox middleBox = new HBox(200, questionBox, buttonBox, reviewerBox);
+		middleBox.setMinSize(1200, 775);
+		middleBox.setMaxSize(1200, 775);
 
 		VBox buttonBox2 = new VBox(5, quitButton, errorLabel);
 
@@ -478,8 +484,8 @@ public class FindReviewerForQuestionPage {
 		// Set height of table to adjust to container
 		qTable.prefHeightProperty().bind(middleBox.heightProperty());
 		rTable.prefHeightProperty().bind(middleBox.heightProperty());
-		detailsColumn.prefWidthProperty().bind(questionBox.widthProperty().subtract(19));
-		reviewerColumn.prefWidthProperty().bind(reviewerBox.widthProperty().subtract(19));
+		detailsColumn.prefWidthProperty().bind(questionBox.widthProperty().subtract(18));
+		reviewerColumn.prefWidthProperty().bind(reviewerBox.widthProperty().subtract(21));
 
 		Scene scene = new Scene(root, 1300, 930);
 		scene.setFill(Color.TRANSPARENT);

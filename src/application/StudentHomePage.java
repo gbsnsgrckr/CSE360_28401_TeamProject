@@ -204,6 +204,9 @@ public class StudentHomePage {
 		// Table display of the question database
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
+		
+		// Give qTable a bold outline
+		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 
 		// Styling for the table
 		qTable.setMinWidth(300);
@@ -640,7 +643,7 @@ public class StudentHomePage {
 
 		// Create and place a placeholder for when resultsTable is empty(At the start of
 		// the page)
-		Label placeholderBox = new Label("Question everything...");
+		Label placeholderBox = new Label("◄ Question everything... ►");
 		placeholderBox.setStyle("-fx-font-size: 50px; -fx-font-weight: bold; -fx-text-fill: derive(gray, 80%)");
 		resultsTable.setPlaceholder(placeholderBox);
 
