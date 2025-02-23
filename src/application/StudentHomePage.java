@@ -115,6 +115,8 @@ public class StudentHomePage {
 
 	private TableView<QATableRow> resultsTable;
 
+	private int indent = 0;
+
 	public StudentHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
@@ -175,33 +177,34 @@ public class StudentHomePage {
 		// Button to submit question text in input fields to database
 		Button submitButton = new Button("Submit Question");
 		submitButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to return to the login screen
 		Button quitButton = new Button("Back to login");
 		quitButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to find reviewers for your questions
 		Button findReviewerButton = new Button("Find Reviewer");
 		findReviewerButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to open the ui to submit a new question
 		Button newQuestionButton = new Button("New");
 		newQuestionButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 		newQuestionButton.setMinWidth(20);
 		;
 
 		// Button to open the ui to submit a new question
 		Button questionCloseButton = new Button("Close");
 		questionCloseButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Table display of the question database
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
+
 		// Styling for the table
 		qTable.setMinWidth(300);
 		qTable.setFixedCellSize(-1);
@@ -214,7 +217,7 @@ public class StudentHomePage {
 					setStyle("-fx-border-color: transparent;");
 				} else {
 					setStyle(
-							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  2px; -fx-table-cell-border-color: black;");
+							"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px; -fx-table-cell-border-color: black;");
 				}
 			}
 		});
@@ -261,53 +264,56 @@ public class StudentHomePage {
 			}
 		});
 
-		// Table display of the answer database
-		// Label to display title to user
-		Label prompt3 = new Label("Answer Database");
-		prompt3.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
-
-		// Hbox to position the title
-		HBox titleBox3 = new HBox(prompt3);
-		titleBox3.setAlignment(Pos.CENTER);
-
-		// Create table to display the answer database
-		TableView<Answer> aTable = new TableView<>();
-		aTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-		aTable.setPrefWidth(600);
-
-		// if answers is null then initialize as an empty list
-		if (answers == null) {
-			answers = new ArrayList<>();
-		}
-
-		// Create an observable list and assign it to the table
-		ObservableList<Answer> answerObservableList = FXCollections.observableArrayList(answers);
-		aTable.setItems(answerObservableList);
-
-		// Create, assign, and associate values to table
-		TableColumn<Answer, Integer> idColumn2 = new TableColumn<>("Answer ID");
-		idColumn2.setCellValueFactory(data -> new ReadOnlyObjectWrapper<>(data.getValue().getId()));
-
-		// Create a text column
-		TableColumn<Answer, String> textColumn2 = new TableColumn<>("Answer");
-		textColumn2.setCellValueFactory(new PropertyValueFactory<>("text"));
-
-		// Create a userID column
-		TableColumn<Answer, Integer> authorColumn2 = new TableColumn<>("Author ID");
-		authorColumn2.setCellValueFactory(new PropertyValueFactory<>("author"));
-
-		// Create a createOn column
-		TableColumn<Answer, String> createdColumn2 = new TableColumn<>("Created On");
-		createdColumn2.setCellValueFactory(new PropertyValueFactory<>("createdOn"));
-
-		// Create an updatedOn column
-		TableColumn<Answer, String> updatedColumn2 = new TableColumn<>("Updated On");
-		updatedColumn2.setCellValueFactory(new PropertyValueFactory<>("updatedOn"));
-
-		aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2, createdColumn2, updatedColumn2);
-
-		// Container to hold the table
-		VBox answerDB = new VBox(5, titleBox3, aTable);
+		/*
+		 * Answer Database Table that we shouldn't need // Table display of the answer
+		 * database // Label to display title to user Label prompt3 = new
+		 * Label("Answer Database"); prompt3.
+		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
+		 * );
+		 * 
+		 * // Hbox to position the title HBox titleBox3 = new HBox(prompt3);
+		 * titleBox3.setAlignment(Pos.CENTER);
+		 * 
+		 * // Create table to display the answer database TableView<Answer> aTable = new
+		 * TableView<>(); aTable.
+		 * setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
+		 * ); aTable.setPrefWidth(600);
+		 * 
+		 * // if answers is null then initialize as an empty list if (answers == null) {
+		 * answers = new ArrayList<>(); }
+		 * 
+		 * // Create an observable list and assign it to the table
+		 * ObservableList<Answer> answerObservableList =
+		 * FXCollections.observableArrayList(answers);
+		 * aTable.setItems(answerObservableList);
+		 * 
+		 * // Create, assign, and associate values to table TableColumn<Answer, Integer>
+		 * idColumn2 = new TableColumn<>("Answer ID");
+		 * idColumn2.setCellValueFactory(data -> new
+		 * ReadOnlyObjectWrapper<>(data.getValue().getId()));
+		 * 
+		 * // Create a text column TableColumn<Answer, String> textColumn2 = new
+		 * TableColumn<>("Answer"); textColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("text"));
+		 * 
+		 * // Create a userID column TableColumn<Answer, Integer> authorColumn2 = new
+		 * TableColumn<>("Author ID"); authorColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("author"));
+		 * 
+		 * // Create a createOn column TableColumn<Answer, String> createdColumn2 = new
+		 * TableColumn<>("Created On"); createdColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("createdOn"));
+		 * 
+		 * // Create an updatedOn column TableColumn<Answer, String> updatedColumn2 =
+		 * new TableColumn<>("Updated On"); updatedColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("updatedOn"));
+		 * 
+		 * aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2,
+		 * createdColumn2, updatedColumn2);
+		 * 
+		 * // Container to hold the table VBox answerDB = new VBox(5, titleBox3,
+		 * aTable);
+		 */
 
 		// Label to display title to user
 		Label prompt5 = new Label("Details");
@@ -382,7 +388,7 @@ public class StudentHomePage {
 										getTableView().getItems().get(getIndex()).getAnswerId());
 								replyArea.clear();
 							}
-							
+
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err
@@ -405,7 +411,7 @@ public class StudentHomePage {
 				cellBox.getChildren().clear();
 
 				// variable to compound indents
-				int indent = 0;
+				// int indent = 2;
 
 				// Clear graphic
 				setGraphic(null);
@@ -425,40 +431,36 @@ public class StudentHomePage {
 					// Set the preferred height of the cell
 					displayLabel.setPrefHeight(225);
 
+					// Make sure you're on at least the second row
 					if (getIndex() > 0) {
+						QATableRow currentRow = getTableView().getItems().get(getIndex());
+						QATableRow previousRow = getTableView().getItems().get(getIndex() - 1);
+
+						// Add a spacer for any thread below the main question
 						Region spacer = new Region();
 						spacer.setStyle("-fx-border-color: black;");
 						spacer.setMinSize(50, 5);
 						spacer.setMaxSize(50, 5);
 						cellBox.getChildren().add(spacer);
 
+						// Make sure you're at least on third row
 						if (getIndex() > 1) {
+
 							// Check if row item is in the relatedId list for the row item above
-							if (getTableView().getItems().get(getIndex() - 1).getRelatedId() != null
-									&& getTableView().getItems().get(getIndex() - 1).getRelatedId()
-											.contains(getTableView().getItems().get(getIndex()).getAnswerId())) {
-								for (int i = -1; i < indent; i++) {
-									// Pad cell
-									//cellBox.setPadding(new Insets(0, 0, 0, 30));
-									Region subSpacer = new Region();
-									spacer.setStyle("-fx-border-color: black;");
-									spacer.setMinSize(50, 5);
-									spacer.setMaxSize(50, 5);
-									
-									cellBox.getChildren().add(subSpacer);
-									
-								}
-								// Increment indent
-								indent++;
+							if (previousRow.getRelatedId() != null
+									&& previousRow.getRelatedId().contains(currentRow.getAnswerId().toString())) {
+
+								// Trying to get compounding indentation to work here. private variable indent already exists at class level
+								
 							} else {
-								// Reset indent counter
+								// Reset indent counter on an unrelated row
 								indent = 0;
 							}
+
 						}
 					}
 
-					// displayLabel.setText("" + row.getType() + "\n\n" + row.getAuthorId()); // Use
-					// this to show QATableRow Info in resultsTable
+					
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
@@ -632,6 +634,16 @@ public class StudentHomePage {
 
 		// Set columns to resultsTable
 		resultsTable.getColumns().setAll(contentColumn);
+
+		// Give resultsTable a bold outline
+		resultsTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
+
+		// Create and place a placeholder for when resultsTable is empty(At the start of
+		// the page)
+		Label placeholderBox = new Label("Question everything...");
+		placeholderBox.setStyle("-fx-font-size: 50px; -fx-font-weight: bold; -fx-text-fill: derive(gray, 80%)");
+		resultsTable.setPlaceholder(placeholderBox);
+
 		// Hide header for resultsTable
 		resultsTable.widthProperty().addListener((obs, oldVal, newVal) -> {
 			Node titleBar = resultsTable.lookup("TableHeaderRow");
@@ -1014,7 +1026,7 @@ public class StudentHomePage {
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
 				qTable.getSelectionModel().clearSelection();
-				aTable.getSelectionModel().clearSelection();
+				// aTable.getSelectionModel().clearSelection();
 			}
 		});
 
@@ -1022,7 +1034,7 @@ public class StudentHomePage {
 		inputField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
 				qTable.getSelectionModel().clearSelection();
-				aTable.getSelectionModel().clearSelection();
+				// aTable.getSelectionModel().clearSelection();
 			}
 		});
 
@@ -1030,7 +1042,7 @@ public class StudentHomePage {
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
 			if (newSelection != null) {
 				// Clear selections on the other tables
-				aTable.getSelectionModel().clearSelection();
+				// aTable.getSelectionModel().clearSelection();
 
 				// Hide the searchBox when using the qTable
 				searchBox.setVisible(false);

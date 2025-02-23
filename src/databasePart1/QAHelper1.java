@@ -43,7 +43,7 @@ public class QAHelper1 {
 	public void connectToDatabase() throws SQLException {
 		try {
 			Class.forName(JDBC_DRIVER); // Load the JDBC driver
-			System.out.println("Connecting to database...");
+			System.out.println("Connecting to QA database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
 			statement = connection.createStatement();
