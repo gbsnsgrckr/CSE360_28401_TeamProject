@@ -425,6 +425,47 @@ public class QAHelper1 {
 		}
 		return null;
 	}
+	
+	// Get an answer object with a provided answer text
+		public Answer getAnswer(String answerText) throws SQLException {
+			// Search the answer database for a match to the answer text
+			String query = "SELECT * FROM cse360answer AS c WHERE c.text = ?	";
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setString(1, answerText);
+				ResultSet rs = pstmt.executeQuery();
+
+				if (rs.next()) {
+					int id = rs.getInt("id");
+					String text = rs.getString("text");
+					int authorId = rs.getInt("author");
+					Timestamp created = rs.getTimestamp("created_On");
+					// Convert to LocalDateTime format
+					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+					Timestamp updated = rs.getTimestamp("updated_On");
+					// Convert to LocalDateTime format
+					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+					User author = databaseHelper.getUser(authorId);
+					String authorName = "User";
+
+					if (author != null) {
+						authorName = author.getName();
+					}
+
+					String answerIDs = rs.getString("answer_id");
+					// convert comma separated list into an array
+					List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
+
+					// Create a new answer object with the pulled info
+					Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
+
+					// Return the answer object
+					return answer;
+				}
+			}
+			return null;
+		}
 
 	// Retrieve all questions from the question database
 	public List<Question> getAllQuestions() throws SQLException {

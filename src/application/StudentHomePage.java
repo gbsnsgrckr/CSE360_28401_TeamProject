@@ -113,6 +113,8 @@ public class StudentHomePage {
 	private boolean updatingAnswer = false;
 	private boolean updatingQuestion = false;
 
+	private Answer tempAnswer;
+
 	private TableView<QATableRow> resultsTable;
 
 	private int indent = 0;
@@ -204,7 +206,7 @@ public class StudentHomePage {
 		// Table display of the question database
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
-		
+
 		// Give qTable a bold outline
 		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 
@@ -378,8 +380,10 @@ public class StudentHomePage {
 				submitReplyButton.setOnAction(a -> {
 					String inputText = replyArea.getText().trim();
 					QATableRow.RowType rowType = getTableView().getItems().get(getIndex()).getType();
+
 					if (!inputText.isEmpty()) {
 						try {
+
 							if (rowType == QATableRow.RowType.QUESTION) {
 								databaseHelper.qaHelper.registerAnswerWithQuestion(
 										new Answer(inputText, databaseHelper.currentUser.getUserId()),
@@ -392,13 +396,24 @@ public class StudentHomePage {
 								replyArea.clear();
 							}
 
+							// Retrieve your new answer from the database
+							tempAnswer = databaseHelper.qaHelper.getAnswer(inputText);
+
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err
 									.println("Error trying to register answer in results table via submitReplyButton");
 						}
+
 						// Update the table after submitting new answer
 						updateResultsTableForQuestion(qTable.getSelectionModel().getSelectedItem());
+
+						// Select the next row down which is the new answer - Doesn't work if the text
+						// of the answer is the same
+						resultsTable.getSelectionModel()
+								.select(new QATableRow(QATableRow.RowType.ANSWER, tempAnswer.toDisplay(),
+										tempAnswer.getId(), tempAnswer.getAuthorId(), tempAnswer.getRelatedId()));
+
 					}
 				});
 				cellContent.getChildren().addAll(replyBox);
@@ -453,8 +468,9 @@ public class StudentHomePage {
 							if (previousRow.getRelatedId() != null
 									&& previousRow.getRelatedId().contains(currentRow.getAnswerId().toString())) {
 
-								// Trying to get compounding indentation to work here. private variable indent already exists at class level
-								
+								// Trying to get compounding indentation to work here. private variable indent
+								// already exists at class level
+
 							} else {
 								// Reset indent counter on an unrelated row
 								indent = 0;
@@ -462,8 +478,6 @@ public class StudentHomePage {
 
 						}
 					}
-
-					
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
