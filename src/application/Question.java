@@ -14,8 +14,41 @@ public class Question {
 	private List<String> comp;
 	private int preferredAnswer;
 	private User author;
+	private String authorName;
+	private List<String> relatedId;
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;
+		this.relatedId = relatedId;
+	}
+	
+	
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;		
+	}
+	
+	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author) {
 		this.id = id;
@@ -128,6 +161,14 @@ public class Question {
 		}
 		return (int) ChronoUnit.DAYS.between(createdOn, LocalDateTime.now());
 	}
+	
+	public String getAuthorName() {
+		return authorName;
+	}
+	
+	public List<String> getRelatedId() {
+		return relatedId;
+	}
 
 	// Setters
 	public void setId(Integer id) {
@@ -165,11 +206,19 @@ public class Question {
 	public void setAuthor(User author) {
 		this.author = author;
 	}
+	
+	public void setAuthorName(String authorName) {
+		this.authorName = authorName;
+	}
+	
+	public void setRelatedId(List<String> relatedId) {
+		this.relatedId = relatedId;
+	}
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nAuthorId:\n	%s  \nAuthor:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
-				id, title, text, authorId, author, createdOn, updatedOn, preferredAnswer);
+				"\nQUESTION: \nID:\n	%s\nTitle:\n	%s\nText:\n	%s\nRelatedIds:\n	%s\n	%s\nAuthorId:\n	%s\nAuthor Name:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
+				id, title, text, relatedId, authorId, authorName, createdOn, updatedOn, preferredAnswer);
 	}
 
 	public String toDisplay() {
@@ -186,10 +235,35 @@ public class Question {
 			if (author == null) {
 				displayAuthor = "User";
 			} else {
-				displayAuthor = author.getName();
+				displayAuthor = authorName;
 			}
 
 			return String.format("%s\n%s               %sd", title, displayAuthor, daysSinceCreated);
+		}
+	}
+	
+	public String toDisplayWithText() {
+		String displayAuthor;
+		int daysSinceCreated = getDaysSinceCreated();
+		
+		if (relatedId == null || relatedId.isEmpty()) {
+			relatedId = List.of("");
+		}
+
+		// If title is empty then return an empty string
+		if (title == "") {
+			return "";
+		} else {
+			// If author returns null(In case of test cases or populated database without
+			// proper users)
+			// then an empty sting is display for the author.
+			if (author == null) {
+				displayAuthor = "User";
+			} else {
+				displayAuthor = author.getName();
+			}
+
+			return String.format("QuestionId: %s\n%s\n\n%s\n\nRelatedIDs: %s\n\n%s           									    %sd", id, title, text, relatedId,  displayAuthor, daysSinceCreated);
 		}
 	}
 

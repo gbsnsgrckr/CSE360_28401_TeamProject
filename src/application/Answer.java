@@ -11,7 +11,32 @@ public class Answer {
 	private LocalDateTime createdOn;
 	private LocalDateTime updatedOn;
 	private User author;
+	private String authorName;
+	private List<String> relatedId;
 
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
+			User author, String authorName, List<String> relatedId) {
+		this.id = id;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.author = author;
+		this.authorName = authorName;
+		this.relatedId = relatedId;
+	}
+	
+	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
+			User author, String authorName) {
+		this.id = id;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.author = author;
+		this.authorName = authorName;
+	}
+	
 	public Answer(Integer id, String text, Integer authorId, LocalDateTime createdOn, LocalDateTime updatedOn,
 			User author) {
 		this.id = id;
@@ -28,6 +53,13 @@ public class Answer {
 		this.authorId = authorId;
 		this.createdOn = createdOn;
 		this.updatedOn = updatedOn;
+	}
+	
+	public Answer(String text, Integer authorId, List<String> relatedId) {
+		this.text = text;
+		this.authorId = authorId;
+		this.relatedId = relatedId;
+
 	}
 
 	public Answer(String text, Integer authorId) {
@@ -70,7 +102,15 @@ public class Answer {
 		}
 		return (int) ChronoUnit.DAYS.between(createdOn, LocalDateTime.now());
 	}
+	
+	public String getAuthorName() {
+		return authorName;
+	}
 
+	public List<String> getRelatedId() {
+		return relatedId;
+	}
+	
 	// Setters
 	public void setId(Integer id) {
 		this.id = id;
@@ -95,16 +135,28 @@ public class Answer {
 	public void setAuthor(User author) {
 		this.author = author;
 	}
+	
+	public void setAuthorName(String authorName) {
+		this.authorName = authorName;
+	}
+	
+	public void setRelatedId(List<String> relatedId) {
+		this.relatedId = relatedId;
+	}
 
 	public String toString() {
 		return String.format(
-				"\nANSWER: \nID:\n	%s\nText:\n		%s\nAuthorId:\n	  %s\nAuthor:\n 	%s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
-				id, text, authorId, author, createdOn, updatedOn);
+				"\nANSWER: \nID:\n	%s\nText:\n		%s\nRelatedIDs:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				id, text, relatedId, authorId, authorName, createdOn, updatedOn);
 	}
 
 	public String toDisplay() {
 		String displayAuthor;
 		int daysSinceCreated = getDaysSinceCreated();
+		
+		if (relatedId == null || relatedId.isEmpty()) {
+			relatedId = List.of("");
+		}
 
 		// If title is empty then return an empty string
 		if (text == "") {
@@ -116,10 +168,10 @@ public class Answer {
 			if (author == null) {
 				displayAuthor = "User";
 			} else {
-				displayAuthor = author.getName();
+				displayAuthor = getAuthorName();
 			}
 
-			return String.format("%s\n%s               %sd", text, displayAuthor, daysSinceCreated);
+			return String.format("AnswerId: %s\n%s\nRelatedIds: %s\n\n%s             					  					%sd", id, text, relatedId, displayAuthor, daysSinceCreated);
 		}
 	}
 

@@ -2,6 +2,8 @@ package application;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
 import java.sql.SQLException;
 
 import databasePart1.DatabaseHelper;
@@ -15,9 +17,13 @@ public class StartCSE360 extends Application {
 
 	@Override
 	public void start(Stage primaryStage) {
+		
+		// Initalizes tranparency in stage
+		primaryStage.initStyle(StageStyle.TRANSPARENT);
+		
 		try {
 			databaseHelper.connectToDatabase(); // Connect to the database
-			databaseHelper.qaHelper.connectToDatabase();
+			//databaseHelper.qaHelper.connectToDatabase();
 			if (databaseHelper.isDatabaseEmpty()) {
 
 				new AdminSetupPage(databaseHelper).show(primaryStage);
@@ -31,6 +37,8 @@ public class StartCSE360 extends Application {
 		
 		// Removes icon from title bar in alert window		
 		//primaryStage.getIcons().clear();
+		
+		
 		
 		primaryStage.setTitle("");
 	}

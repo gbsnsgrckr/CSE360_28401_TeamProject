@@ -32,9 +32,9 @@ public class QAHelper1 {
 	static final String USER = "sa";
 	static final String PASS = "";
 
-	private Connection connection = null;
-	private Statement statement = null;
-	
+	public Connection connection = null;
+	public Statement statement = null;
+
 	public QAHelper1(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
@@ -43,16 +43,10 @@ public class QAHelper1 {
 	public void connectToDatabase() throws SQLException {
 		try {
 			Class.forName(JDBC_DRIVER); // Load the JDBC driver
-			System.out.println("Connecting to database...");
+			System.out.println("Connecting to QA database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
 			statement = connection.createStatement();
-			// You can use this command to clear the Question/Answer database and restart
-			// from fresh.
-			// statement.execute("DROP ALL OBJECTS");
-			// System.out.println("Database cleared successfully.");
-
-			createTables();
 		} catch (ClassNotFoundException e) {
 			System.err.println("JDBC Driver not found: " + e.getMessage());
 		}
@@ -64,29 +58,16 @@ public class QAHelper1 {
 		String questionTable = "CREATE TABLE IF NOT EXISTS cse360question ("
 				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "title VARCHAR(255), " + "text TEXT DEFAULT NULL, "
 				+ "author INT, " + "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
-				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "answer_id VARCHAR(255) DEFAULT NULL, "
+				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "answer_id VARCHAR(MAX) DEFAULT NULL, "
 				+ "preferred_answer INT DEFAULT NULL)";
-//				+ "FOREIGN KEY (author) REFERENCES cse360users(id))";		// Currently not linked to user database
 		statement.execute(questionTable);
 
 		// Create the answer database
 		String answerTable = "CREATE TABLE IF NOT EXISTS cse360answer ("
 				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "text TEXT DEFAULT NULL, " + "author INT, "
-				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP)";
-//				+ "FOREIGN KEY (author) REFERENCES cse360users(id))";		// Currently not linked to user database
+				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
+				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
-
-		/*
-		 * Eliminating the relation database and integrating the functionality into the
-		 * question database // Create the relation database String relationTable =
-		 * "CREATE TABLE IF NOT EXISTS cse360relation (" + "question_id INT NOT NULL, "
-		 * + "answer_id INT NOT NULL, " + "preferred_answer BOOLEAN DEFAULT NULL, " +
-		 * "FOREIGN KEY (question_id) REFERENCES cse360question(id) ON DELETE CASCADE, "
-		 * // +
-		 * "FOREIGN KEY (answer_id) REFERENCES cse360answer(id) ON DELETE CASCADE, " //
-		 * + "PRIMARY KEY (question_id, answer_id), " +
-		 * "UNIQUE (question_id, preferred_answer))"; statement.execute(relationTable);
-		 */
 	}
 
 	// Check if the database is empty - Only checks the question database at the
@@ -113,7 +94,7 @@ public class QAHelper1 {
 	}
 
 	// Registers a new answer in the database.
-	public void registerAnswer(Answer answer, int questionID) throws SQLException {
+	public void registerAnswerWithQuestion(Answer answer, int relatedID) throws SQLException {
 		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
 		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
 			pstmt.setString(1, answer.getText());
@@ -123,7 +104,26 @@ public class QAHelper1 {
 			ResultSet newID = pstmt.getGeneratedKeys();
 			if (newID.next()) {
 				int answerID = newID.getInt(1);
-				addRelation(questionID, answerID);
+				addRelationToQuestion(relatedID, answerID);
+			}
+
+		}
+		System.out.println("Answer registered successfully.");
+	}
+
+	// Registers a new answer in the database.
+	public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
+		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
+		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
+			pstmt.setString(1, answer.getText());
+			pstmt.setInt(2, answer.getAuthorId());
+			pstmt.executeUpdate();
+
+			ResultSet newID = pstmt.getGeneratedKeys();
+
+			if (newID.next()) {
+				int answerID = newID.getInt(1);
+				addRelationToAnswer(relatedID, answerID);
 			}
 
 		}
@@ -174,8 +174,8 @@ public class QAHelper1 {
 		}
 	}
 
-	// Add a relation to the relation database
-	public void addRelation(int questionID, int answerID) {
+	// Add a relation to the question database
+	public void addRelationToQuestion(int questionID, int answerID) {
 		String selectQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
 		String updateQuery = "UPDATE cse360question SET answer_id = ? WHERE id = ?";
 		try (PreparedStatement pstmt = connection.prepareStatement(selectQuery)) {
@@ -202,9 +202,45 @@ public class QAHelper1 {
 			} else {
 				System.err.println("Could not find a question with id: " + questionID);
 			}
+
 		} catch (SQLException e) {
 			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
 		}
+	}
+
+	// Add a relation to the answer database
+	public void addRelationToAnswer(int answerID, int relatedID) {
+		String selectQuery = "SELECT answer_id FROM cse360answer WHERE id = ?";
+		String updateQuery = "UPDATE cse360answer SET answer_id = ? WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(selectQuery)) {
+			pstmt.setInt(1, answerID);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				String answerIDs = rs.getString("answer_id");
+				String newAnswerIDs;
+
+				// Check if null or empty
+				if (answerIDs == null || answerIDs.trim().isEmpty()) {
+					newAnswerIDs = String.valueOf(relatedID);
+				} else {
+					// If it is not empty or null, then add a comma and space
+					newAnswerIDs = answerIDs + ", " + relatedID;
+				}
+
+				try (PreparedStatement upstmt = connection.prepareStatement(updateQuery)) {
+					upstmt.setString(1, newAnswerIDs);
+					upstmt.setInt(2, answerID);
+					upstmt.executeUpdate();
+				}
+			} else {
+				System.err.println("Could not find an answer with id: " + answerID);
+			}
+
+		} catch (SQLException e) {
+			System.err.println(e.getMessage() + "\nERROR IN ADD-RELATION METHOD");
+		}
+
 	}
 
 	// Delete a relation from the relation database
@@ -274,16 +310,73 @@ public class QAHelper1 {
 				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
-				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;				
-				
-				List<String> comp = textDeserial(text);
-				
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+				List<String> comp = textDeserial(title + text);
+
 				int preferredAnswer = rs.getInt("preferred_answer");
-				
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName, relatedId);
+
+				// Return the question object
+				return question;
+			}
+		}
+		return null;
+	}
+
+	// Get a question object with a provided question title
+	public Question getQuestion(String questionTitle) throws SQLException {
+		// Search the question database for a match to the question id
+		String query = "SELECT * FROM cse360question AS c WHERE c.title = ?	";
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, questionTitle);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title"); // for each row, get all of the user attributes
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_On");
+				// Convert to LocalDateTime format
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_On");
+				// Convert to LocalDateTime format
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+				List<String> comp = textDeserial(title + text);
+
+				int preferredAnswer = rs.getInt("preferred_answer");
+
+				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
+
+				// Create a new question object with the pulled info
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName, relatedId);
 
 				// Return the question object
 				return question;
@@ -311,11 +404,20 @@ public class QAHelper1 {
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-				
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
 
 				// Return the answer object
 				return answer;
@@ -345,12 +447,22 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 				int preferredAnswer = rs.getInt("preferred_answer");
 
-				List<String> comp = textDeserial(text);
-				
+				List<String> comp = textDeserial(title + text);
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -359,10 +471,12 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
-	
+
 	public List<Question> getAllUnansweredQuestions() throws SQLException {
-		String query = "SELECT * FROM cse360question WHERE answer_id IS NULL OR answer_id = ''"; // selecting all of the rows in the database
-		List<Question> questions = new ArrayList<>();											// that don't have an answer id
+		String query = "SELECT * FROM cse360question WHERE answer_id IS NULL OR answer_id = ''"; // selecting all of the
+																									// rows in the
+																									// database
+		List<Question> questions = new ArrayList<>(); // that don't have an answer id
 
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			ResultSet rs = pstmt.executeQuery();
@@ -381,11 +495,21 @@ public class QAHelper1 {
 				int preferredAnswer = rs.getInt("preferred_answer");
 
 				List<String> comp = textDeserial(text);
-				
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -394,10 +518,13 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
-	
+
 	public List<Question> getAllAnsweredQuestions() throws SQLException {
-		String query = "SELECT * FROM cse360question WHERE answer_id IS NOT NULL AND answer_id <> ''"; // selecting all of the rows in the database
-		List<Question> questions = new ArrayList<>();											// that don't have an answer id
+		String query = "SELECT * FROM cse360question WHERE answer_id IS NOT NULL AND answer_id <> ''"; // selecting all
+																										// of the rows
+																										// in the
+																										// database
+		List<Question> questions = new ArrayList<>(); // that don't have an answer id
 
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			ResultSet rs = pstmt.executeQuery();
@@ -416,11 +543,21 @@ public class QAHelper1 {
 				int preferredAnswer = rs.getInt("preferred_answer");
 
 				List<String> comp = textDeserial(text);
-				
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new question object with the pulled info
-				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer, author);
+				Question question = new Question(id, title, text, authorId, createdOn, updatedOn, comp, preferredAnswer,
+						author, authorName, relatedId);
 
 				// Add question object to the list questions
 				questions.add(question);
@@ -449,11 +586,20 @@ public class QAHelper1 {
 				Timestamp updated = rs.getTimestamp("updated_On");
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-				
+
 				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+
+				if (author != null) {
+					authorName = author.getName();
+				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
 				// Create a new answer object with the pulled info
-				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author);
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
 
 				// Add the new answer object to the list of answer objects
 				answers.add(answer);
@@ -464,9 +610,9 @@ public class QAHelper1 {
 	}
 
 	// Retrieve all of the answers that are associated with a given question id from
-	// the relation database
+	// the question database
 	public List<Answer> getAllAnswersForQuestion(int questionID) throws SQLException {
-		String query = "SELECT answer_id FROM cse360question WHERE id = ?";				
+		String query = "SELECT answer_id FROM cse360question WHERE id = ?";
 		List<Answer> answers = new ArrayList<>();
 
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -475,30 +621,30 @@ public class QAHelper1 {
 
 			if (rs.next()) {
 				String answerIDs = rs.getString("answer_id");
-				
+
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					System.err.println("Error: There are no answers related to this question.");
+					// System.err.println("Error: There are no answers related to this question.");	// Debug
 					return answers;
 				}
-				
+
 				// convert comma separated list into an array
 				String[] answerIdArray = answerIDs.split(",\\s");
-				
-				String temp = String.join(",",  Collections.nCopies(answerIdArray.length, "?"));
-				String newQuery = "SELECT id, text, author, created_On, updated_On FROM cse360answer WHERE id IN ("
+
+				String temp = String.join(",", Collections.nCopies(answerIdArray.length, "?"));
+				String newQuery = "SELECT id, text, author, created_On, updated_On, answer_id FROM cse360answer WHERE id IN ("
 						+ temp + ")";
 				try (PreparedStatement upstmt = connection.prepareStatement(newQuery)) {
-					
+
 					for (int i = 0; i < answerIdArray.length; i++) {
-						upstmt.setInt(i + 1, Integer.parseInt(answerIdArray[i].trim()));						
+						upstmt.setInt(i + 1, Integer.parseInt(answerIdArray[i].trim()));
 					}
-					
+
 					ResultSet newRs = upstmt.executeQuery();
-					
+
 					while (newRs.next()) {
 						int id = newRs.getInt("id");
 						String text = newRs.getString("text");
-						int author = newRs.getInt("author");
+						int authorId = newRs.getInt("author");
 						Timestamp created = newRs.getTimestamp("created_On");
 						// Convert to LocalDateTime format
 						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
@@ -506,8 +652,20 @@ public class QAHelper1 {
 						// Convert to LocalDateTime format
 						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+
+						String subAnswerIDs = newRs.getString("answer_id");
+						// convert comma separated list into an array
+						List<String> relatedId = subAnswerIDs != null ? List.of(subAnswerIDs.split(",\\s")) : null;
+
 						// Create a new answer object with the pulled info
-						Answer answer = new Answer(id, text, author, createdOn, updatedOn);
+						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName,
+								relatedId);
 
 						// Add the new answer object to the list of answer objects
 						answers.add(answer);
@@ -515,6 +673,76 @@ public class QAHelper1 {
 				}
 			} else {
 				System.err.println("Error. Question id, " + questionID + ", was not found");
+			}
+		}
+		// Return the list of answer objects
+		return answers;
+	}
+
+	// Retrieve all of the answers that are associated with a given answer id from
+	// the answer database
+	public List<Answer> getAllAnswersForAnswer(int answerID) throws SQLException {
+		String query = "SELECT answer_id FROM cse360answer WHERE id = ?";
+		List<Answer> answers = new ArrayList<>();
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, answerID);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {
+				String answerIDs = rs.getString("answer_id");
+
+				if (answerIDs == null || answerIDs.trim().isEmpty()) {
+					// System.err.println("Error: There are no answers related to this answer."); 			// Debug
+					return answers;
+				}
+
+				// convert comma separated list into an array
+				String[] answerIdArray = answerIDs.split(",\\s");
+
+				String temp = String.join(",", Collections.nCopies(answerIdArray.length, "?"));
+				String newQuery = "SELECT id, text, author, created_On, updated_On, answer_id FROM cse360answer WHERE id IN ("
+						+ temp + ")";
+				try (PreparedStatement upstmt = connection.prepareStatement(newQuery)) {
+
+					for (int i = 0; i < answerIdArray.length; i++) {
+						upstmt.setInt(i + 1, Integer.parseInt(answerIdArray[i].trim()));
+					}
+
+					ResultSet newRs = upstmt.executeQuery();
+
+					while (newRs.next()) {
+						int id = newRs.getInt("id");
+						String text = newRs.getString("text");
+						int authorId = newRs.getInt("author");
+						Timestamp created = newRs.getTimestamp("created_On");
+						// Convert to LocalDateTime format
+						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+						Timestamp updated = newRs.getTimestamp("updated_On");
+						// Convert to LocalDateTime format
+						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+
+						String subAnswerIDs = newRs.getString("answer_id");
+						// convert comma separated list into an array
+						List<String> relatedId = subAnswerIDs != null ? List.of(subAnswerIDs.split(",\\s")) : null;
+
+						// Create a new answer object with the pulled info
+						Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName,
+								relatedId);
+
+						// Add the new answer object to the list of answer objects
+						answers.add(answer);
+					}
+				}
+			} else {
+				System.err.println("Error. Answer id, " + answerID + ", was not found");
 			}
 		}
 		// Return the list of answer objects

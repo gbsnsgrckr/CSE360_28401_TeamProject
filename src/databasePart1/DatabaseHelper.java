@@ -9,11 +9,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import application.Answer;
 import application.Question;
 import application.User;
+import tests.*;
 
 /**
  * The DatabaseHelper class is responsible for managing the connection to the
@@ -34,10 +34,10 @@ public class DatabaseHelper {
 	private Statement statement = null;
 
 	public User currentUser;
-	
+
 	// Create QAHelper object
 	public final QAHelper1 qaHelper;
-	
+
 	// Initialize new QAHelper object2
 	public DatabaseHelper() {
 		qaHelper = new QAHelper1(this);
@@ -45,30 +45,78 @@ public class DatabaseHelper {
 
 	public void connectToDatabase() throws SQLException {
 		try {
+			qaHelper.connectToDatabase();
+
 			Class.forName(JDBC_DRIVER); // Load the JDBC driver
-			System.out.println("Connecting to database...");
+			System.out.println("Connecting to User database...");
 			connection = DriverManager.getConnection(DB_URL, USER, PASS);
 
 			statement = connection.createStatement();
-			// You can use this command to clear the database and restart from fresh.
-			// statement.execute("DROP ALL OBJECTS");
-			// System.out.println("Database cleared successfully.");
+			/*------------------------------------------------------------------------------------------------*/
+			/* You can use this command to clear the databases and restart from fresh. */
 
-			createTables();
+			boolean resetUserDatabase = false; // Set to true if you want to reset the User Database
+			boolean resetQADatabase = false; // Set to true if you want to reset the QA Database
+
+			int a = 0; // Set this to 1 if you wish to populate User Database(0 or 1)
+			int b = 0; // Set this to the number of times you want to populate the QA
+						// Database(0 or greater)
+
+			/*------------------------------------------------------------------------------------------------*/
+
+			// If set to true, then clear User Database
+			if (resetUserDatabase) {
+				statement.execute("DROP ALL OBJECTS");
+				System.out.println("User Database cleared successfully.");
+			}
+
+			// If set to true, then clear QA Database
+			if (resetQADatabase) {
+				qaHelper.statement.execute("DROP ALL OBJECTS");
+				System.out.println("Question/Answer Database cleared successfully.");
+			}
+
+			// Create tables for Users Database
+			this.createTables();
+
+			// Populate the User Database if set to above
+			for (int i = 0; i < a; i++) {
+				new PopulateUserDatabase(this).execute();
+			}
+
+			// Create tables for QA Database
+			qaHelper.createTables();
+
+			// Populate the QA Database if set to above
+			for (int n = 0; n < b; n++) {
+				new PopulateQADatabase(qaHelper).execute();
+			}
+
 		} catch (ClassNotFoundException e) {
 			System.err.println("JDBC Driver not found: " + e.getMessage());
 		}
 	}
 
+	// Create the tables for the User Database
 	private void createTables() throws SQLException {
-		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" + "id INT AUTO_INCREMENT PRIMARY KEY, " 
-				+ "userName VARCHAR(255) UNIQUE, " + "name VARCHAR(255), " + "password VARCHAR(255), "	// added in username, name, password, email, OTPFlag	  
-				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "reviewerIds VARCHAR(70)" + "otp BOOLEAN DEFAULT FALSE)";  // added in roles as a comma separated string
+		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" + "id INT AUTO_INCREMENT PRIMARY KEY, "
+				+ "userName VARCHAR(255) UNIQUE, " + "name VARCHAR(255), " + "password VARCHAR(255), " // added in
+																										// username,
+																										// name,
+																										// password,
+																										// email,
+																										// OTPFlag
+				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "otp BOOLEAN DEFAULT FALSE)"; // added in roles as a
+																									// comma separated
+																									// string
 		statement.execute(userTable);
 
 		// Create the invitation codes table
 		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" + "code VARCHAR(10) PRIMARY KEY, "
-				+ "isUsed BOOLEAN DEFAULT FALSE," + "generatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";  // new date variable for code timeout
+				+ "isUsed BOOLEAN DEFAULT FALSE," + "generatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"; // new date
+																											// variable
+																											// for code
+																											// timeout
 		statement.execute(invitationCodesTable);
 	}
 
@@ -82,98 +130,11 @@ public class DatabaseHelper {
 		return true;
 	}
 
-	//// REVIEWER IDS
-	public List<Integer> getAllReviewerIds(int userId) throws SQLException {
-		String query = "SELECT reviewerIds FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
-		List<Integer> reviewerIds = new ArrayList<>();
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-			
-			if (rs.next()) {
-				reviewerIds = reviewerDeserial(rs.getString("reviewerIds"));
-			}
-		}
-		return reviewerIds;
-	}
-	
-	public boolean addReviewerId(int userId, int reviewerId) throws SQLException {
- 		String query = "SELECT reviewerIds FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-
-			if (rs.next()) {   // if the user is found
-				List<Integer> reviewers = reviewerDeserial(rs.getString("reviewerIds"));  // deserialize string into list of roles
-				if (!reviewers.contains(reviewerId)) {  						    // make sure to not duplicate roles
-					reviewers.add(reviewerId);   									// add new roles
-
-					String reviewerString = reviewerSerial(reviewers);               	// serialize list of roles into a string
-					try {
-						updateReviewerIds(reviewers, userId);                 // calling updateRoles for reusability
-						return true;
-					} catch (SQLException e) {
-						System.out.println(e.getMessage() + "\n" + "ERROR IN UPDATEREVIEWERS");
-						return false;
-					}
-				} else {
-					System.out.println("UPDATEREVIEWERS: User already has this reviewer");
-					return false;
-				}
-			}
-			System.out.println("UPDATEREVIEWERS: User was not found");
-			return false;
-		}
-	}
-	
-	public boolean updateReviewerIds(List<Integer> reviewers, int userId) throws SQLException {
- 		String query = "UPDATE cse360users SET reviewerIds = ? WHERE id = ?";            // selecting all of the rows in the database
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setString(1, reviewerSerial(reviewers));
-			pstmt.setInt(2, userId);
-			pstmt.executeUpdate();
-			return true;
-		}
-	}
-	
-	public boolean removeReviewer(int userId, int reviewerId) throws SQLException {
-		String query = "SELECT reviewerIds FROM cse360users AS c WHERE c.id = ?	";
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId);
-			ResultSet rs = pstmt.executeQuery();
-
-			if (rs.next()) {
-				List<Integer> reviewers = reviewerDeserial(rs.getString("reviewerIds"));   // get list of deserialized roles
-
-				if (reviewers.contains(reviewerId)) {    							// make sure that user has this role
-					reviewers.remove(reviewers.indexOf(reviewerId)); 					// possible to delete last role
-
-					String reviewersString = reviewerSerial(reviewers);                // serialize roles into a string 
-					try {
-						updateReviewerIds(reviewers, userId);					// reusing updateRoles method
-						return true;	
-					} catch (SQLException e) {
-						System.out.println(e.getMessage() + "\n" + "ERROR IN UPDATEROLES");
-						return false;
-					}
-				} else {
-					System.out.println("REMOVEREVIEWER: User does not have this reviewer");
-					return false;
-				}
-			} else {
-				System.out.println("REMOVEREVIEWER: Reviewer was not found");
-			}
-		}
-		return false;
-	}
-	
 	// Registers a new user in the database.
-	public void register(User user) throws SQLException {  
+	public void register(User user) throws SQLException {
 		String insertUser = "INSERT INTO cse360users (userName, name, password, email, roles, otp) VALUES (?, ?, ?, ?, ?, ?)";
-		try (PreparedStatement pstmt = connection.prepareStatement(insertUser)) {    // added new values to set corresponding to tables
+		try (PreparedStatement pstmt = connection.prepareStatement(insertUser)) { // added new values to set
+																					// corresponding to tables
 			pstmt.setString(1, user.getUsername());
 			pstmt.setString(2, user.getName());
 			pstmt.setString(3, user.getPassword());
@@ -185,7 +146,8 @@ public class DatabaseHelper {
 	}
 
 	public void updateRoles(String username, String roles) throws SQLException {
-		String insertUser = "UPDATE cse360users SET roles = ? WHERE username = ?";  // updating the roles for a user, add or remove
+		String insertUser = "UPDATE cse360users SET roles = ? WHERE username = ?"; // updating the roles for a user, add
+																					// or remove
 
 		try (PreparedStatement pstmt = connection.prepareStatement(insertUser)) {
 			pstmt.setString(1, roles);
@@ -196,7 +158,7 @@ public class DatabaseHelper {
 	}
 
 	public void updatePassword(String username, String password) {
-		String insertUser = "UPDATE cse360users SET password = ? WHERE username = ?";  // able to update password for OTP
+		String insertUser = "UPDATE cse360users SET password = ? WHERE username = ?"; // able to update password for OTP
 
 		try (PreparedStatement pstmt = connection.prepareStatement(insertUser)) {
 			pstmt.setString(1, password);
@@ -209,7 +171,8 @@ public class DatabaseHelper {
 	}
 
 	public void updateOTPFlag(String username, boolean flag) {
-		String insertUser = "UPDATE cse360users SET otp = ? WHERE username = ?";  // able to update if the user is using a OTP
+		String insertUser = "UPDATE cse360users SET otp = ? WHERE username = ?"; // able to update if the user is using
+																					// a OTP
 
 		try (PreparedStatement pstmt = connection.prepareStatement(insertUser)) {
 			pstmt.setBoolean(1, flag);
@@ -222,7 +185,7 @@ public class DatabaseHelper {
 	}
 
 	public User getUser(String username) throws SQLException {
-		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";  // getting all of the fields of a user
+		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	"; // getting all of the fields of a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, username);
 			ResultSet rs = pstmt.executeQuery();
@@ -230,49 +193,56 @@ public class DatabaseHelper {
 			if (rs.next()) {
 				int id = rs.getInt("id");
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
-				boolean otp = rs.getBoolean("otp");				
+				boolean otp = rs.getBoolean("otp");
 				return new User(id, username, name, password, email, roles, otp);
 			}
 		}
 		return null;
 	}
-	
+
 	public User getUser(int id) throws SQLException {
-		String query = "SELECT * FROM cse360users AS c WHERE c.id = ?	";  // getting all of the fields of a user
+		String query = "SELECT * FROM cse360users AS c WHERE c.id = ?	"; // getting all of the fields of a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setInt(1, id);
 			ResultSet rs = pstmt.executeQuery();
 
-			if (rs.next()) {				
+			if (rs.next()) {
 				String username = rs.getString("userName");
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
-				boolean otp = rs.getBoolean("otp");				
+				boolean otp = rs.getBoolean("otp");
 				return new User(id, username, name, password, email, roles, otp);
 			}
 		}
 		return null;
 	}
 
-	public boolean addRoles(String username, String newRole) throws SQLException {  // able to add roles based on username
+	public boolean addRoles(String username, String newRole) throws SQLException { // able to add roles based on
+																					// username
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, username);
 			ResultSet rs = pstmt.executeQuery();
 
-			if (rs.next()) {   // if the user is found
-				List<String> roles = rolesDeserial(rs.getString("roles"));  // deserialize string into list of roles
-				if (!roles.contains(newRole)) {  						    // make sure to not duplicate roles
-					roles.add(newRole);   									// add new roles
+			if (rs.next()) { // if the user is found
+				List<String> roles = rolesDeserial(rs.getString("roles")); // deserialize string into list of roles
+				if (!roles.contains(newRole)) { // make sure to not duplicate roles
+					roles.add(newRole); // add new roles
 
-					String rolesString = rolesSerial(roles);               	// serialize list of roles into a string
+					String rolesString = rolesSerial(roles); // serialize list of roles into a string
 					try {
-						updateRoles(username, rolesString);                 // calling updateRoles for reusability
+						updateRoles(username, rolesString); // calling updateRoles for reusability
 						return true;
 					} catch (SQLException e) {
 						System.out.println(e.getMessage() + "\n" + "ERROR IN ADDROLES/REGISTER");
@@ -291,22 +261,24 @@ public class DatabaseHelper {
 	public boolean removeRoles(String username, String newRole) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
 
-		if (!newRole.equalsIgnoreCase("admin") && currentUser.getRoles().size() > 1) {   // make sure that you are not deleting the only admin's roles
+		if (!newRole.equalsIgnoreCase("admin") && currentUser.getRoles().size() > 1) { // make sure that you are not
+																						// deleting the only admin's
+																						// roles
 
 			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 				pstmt.setString(1, username);
 				ResultSet rs = pstmt.executeQuery();
 
 				if (rs.next()) {
-					List<String> roles = rolesDeserial(rs.getString("roles"));   // get list of deserialized roles
+					List<String> roles = rolesDeserial(rs.getString("roles")); // get list of deserialized roles
 
-					if (roles.contains(newRole)) {    							// make sure that user has this role
-						roles.remove(roles.indexOf(newRole)); 					// possible to delete last role
+					if (roles.contains(newRole)) { // make sure that user has this role
+						roles.remove(roles.indexOf(newRole)); // possible to delete last role
 
-						String rolesString = rolesSerial(roles);                // serialize roles into a string 
+						String rolesString = rolesSerial(roles); // serialize roles into a string
 						try {
-							updateRoles(username, rolesString);					// reusing updateRoles method
-							return true;	
+							updateRoles(username, rolesString); // reusing updateRoles method
+							return true;
 						} catch (SQLException e) {
 							System.out.println(e.getMessage() + "\n" + "ERROR IN REMOVEROLES/REGISTER");
 							return false;
@@ -325,9 +297,10 @@ public class DatabaseHelper {
 	}
 
 	public boolean deleteUser(String username) {
-		if (!username.equals(currentUser.getUsername())) {          //make sure the the correct user is getting deleted
+		if (!username.equals(currentUser.getUsername())) { // make sure the the correct user is getting deleted
 
-			String query = "DELETE FROM cse360users AS c WHERE c.username = ?";       // delete the correct user row from database
+			String query = "DELETE FROM cse360users AS c WHERE c.username = ?"; // delete the correct user row from
+																				// database
 			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 				pstmt.setString(1, username);
 
@@ -347,7 +320,7 @@ public class DatabaseHelper {
 	}
 
 	public List<User> getAllUsers() throws SQLException {
-		String query = "SELECT * FROM cse360users";            // selecting all of the rows in the database
+		String query = "SELECT * FROM cse360users"; // selecting all of the rows in the database
 		List<User> users = new ArrayList<>();
 
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -355,15 +328,50 @@ public class DatabaseHelper {
 
 			while (rs.next()) {
 				int id = rs.getInt("id");
-				String username = rs.getString("username");      // for each row, get all of the user attributes
+				String username = rs.getString("username"); // for each row, get all of the user attributes
 				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
 				String password = rs.getString("password");
 				String email = rs.getString("email");
 				List<String> roles = rolesDeserial(rs.getString("roles"));
-				boolean otp = rs.getBoolean("otp");				
-				User user = new User(id, username, name, password, email, roles, otp);  // create new user with all of the attributes
-				System.out.println("USERS: " + user.toString());
-				users.add(user);                                                    // add new user to the list of users
+				boolean otp = rs.getBoolean("otp");
+				User user = new User(id, username, name, password, email, roles, otp); // create new user with all of
+																						// the attributes
+				users.add(user); // add new user to the list of users
+			}
+		}
+		return users;
+	}
+
+	// Retrieves all users with a specified role
+	public List<User> getAllUsersWithRole(String role) throws SQLException {
+		String query = "SELECT * FROM cse360users WHERE roles LIKE ?";
+		List<User> users = new ArrayList<>();
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, "%" + role + "%");
+
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String username = rs.getString("username"); // for each row, get all of the user attributes
+				String name = rs.getString("name");
+				if (name == null || name.isEmpty()) {
+					name = "User";
+				}
+				String password = rs.getString("password");
+				String email = rs.getString("email");
+				List<String> roles = rolesDeserial(rs.getString("roles"));
+				boolean otp = rs.getBoolean("otp");
+
+				if (roles.contains(role)) {
+					User user = new User(id, username, name, password, email, roles, otp); // create new user
+
+					users.add(user); // add new user to the list of users
+				}
 			}
 		}
 		return users;
@@ -372,35 +380,35 @@ public class DatabaseHelper {
 	// Validates a user's login credentials.
 	public User login(String username, String password) throws SQLException {
 		String query = "SELECT * FROM cse360users WHERE userName = ? AND password = ? AND password <> ''";
-		if (connection == null) {															// connection has been becoming null for some reason
-			connectToDatabase();														
-			System.out.println("CONNECTIONCONNECTIONCONNECTION: " + connection.toString());	// debug
+		if (connection == null) { // connection has been becoming null for some reason
+			connectToDatabase();
+			System.out.println("CONNECTIONCONNECTIONCONNECTION: " + connection.toString()); // debug
 		}
-		
+
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, username);
 			pstmt.setString(2, password);
-			
 
 			try (ResultSet rs = pstmt.executeQuery()) {
 				if (rs.next()) {
 					// Set currentUser since successful login at this point
 					currentUser = getUser(username);
-					
+
 					boolean otp = rs.getBoolean("otp");
 					String storedPW = rs.getString("password");
-					
-					// If password is blank, login fails - password is set to blank after logging in with a one-time password
+
+					// If password is blank, login fails - password is set to blank after logging in
+					// with a one-time password
 					if (storedPW.isEmpty()) {
 						System.out.println("Password is empty."); // Debug
 						return null;
 					}
-					if (otp) {              
+					if (otp) {
 						// Reset password to "" or blank
 						String updateQuery = "UPDATE cse360users SET password = '' WHERE userName = ?";
 						try (PreparedStatement updatepstmt = connection.prepareStatement(updateQuery)) {
 							updatepstmt.setString(1, username);
-							updatepstmt.executeUpdate();							
+							updatepstmt.executeUpdate();
 						}
 					}
 					return currentUser;
@@ -412,7 +420,7 @@ public class DatabaseHelper {
 
 	// Checks if a user already exists in the database based on their userName.
 	public boolean doesUserExist(String userName) {
-		String query = "SELECT COUNT(*) FROM cse360users WHERE userName = ?";  // make sure that user exists
+		String query = "SELECT COUNT(*) FROM cse360users WHERE userName = ?"; // make sure that user exists
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 
 			pstmt.setString(1, userName);
@@ -430,13 +438,14 @@ public class DatabaseHelper {
 
 	// Retrieves the role of a user from the database using their UserName.
 	public List<String> getUserRole(String userName) {
-		String query = "SELECT roles FROM cse360users WHERE userName = ?";     // getting all of the roles for a user
+		String query = "SELECT roles FROM cse360users WHERE userName = ?"; // getting all of the roles for a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, userName);
 			ResultSet rs = pstmt.executeQuery();
 
 			if (rs.next()) {
-				return rolesDeserial(rs.getString("roles")); // Return the role if user exists, deserializing into a list
+				return rolesDeserial(rs.getString("roles")); // Return the role if user exists, deserializing into a
+																// list
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -447,7 +456,10 @@ public class DatabaseHelper {
 	// Generates a new invitation code and inserts it into the database.
 	public String generateInvitationCode() {
 		String code = UUID.randomUUID().toString().substring(0, 4); // Generate a random 4-character code
-		String query = "INSERT INTO InvitationCodes (code, generatedDate) VALUES (?, CURRENT_TIMESTAMP)";  //added timeStamp for invalidation 
+		String query = "INSERT INTO InvitationCodes (code, generatedDate) VALUES (?, CURRENT_TIMESTAMP)"; // added
+																											// timeStamp
+																											// for
+																											// invalidation
 		System.out.println(code);
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, code);
@@ -460,27 +472,27 @@ public class DatabaseHelper {
 	}
 
 	public String generateOneTimePassword() {
-		String special = "~`!@#$%^&*()_-+{}[]|:,.?/";  // same list of special characters in PasswordEvaluator
-		String lower = "abcdefghijklmnopqrstuvwxyz";   // alphabet in lowercase
-		String upper = lower.toUpperCase();			   // using lowercase alphabet to uppercase 
+		String special = "~`!@#$%^&*()_-+{}[]|:,.?/"; // same list of special characters in PasswordEvaluator
+		String lower = "abcdefghijklmnopqrstuvwxyz"; // alphabet in lowercase
+		String upper = lower.toUpperCase(); // using lowercase alphabet to uppercase
 		String OTP = "";
 		Random random = new Random();
 		int rand = 0;
 
-		for (int i = 0; i < 6; i++) {                  // first 6 characters will be only chars
-			rand = random.nextInt(26);                 // generating a random number from 0-25 (random is exclusive)
+		for (int i = 0; i < 6; i++) { // first 6 characters will be only chars
+			rand = random.nextInt(26); // generating a random number from 0-25 (random is exclusive)
 
-			if (i % 2 == 0) {                          // for each even character, character will be lowercase
+			if (i % 2 == 0) { // for each even character, character will be lowercase
 				OTP = OTP + lower.charAt(rand);
-			} else {                                   // for each odd character,character will be uppercase
+			} else { // for each odd character,character will be uppercase
 				OTP = OTP + upper.charAt(rand);
 			}
 		}
 
-		rand = random.nextInt(9);                      // reset random to only be 0-9
-		OTP = OTP + rand;                  			   // add random number to OTP
-		rand = random.nextInt(special.length());       // reset random to special char length (random exclusive)
-		OTP = OTP + special.charAt(rand);              // add random special character to OTP
+		rand = random.nextInt(9); // reset random to only be 0-9
+		OTP = OTP + rand; // add random number to OTP
+		rand = random.nextInt(special.length()); // reset random to special char length (random exclusive)
+		OTP = OTP + special.charAt(rand); // add random special character to OTP
 		return OTP;
 	}
 
@@ -505,7 +517,8 @@ public class DatabaseHelper {
 
 	// Marks the invitation code as used in the database.
 	private void markInvitationCodeAsUsed(String code) {
-		String query = "UPDATE InvitationCodes SET isUsed = TRUE WHERE code = ?";  // update Invitation Code to true when used
+		String query = "UPDATE InvitationCodes SET isUsed = TRUE WHERE code = ?"; // update Invitation Code to true when
+																					// used
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setString(1, code);
 			pstmt.executeUpdate();
@@ -514,44 +527,25 @@ public class DatabaseHelper {
 		}
 	}
 
-	private List<String> rolesDeserial(String roles) {  // Deserializing from String to List<Roles> for easier logic
+	private List<String> rolesDeserial(String roles) { // Deserializing from String to List<Roles> for easier logic
 		if (roles == null || roles == "") {
-			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
+			return new ArrayList<>(); // if roles is empty or null, return empty list, was returning 1 comma before
+										// this
 		} else {
-			return new ArrayList<>(Arrays.asList(roles.split(",")));  // return mutable list that is split on commmas from database
+			return new ArrayList<>(Arrays.asList(roles.split(","))); // return mutable list that is split on commmas
+																		// from database
 		}
 	}
 
-	private String rolesSerial(List<String> roles) {   // serializing a List<Roles> into a string to be stored in database
-		if (roles == null || roles.isEmpty()) {        // make sure that the list is not empty or null
+	private String rolesSerial(List<String> roles) { // serializing a List<Roles> into a string to be stored in database
+		if (roles == null || roles.isEmpty()) { // make sure that the list is not empty or null
 			return "";
-		} else {  
-			return String.join(",", roles);            // joining each Role in the list to be comma separated string
-		}
-	}
-	
-	private List<Integer> reviewerDeserial(String reviewers) {  // Deserializing from String to List<Roles> for easier logic
-		if (reviewers == null || reviewers == "") {
-			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
 		} else {
-			List<Integer> reviewerIds = Arrays.asList(reviewers.split(",")).stream().map(r -> Integer.parseInt(r)).collect(Collectors.toList());
-			return new ArrayList<>(reviewerIds);
+			return String.join(",", roles); // joining each Role in the list to be comma separated string
 		}
 	}
 
-	private String reviewerSerial(List<Integer> reviewers) {   // serializing a List<Roles> into a string to be stored in database
-		if (reviewers == null || reviewers.isEmpty()) {        // make sure that the list is not empty or null
-			return "";
-		} else {  
-			String serial = "";
-			for (Integer i : reviewers) {
-				serial = serial + i.toString() + ",";
-			}
-			return serial;
-		}
-	}
-
-	public void setUserCurrentRole(String role) {      // public setter for when user picks their role
+	public void setUserCurrentRole(String role) { // public setter for when user picks their role
 		currentUser.setCurrentRole(role);
 	}
 
@@ -570,24 +564,20 @@ public class DatabaseHelper {
 			se.printStackTrace();
 		}
 	}
-	/*
-	 *---------------------------------------------------------------------------------------------------------
-	 *
-	 */
-	 
-	 public class QAHelper {
-	 
-	// Initialize connection to database
+
+	//
+	public class QAHelper {
+
+		// Initialize connection to database
 		public void connectToDatabase() throws SQLException {
 			qaHelper.connectToDatabase();
 		}
 
 		/*
-		// Create the tables that will be used to store the info	// I don't believe we need this part
-		private void createTables() throws SQLException {
-			qaHelper.createTables();
-		}
-		*/
+		 * // Create the tables that will be used to store the info // I don't believe
+		 * we need this part private void createTables() throws SQLException {
+		 * qaHelper.createTables(); }
+		 */
 
 		// Check if the database is empty
 		public boolean isDatabaseEmpty() throws SQLException {
@@ -599,9 +589,14 @@ public class DatabaseHelper {
 			qaHelper.registerQuestion(question);
 		}
 
+		// Registers a new question in the database.
+		public void registerAnswerWithQuestion(Answer answer, int questionID) throws SQLException {
+			qaHelper.registerAnswerWithQuestion(answer, questionID);
+		}
+
 		// Registers a new user in the database.
-		public void registerAnswer(Answer answer, int questionID) throws SQLException {
-			qaHelper.registerAnswer(answer, questionID);
+		public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
+			qaHelper.registerAnswerWithAnswer(answer, relatedID);
 		}
 
 		// Deletes a question row from the SQL table
@@ -614,9 +609,14 @@ public class DatabaseHelper {
 			return qaHelper.deleteAnswer(id);
 		}
 
-		// Add a relation to the relation database
-		public void addRelation(int questionID, int answerID) {
-			qaHelper.addRelation(questionID, answerID);
+		// Add a relation to the question database
+		public void addRelationToQuestion(int questionID, int answerID) {
+			qaHelper.addRelationToQuestion(questionID, answerID);
+		}
+
+		// Add a relation to the answer database
+		public void addRelationToAnswer(int questionID, int answerID) {
+			qaHelper.addRelationToAnswer(questionID, answerID);
 		}
 
 		// Delete a relation from the relation database
@@ -629,6 +629,11 @@ public class DatabaseHelper {
 			return qaHelper.getQuestion(questionID);
 		}
 
+		// Get a question object with a provided question title
+		public Question getQuestion(String questionTitle) throws SQLException {
+			return qaHelper.getQuestion(questionTitle);
+		}
+
 		// Get an answer object with a provided answer id
 		public Answer getAnswer(Integer answerID) throws SQLException {
 			return qaHelper.getAnswer(answerID);
@@ -639,15 +644,31 @@ public class DatabaseHelper {
 			return qaHelper.getAllQuestions();
 		}
 
+		// Retrieve all questions from question database that don't have answers
+		public List<Question> getAllUnansweredQuestions() throws SQLException {
+			return qaHelper.getAllUnansweredQuestions();
+		}
+
+		// Retrieve all questions from question database that have answers
+		public List<Question> getAllAnsweredQuestions() throws SQLException {
+			return qaHelper.getAllAnsweredQuestions();
+		}
+
 		// Retrieve all answers from the answer database
 		public List<Answer> getAllAnswers() throws SQLException {
 			return qaHelper.getAllAnswers();
 		}
 
 		// Retrieve all of the answers that are associated with a given question id from
-		// the relation database
+		// the answer database
 		public List<Answer> getAllAnswersForQuestion(int questionID) throws SQLException {
 			return qaHelper.getAllAnswersForQuestion(questionID);
+		}
+
+		// Retrieve all of the answers that are associated with a given answer id from
+		// the answer database
+		public List<Answer> getAllAnswersForAnswer(int answerID) throws SQLException {
+			return qaHelper.getAllAnswersForAnswer(answerID);
 		}
 
 		// Method used to convert the text of a question into a list of unique words
@@ -665,10 +686,5 @@ public class DatabaseHelper {
 		public void updateAnswer(Answer answer) {
 			qaHelper.updateAnswer(answer);
 		}
-}
-		
-	/*
-	 *-----------------------------------------------------------------------------------------------------
-	 *
-	 */
+	}
 }

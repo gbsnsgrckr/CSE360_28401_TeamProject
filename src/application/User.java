@@ -14,24 +14,12 @@ public class User {
 	private String email;
 	private String currentRole;
 	private List<String> roles;
-	private int preferredAnswer;
-	
+
 	// Flag will be true if one-time password is active on user
 	private boolean otp;
 
 	// Constructor to initialize a new User object with userName, password, and
 	// role.
-	public User(int id, String userName, String name, String password, String email, List<String> roles, boolean otp, int preferredAnswer) {
-		this.id = id;
-		this.userName = userName;
-		this.name = name;
-		this.password = password;
-		this.email = email;
-		this.roles = roles;
-		this.otp = otp;
-		this.preferredAnswer = preferredAnswer;
-	}
-	
 	public User(int id, String userName, String name, String password, String email, List<String> roles, boolean otp) {
 		this.id = id;
 		this.userName = userName;
@@ -41,8 +29,8 @@ public class User {
 		this.roles = roles;
 		this.otp = otp;
 	}
-	
-	public User(String userName, String name, String password, String email, List<String> roles, boolean otp) {	
+
+	public User(String userName, String name, String password, String email, List<String> roles, boolean otp) {
 		this.userName = userName;
 		this.name = name;
 		this.password = password;
@@ -51,14 +39,15 @@ public class User {
 		this.otp = otp;
 	}
 
-	public User(String username, String name, String password, String email, String currentRole, List<String> roles, boolean otp) {
+	public User(String username, String name, String password, String email, String currentRole, List<String> roles,
+			boolean otp) {
 
 	}
 
 	public void addRole(String role) {
 		roles.add(role);
 	}
-	
+
 	public int getUserId() {
 		return this.id;
 	}
@@ -86,13 +75,9 @@ public class User {
 	public List<String> getRoles() {
 		return this.roles;
 	}
-	
+
 	public boolean getOTPFlag() {
 		return this.otp;
-	}
-	
-	public int getPreferredAnswer() {
-		return this.preferredAnswer;
 	}
 
 	public void setPassword(String password) {
@@ -102,16 +87,23 @@ public class User {
 	public void setCurrentRole(String role) {
 		this.currentRole = role;
 	}
-	
+
 	public void setOTPFlag(boolean flag) {
 		this.otp = flag;
 	}
-	
-	public void setPreferredAnswer(int preferredAnswer) {
-		this.preferredAnswer = preferredAnswer;
-	}
 
 	public String toString() {
-		return String.format("USER: \n Id: %s, Username: %s, Name: %s, Email: %s, Roles: %s, Preferred Answer: %s", id, userName, name, email, roles, preferredAnswer);
+		return String.format("USER: \n Id: %s, Username: %s, Name: %s, Email: %s, Roles: %s", id, userName, name, email,
+				roles);
+	}
+
+	public String toDisplay() {
+
+		// If name is empty then return an empty string
+		if (name == "") {
+			return "";
+		} else {
+			return String.format("%s\n%s\n%s               %s", userName, name, email, roles);
+		}
 	}
 }
