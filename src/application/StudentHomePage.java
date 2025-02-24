@@ -189,6 +189,10 @@ public class StudentHomePage {
 		findReviewerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
+		Button manageReviewersButton = new Button("Manage my Reviewers");
+		manageReviewersButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+		
 		// Button to open the ui to submit a new question
 		Button newQuestionButton = new Button("New");
 		newQuestionButton.setStyle(
@@ -1025,6 +1029,18 @@ public class StudentHomePage {
 
 		});
 
+		manageReviewersButton.setOnAction(a -> {
+			// Create a new stage in order to popup new window and keep this one
+			
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+
+			// Close the existing stage
+			primaryStage.close();
+			
+			new ReviewerListPage(newStage, databaseHelper).show(databaseHelper.currentUser);
+		});
+		
 		// Add listeners for the textArea title field
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
@@ -1086,10 +1102,13 @@ public class StudentHomePage {
 		HBox reviewerButtonBox = new HBox(findReviewerButton);
 		reviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
+		HBox manageReviewerButtonBox = new HBox(manageReviewersButton);
+		manageReviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
+		
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox);
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 
