@@ -1,14 +1,19 @@
 package databasePart1;
 
+import java.sql.Connection;
+import java.sql.Statement;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import application.Answer;
 import application.Question;
@@ -106,7 +111,7 @@ public class DatabaseHelper {
 																										// password,
 																										// email,
 																										// OTPFlag
-				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "otp BOOLEAN DEFAULT FALSE)"; // added in roles as a
+				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "reviewers VARCHAR(100), " + "otp BOOLEAN DEFAULT FALSE)"; // added in roles as a
 																									// comma separated
 																									// string
 		statement.execute(userTable);
@@ -118,6 +123,7 @@ public class DatabaseHelper {
 																											// for code
 																											// timeout
 		statement.execute(invitationCodesTable);
+
 	}
 
 	// Check if the database is empty
@@ -130,6 +136,97 @@ public class DatabaseHelper {
 		return true;
 	}
 
+	
+	
+	////REVIEWER IDS
+
+	
+	public Map<User, Integer> getAllReviewersForUser(int userId) throws SQLException {
+		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
+		Map<User, Integer> reviewers = new HashMap<>();
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, userId);
+			ResultSet rs = pstmt.executeQuery();
+			
+			if (rs.next()) {
+				reviewers = getReviewersMap(rs.getString("reviewers"));
+			}
+		}
+		return reviewers;
+	}
+	
+	public boolean addReviewer(int userId, User newReviewer, int weight)  {
+		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, userId);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {   // if the user is found
+				Map<User, Integer> reviewers = getReviewersMap(rs.getString("reviewers"));
+				//User newReviewer = getUser(reviewerId);
+				
+				reviewers.put(newReviewer, weight);
+				
+				updateReviewers(reviewers, userId);
+			}
+			return true;
+		} catch (SQLException e) {
+			System.out.println("ADDREVIEWER: " + e.getMessage());
+		}
+		return false;
+	}
+	
+	public boolean updateReviewers(Map<User, Integer> reviewers, int userId) throws SQLException {
+		String query = "UPDATE cse360users SET reviewers = ? WHERE id = ?";            // selecting all of the rows in the database
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, putReviewerMapToString(reviewers));
+			pstmt.setInt(2, userId);
+			pstmt.executeUpdate();
+			return true;
+		}
+	}
+	
+	public boolean updateReviewerWeight(int userId, User reviewer, int newWeight)  {
+		try {
+			Map<User, Integer> reviewers = getAllReviewersForUser(userId);
+			
+			reviewers.put(reviewer, newWeight);
+			
+			updateReviewers(reviewers, userId);
+			return true;
+		} catch (SQLException e) {
+			System.out.println("UPDATEREVIEWERWEIGHT: " + e.getMessage());
+		}
+		return false;
+	}
+	
+	
+	public boolean removeReviewer(int userId, User reviewer) {
+		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
+		
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, userId);
+			ResultSet rs = pstmt.executeQuery();
+
+			if (rs.next()) {   // if the user is found
+				Map<User, Integer> reviewers = getReviewersMap(rs.getString("reviewers"));
+				//User newReviewer = getUser(reviewerId);
+				
+				reviewers.remove(reviewer);
+				
+				updateReviewers(reviewers, userId);
+			}
+			return true;
+		}
+		catch (SQLException e) {
+			System.out.println("REMOVEREVIEWER: " + e.getMessage());
+		}
+		return false;
+	}
+	
+	
 	// Registers a new user in the database.
 	public void register(User user) throws SQLException {
 		String insertUser = "INSERT INTO cse360users (userName, name, password, email, roles, otp) VALUES (?, ?, ?, ?, ?, ?)";
@@ -544,6 +641,75 @@ public class DatabaseHelper {
 			return String.join(",", roles); // joining each Role in the list to be comma separated string
 		}
 	}
+	
+	private List<Integer> reviewerDeserial(String reviewers) {  // Deserializing from String to List<Roles> for easier logic
+		if (reviewers == null || reviewers == "") {
+			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
+		} else {
+			List<Integer> reviewerIds = Arrays.asList(reviewers.split(",")).stream().map(r -> Integer.parseInt(r)).collect(Collectors.toList());
+			return new ArrayList<>(reviewerIds);
+		}
+	}
+
+	private String reviewerSerial(List<Integer> reviewers) {   // serializing a List<Roles> into a string to be stored in database
+		if (reviewers == null || reviewers.isEmpty()) {        // make sure that the list is not empty or null
+			return "";
+		} else {  
+			String serial = "";
+			for (Integer i : reviewers) {
+				serial = serial + i.toString() + ",";
+			}
+			return serial;
+		}
+	}
+	
+	private String putReviewerMapToString(Map<User, Integer> map) {
+		String mapToString = "";
+		if (map.isEmpty()) {
+			return "";
+			
+		}
+		else {
+			for (Map.Entry<User, Integer> m: map.entrySet()) {
+				mapToString = mapToString + "! ";
+				
+				mapToString = mapToString + m.getKey().getUsername();
+				
+				mapToString = mapToString + " " + m.getValue() + " ";
+				
+			}
+		}
+		return mapToString;
+	}
+	
+	
+	private Map<User, Integer> getReviewersMap(String json) {   /// what it will be stored as ! userId weight ! userId weight 
+		Map<User, Integer> ret = new HashMap<>();
+		if (json == null || json.isEmpty()) {        // make sure that the list is not empty or null
+			return new HashMap<>();
+		} else {  
+			
+			String [] split = json.split("!");
+			for (String s : split) {
+				if (s.trim().isEmpty()) continue;
+				
+				String [] split2 = s.split(" ");
+			
+				try {
+					User user = getUser(split2[1]);
+					ret.put(user, Integer.parseInt(split2[2]));	
+				}
+				
+				catch (SQLException e) {
+					System.out.println("GETREVIEWERSMAP: COULD NOT GET USER" + e.getMessage());
+				}
+			}
+			
+			
+			}
+			return ret;
+		}
+	
 
 	public void setUserCurrentRole(String role) { // public setter for when user picks their role
 		currentUser.setCurrentRole(role);
