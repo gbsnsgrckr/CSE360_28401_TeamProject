@@ -13,6 +13,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -25,7 +26,10 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -35,6 +39,7 @@ public class ReviewerListPage {
 	private final DatabaseHelper databaseHelper;
 
 	private Stage primaryStage; 
+	private VBox layout; 
 	
 	public ReviewerListPage(Stage primaryStage, DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
@@ -46,10 +51,19 @@ public class ReviewerListPage {
 		TableView<User> userTable = createUserTable(user);
 		TableView<User> reviewerTable = createReviewerTable(user);
 		
+		Label userLabel = new Label("Reviewers Available");
+		userLabel.setStyle("-fx-text-fill: black; -fx-font-size: 18px; -fx-font-weight: bold;");
+		userLabel.setAlignment(Pos.CENTER);
+		
+		Label reviewerLabel = new Label("Current Reviewers");
+		reviewerLabel.setStyle("-fx-text-fill: black; -fx-font-size: 18px; -fx-font-weight: bold;");
+		reviewerLabel.setAlignment(Pos.CENTER);
+		
 		Button backButton = new Button("Back");
 		backButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
 						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+		backButton.setAlignment(Pos.CENTER);
 		backButton.setOnAction(a -> {
 
 			// Create new stage to get rid of transparency for following pages
@@ -62,23 +76,42 @@ public class ReviewerListPage {
 			new StudentHomePage(databaseHelper).show(newStage);
 		});
 
-		
-		
 		HBox hbox = new HBox(5, backButton);
-		VBox vbox = new VBox(userTable, reviewerTable);
-		vbox.getChildren().addAll(hbox);
-		Scene scene = new Scene(vbox, 940, 400);
-
+		hbox.setAlignment(Pos.CENTER);
+		layout = new VBox(userLabel, userTable, reviewerLabel, reviewerTable);
+		layout.setAlignment(Pos.CENTER);
+		
+		layout.setStyle("-fx-padding: 20; -fx-background-color: derive(gray, 80%); -fx-background-radius: 100;"
+				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
+				+ "-fx-border-width: 2, 2, 1; -fx-border-radius: 100, 100, 100;" + "-fx-border-insets: 0, 2, 4");
+		
+		HBox buttonBar = createButtonBar();
+		
+		Region spacer = new Region();
+		spacer.setMinHeight(26);
+		spacer.setMaxHeight(26);
+		
+		layout.getChildren().addAll(hbox);
+		
+		VBox layoutBox = new VBox(spacer, layout);
+		layoutBox.setAlignment(Pos.CENTER);
+		
+		StackPane root = new StackPane(layoutBox, buttonBar);
+		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
+		root.setStyle("-fx-background-color: transparent;");
+		root.setPadding(new Insets(0));
+		
+		
+		Scene scene = new Scene(root, 1900, 1000);
+		scene.setFill(Color.TRANSPARENT);
+		
 		// Removes icon from title bar in alert window
 		primaryStage.getIcons().clear();
 
 		primaryStage.setScene(scene);
 		primaryStage.setTitle("");
 		primaryStage.show();
-		
-		
-		
-		
+
 	}
 
 	public void displayAddPopup(User user, User newReviewer) {
@@ -114,7 +147,7 @@ public class ReviewerListPage {
 	        Scene scene = new Scene(layout, 300, 200);
 	        popupStage.setScene(scene);
 	        popupStage.showAndWait(); // Blocks execution until popup is closed
-	    }
+	}
 	
 	
 	public void displayManagePopup(User user, User reviewer) {
@@ -327,6 +360,123 @@ public class ReviewerListPage {
 		table.getColumns().add(manageReviewer);
 		return table;
 
+	}
+	
+	public HBox createButtonBar() {
+		double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
+		
+		Button quitButton = new Button("Back to login");
+		quitButton.setOnAction(event -> {
+
+			new UserLoginPage(databaseHelper).show(primaryStage);
+		});
+		
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+		buttonBar.setMaxHeight(27);		
+		buttonBar.setMaxWidth(80);
+		return buttonBar;
 	}
 	
 }

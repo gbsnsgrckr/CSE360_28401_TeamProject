@@ -202,7 +202,6 @@ public class DatabaseHelper {
 		return false;
 	}
 	
-	
 	public boolean removeReviewer(int userId, User reviewer) {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
 		

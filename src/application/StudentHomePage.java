@@ -192,7 +192,7 @@ public class StudentHomePage {
 		Button manageReviewersButton = new Button("Manage my Reviewers");
 		manageReviewersButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
-		
+
 		// Button to open the ui to submit a new question
 		Button newQuestionButton = new Button("New");
 		newQuestionButton.setStyle(
@@ -208,7 +208,7 @@ public class StudentHomePage {
 		// Table display of the question database
 		// Create table to display the question database within
 		TableView<Question> qTable = new TableView<>();
-		
+
 		// Give qTable a bold outline
 		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 
@@ -399,7 +399,7 @@ public class StudentHomePage {
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err
-									.println("Error trying to register answer in results table via submitReplyButton");
+							.println("Error trying to register answer in results table via submitReplyButton");
 						}
 						// Update the table after submitting new answer
 						updateResultsTableForQuestion(qTable.getSelectionModel().getSelectedItem());
@@ -457,8 +457,9 @@ public class StudentHomePage {
 							if (previousRow.getRelatedId() != null
 									&& previousRow.getRelatedId().contains(currentRow.getAnswerId().toString())) {
 
-								// Trying to get compounding indentation to work here. private variable indent already exists at class level
-								
+								// Trying to get compounding indentation to work here. private variable indent
+								// already exists at class level
+
 							} else {
 								// Reset indent counter on an unrelated row
 								indent = 0;
@@ -466,8 +467,6 @@ public class StudentHomePage {
 
 						}
 					}
-
-					
 
 					// Check if the currentUser matches the author of the answer in the cell
 					if (row.getType() == QATableRow.RowType.ANSWER && row.getAuthorId() != null
@@ -1031,16 +1030,16 @@ public class StudentHomePage {
 
 		manageReviewersButton.setOnAction(a -> {
 			// Create a new stage in order to popup new window and keep this one
-			
+
 			Stage newStage = new Stage();
 			newStage.initStyle(StageStyle.TRANSPARENT);
 
 			// Close the existing stage
 			primaryStage.close();
-			
+
 			new ReviewerListPage(newStage, databaseHelper).show(databaseHelper.currentUser);
 		});
-		
+
 		// Add listeners for the textArea title field
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
 			if (isFocused) {
@@ -1104,7 +1103,7 @@ public class StudentHomePage {
 
 		HBox manageReviewerButtonBox = new HBox(manageReviewersButton);
 		manageReviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
-		
+
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
@@ -1310,7 +1309,6 @@ public class StudentHomePage {
 
 				// Recursively call addRelatedAnswers and store the list thats left
 				answers = addRelatedAnswers(answer.getId(), answers);
-
 			}
 
 			// After that, if there are any, add each answer as its own row
