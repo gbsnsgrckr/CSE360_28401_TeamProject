@@ -102,6 +102,20 @@ public class AdminHomePage {
 
 			new UserLoginPage(databaseHelper).show(primaryStage);
 		});
+		
+		Button viewRequests = new Button("See requests for reviewer");
+		viewRequests.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
+						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+		viewRequests.setOnAction(a -> {
+
+			// Create new stage to get rid of transparency for following pages
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+			primaryStage.close();
+			new AdminRequest(databaseHelper).show(newStage);
+		});
+
 
 		// Create inviteButton for admin to generate invitation codes
 		Button inviteButton = new Button("Invite");
@@ -371,7 +385,7 @@ public class AdminHomePage {
 		table.getColumns().add(deleteColumn);
 		table.getColumns().add(tempPassword);
 
-		HBox hbox = new HBox(5, backButton, inviteButton);
+		HBox hbox = new HBox(5, backButton, inviteButton, viewRequests);
 		HBox header = new HBox(5, prompt);
 		header.setAlignment(Pos.CENTER);
 		VBox vbox = new VBox(header, table);

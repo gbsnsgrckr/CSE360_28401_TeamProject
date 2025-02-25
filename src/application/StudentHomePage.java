@@ -185,6 +185,10 @@ public class StudentHomePage {
 		Button quitButton = new Button("Back to login");
 		quitButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+		
+		Button askToBeAReviewer = new Button("Ask to be a reviewer");
+		askToBeAReviewer.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 		// Button to find reviewers for your questions
 		Button findReviewerButton = new Button("Find Reviewer");
@@ -733,6 +737,13 @@ public class StudentHomePage {
 		Label errorLabel = new Label();
 		errorLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-font-size: 20px;");
 		errorLabel.setTranslateY(22);
+		
+		askToBeAReviewer.setOnAction(a ->{
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+
+			new AskToBeAReviewer(databaseHelper).show(newStage);
+		});
 
 		// "Back to login" button will bring user back to the login screen
 		quitButton.setOnAction(a -> {
@@ -1121,8 +1132,12 @@ public class StudentHomePage {
 
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
+		
+		HBox askToBeAReviewerBox = new HBox(askToBeAReviewer);
+		askToBeAReviewerBox.setAlignment(Pos.BOTTOM_CENTER);
 
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox);
+
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox, askToBeAReviewerBox);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 

@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 import application.Answer;
 import application.Question;
+import application.Request;
 import application.User;
 import tests.*;
 
@@ -115,6 +116,11 @@ public class DatabaseHelper {
 																									// comma separated
 																									// string
 		statement.execute(userTable);
+		
+		// Create the table for the reviewer request
+		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" + "request VARCHAR(500), " 
+				+ "userName VARCHAR(255) UNIQUE, " + "requestTOF BOOLEAN DEFAULT FALSE)";
+		statement.execute(requestReviewerTable);
 
 		// Create the invitation codes table
 		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" + "code VARCHAR(10) PRIMARY KEY, "
@@ -240,6 +246,23 @@ public class DatabaseHelper {
 			pstmt.executeUpdate();
 		}
 	}
+	
+	public void register(String request) throws SQLException {
+		String insertRequest = "INSERT INTO cse360request (request, userName, requestTOF) VALUES (?, ?, ?)";
+		if (currentUser == null || currentUser.getUsername() == null) {
+	        throw new IllegalStateException("Current user is not set.");
+	    }
+		try (PreparedStatement pstmt = connection.prepareStatement(insertRequest)){
+			pstmt.setString(1,  request);
+			pstmt.setString(2,  currentUser.getUsername());
+			pstmt.setBoolean(3, true);
+			pstmt.executeUpdate();
+		}
+		catch (SQLIntegrityConstraintViolationException e) {
+	        System.out.println("User already has a request registered.");
+	    }
+	}
+
 
 	public void updateRoles(String username, String roles) throws SQLException {
 		String insertUser = "UPDATE cse360users SET roles = ? WHERE username = ?"; // updating the roles for a user, add
@@ -357,7 +380,7 @@ public class DatabaseHelper {
 	public boolean removeRoles(String username, String newRole) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
 
-		if (!newRole.equalsIgnoreCase("admin") && currentUser.getRoles().size() > 1) { // make sure that you are not
+		if (!newRole.equalsIgnoreCase("admin") && currentUser.getRoles().size() > 1) { // make sure that you are not  
 																						// deleting the only admin's
 																						// roles
 
@@ -391,6 +414,24 @@ public class DatabaseHelper {
 		System.out.println("REMOVEROLES: You cannot remove your own roles");
 		return false;
 	}
+	
+	public boolean deleteRequest(String username) {
+		String query = "DELETE FROM cse360request as c WHERE c.username = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, username);
+
+			if (pstmt.executeUpdate() > 0) {
+				System.out.println("DELETEREQUEST: REQUEST successfully deleted");
+				return true;
+			}
+			System.out.println("DELETEREQUEST: REQUEST was not found");
+			return false;
+		} catch (SQLException e) {
+			System.err.println("DELETEREQUEST: SQL Error - " + e.getMessage());
+			return false;
+		}
+}
+
 
 	public boolean deleteUser(String username) {
 		if (!username.equals(currentUser.getUsername())) { // make sure the the correct user is getting deleted
@@ -440,6 +481,26 @@ public class DatabaseHelper {
 		}
 		return users;
 	}
+	
+	public List<Request> getAllRequests() throws SQLException {
+		String query = "SELECT userName, request, requestTOF FROM cse360request";
+		List<Request> requests = new ArrayList<>();
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				String userName = rs.getString("userName");
+	            String requestText = rs.getString("request");
+	            boolean requestTOF = rs.getBoolean("requestTOF");
+	            
+	            User user = getUser(userName);
+	            
+	            requests.add(new Request(requestText, user, requestTOF));
+			}
+		}
+		return requests;
+	}
+
 
 	// Retrieves all users with a specified role
 	public List<User> getAllUsersWithRole(String role) throws SQLException {
