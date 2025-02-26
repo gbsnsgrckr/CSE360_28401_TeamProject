@@ -96,14 +96,7 @@ public class QAHelper1 {
         statement.execute(answerViewsTable);
     }
 
-    /**
-     * Inserts a row marking an answer as "read" by a given user, if it has not already been.
-     * This helps us keep track of how many 'unread' answers remain for each question or user.
-     * 
-     *
-     /**
-      * 
-      */
+    // This helps us keep track of how many 'unread' answers remain for each question or user.
     public void markAnswerAsRead(int answerId, int userId) throws SQLException {
         // Check if record exists
         String checkQuery = "SELECT * FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
