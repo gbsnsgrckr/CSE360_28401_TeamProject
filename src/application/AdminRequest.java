@@ -104,7 +104,7 @@ public class AdminRequest {
 		TableColumn<Request, Void> decline = new TableColumn<>("Decline");
 		
 		decline.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button declineButton = new Button("decline");
+		    private final Button declineButton = new Button("Decline");
 
 		    {
 		    	declineButton.setStyle(
