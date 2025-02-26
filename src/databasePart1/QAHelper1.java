@@ -810,6 +810,25 @@ public class QAHelper1 {
 			return new ArrayList<>(uniqueText);
 		}
 	}
+	
+	// Update a question object with a preferred answer id
+	public void updatePreferredAnswer(Question question) {
+	    String query = "UPDATE cse360question SET preferred_answer = ?, updated_on = CURRENT_TIMESTAMP WHERE id = ?";
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, question.getPreferredAnswer());
+	        pstmt.setInt(2, question.getId());
+	        int updated = pstmt.executeUpdate();
+	        if (updated > 0) {
+	            System.out.println("Preferred answer updated.");
+	        } else {
+	            System.out.println("No matching question found.");
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        System.out.println("Error trying to update question in updatePreferredAnswer method.");
+	    }
+	}
+
 
 	// Update the contents of a question object with those of pass question object
 	public void updateQuestion(Question question) {

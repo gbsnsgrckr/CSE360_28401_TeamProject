@@ -1,12 +1,14 @@
 package application;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import databasePart1.DatabaseHelper;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -24,7 +26,9 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -47,15 +51,6 @@ public class StudentHomePage {
 		private final Integer authorId;
 		private final List<String> relatedId;
 
-		public QATableRow(RowType type, String text, Integer contentId, Integer authorId, List<String> relatedId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = authorId;
-			this.relatedId = relatedId;
-
-		}
-
 		// Wrapper class for resultsTable to allow for dynamic rows
 		public QATableRow(RowType type, String text, Integer contentId, List<String> relatedId) {
 			this.type = type;
@@ -66,6 +61,19 @@ public class StudentHomePage {
 
 		}
 
+		public QATableRow(RowType type, String text, Integer contentId, Integer authorId, List<String> relatedId) {
+			this.type = type;
+			this.text = text;
+			this.contentId = contentId;
+			this.authorId = authorId;
+			this.relatedId = relatedId;
+
+		}
+
+		public Integer getQuestionId() {
+			return contentId;
+		}
+
 		public Integer getAnswerId() {
 			return contentId;
 		}
@@ -74,20 +82,16 @@ public class StudentHomePage {
 			return authorId;
 		}
 
-		public Integer getQuestionId() {
-			return contentId;
-		}
-
-		public List<String> getRelatedId() {
-			return relatedId;
-		}
-
 		public String getText() {
 			return text;
 		}
 
 		public RowType getType() {
 			return type;
+		}
+
+		public List<String> getRelatedId() {
+			return relatedId;
 		}
 
 		@Override
@@ -117,33 +121,6 @@ public class StudentHomePage {
 
 	public StudentHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
-	}
-
-	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
-		try {
-			// Retrieve related answers
-			List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(parentId);
-
-			// Iterate through each answer in relatedAnswers
-			for (Answer subAnswer : relatedAnswers) {
-
-				// Remove subAnswer from the list of answers
-				answers.remove(subAnswer);
-
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, subAnswer.toDisplay(),
-						subAnswer.getId(), subAnswer.getAuthorId(), subAnswer.getRelatedId()));
-
-				// Recursively call the function to process nested related answers
-				addRelatedAnswers(subAnswer.getId(), answers);
-
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("Error retrieving related answers in addRelatedAnswers()");
-		}
-		// Return list of answers that is left
-		return answers;
 	}
 
 	public void show(Stage primaryStage) {
@@ -209,17 +186,9 @@ public class StudentHomePage {
 		quitButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
-		Button askToBeAReviewer = new Button("Ask to be a reviewer");
-		askToBeAReviewer.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-
 		// Button to find reviewers for your questions
 		Button findReviewerButton = new Button("Find Reviewer");
 		findReviewerButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
-
-		Button manageReviewersButton = new Button("Manage my Reviewers");
-		manageReviewersButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to open the ui to submit a new question
@@ -227,6 +196,7 @@ public class StudentHomePage {
 		newQuestionButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 		newQuestionButton.setMinWidth(20);
+		;
 
 		// Button to open the ui to submit a new question
 		Button questionCloseButton = new Button("Close");
@@ -298,6 +268,57 @@ public class StudentHomePage {
 				titleBar.setStyle("-fx-pref-height: 0; -fx-min-height: 0; -fx-max-height: 0;");
 			}
 		});
+
+		/*
+		 * Answer Database Table that we shouldn't need // Table display of the answer
+		 * database // Label to display title to user Label prompt3 = new
+		 * Label("Answer Database"); prompt3.
+		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
+		 * );
+		 * 
+		 * // Hbox to position the title HBox titleBox3 = new HBox(prompt3);
+		 * titleBox3.setAlignment(Pos.CENTER);
+		 * 
+		 * // Create table to display the answer database TableView<Answer> aTable = new
+		 * TableView<>(); aTable.
+		 * setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
+		 * ); aTable.setPrefWidth(600);
+		 * 
+		 * // if answers is null then initialize as an empty list if (answers == null) {
+		 * answers = new ArrayList<>(); }
+		 * 
+		 * // Create an observable list and assign it to the table
+		 * ObservableList<Answer> answerObservableList =
+		 * FXCollections.observableArrayList(answers);
+		 * aTable.setItems(answerObservableList);
+		 * 
+		 * // Create, assign, and associate values to table TableColumn<Answer, Integer>
+		 * idColumn2 = new TableColumn<>("Answer ID");
+		 * idColumn2.setCellValueFactory(data -> new
+		 * ReadOnlyObjectWrapper<>(data.getValue().getId()));
+		 * 
+		 * // Create a text column TableColumn<Answer, String> textColumn2 = new
+		 * TableColumn<>("Answer"); textColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("text"));
+		 * 
+		 * // Create a userID column TableColumn<Answer, Integer> authorColumn2 = new
+		 * TableColumn<>("Author ID"); authorColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("author"));
+		 * 
+		 * // Create a createOn column TableColumn<Answer, String> createdColumn2 = new
+		 * TableColumn<>("Created On"); createdColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("createdOn"));
+		 * 
+		 * // Create an updatedOn column TableColumn<Answer, String> updatedColumn2 =
+		 * new TableColumn<>("Updated On"); updatedColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("updatedOn"));
+		 * 
+		 * aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2,
+		 * createdColumn2, updatedColumn2);
+		 * 
+		 * // Container to hold the table VBox answerDB = new VBox(5, titleBox3,
+		 * aTable);
+		 */
 
 		// Label to display title to user
 		Label prompt5 = new Label("Details");
@@ -463,7 +484,7 @@ public class StudentHomePage {
 							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
 						// Buttons to edit and delete the answer
 						Button editButton = new Button("Edit");
-						Button deleteButton = new Button("Delete");
+						Button deleteButton = new Button("Delete");					
 						// Styling for buttons
 						editButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
@@ -471,7 +492,8 @@ public class StudentHomePage {
 						deleteButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
-
+						
+						
 						editButton.setOnAction(a -> {
 							// Set submit button text
 							submitButton.setText("Update Answer");
@@ -535,6 +557,7 @@ public class StudentHomePage {
 						// Buttons to edit and delete the answer
 						Button editButton = new Button("Edit");
 						Button deleteButton = new Button("Delete");
+						Button setPreferredAnswerButton = new Button("Set Prefered Answer"); //joe
 						// Styling for buttons
 						editButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
@@ -542,6 +565,72 @@ public class StudentHomePage {
 						deleteButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
+						setPreferredAnswerButton.setStyle( //joe
+								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+										+ "-fx-font-weight: bold; -fx-padding: 1px;");
+
+						setPreferredAnswerButton.setOnAction(a -> { // joe
+						    // Debug: Print when the setPreferredAnswerButton is pressed
+						    System.out.println("SetPreferredAnswerButton pressed for question id: " 
+						        + question.getId() + " | Current preferredAnswer: " + question.getPreferredAnswer());
+
+						    // Create a pop-up for the user to input the preferred answer Id
+						    Stage preferredAnswerBox = new Stage();
+
+						    Label promptLabel = new Label("Enter the Answer ID of the preferred answer:");
+						    TextField answerIdField = new TextField();
+						    answerIdField.setPrefWidth(50);
+						    Label errorLabel = new Label("");
+						    errorLabel.setStyle("-fx-text-fill: red;");
+						    Button confirmButton = new Button("Confirm");
+
+						    // Attach functionality to the confirm button with input validation
+						    confirmButton.setOnAction(event -> {
+						        // Clear any previous error messages
+						        errorLabel.setText("");
+						        
+						        // First check if the input is empty
+						        String inputText = answerIdField.getText().trim();
+						        if (inputText.isEmpty()) {
+						            errorLabel.setText("Input cannot be empty.");
+						            return;
+						        }
+						        
+						        try {
+						            int enteredId = Integer.parseInt(inputText);
+
+						            // Validate that the entered ID exists among valid answer IDs for this question.
+						            if (!question.getRelatedId().contains(String.valueOf(enteredId))) {
+						                errorLabel.setText("Please enter a valid answer ID for this question.");
+						                return;
+						            }
+
+						            // Update the in-memory question with the preferred answer
+						            question.setPreferredAnswer(enteredId);
+
+						            // Update the database with the new preferred answer
+						            // (Assumes you have added an updatePreferredAnswer method in QAHelper1.)
+						            databaseHelper.qaHelper.updatePreferredAnswer(question);
+
+						            // Close the popup once the update is complete
+						            preferredAnswerBox.close();
+						        } catch (NumberFormatException ex) {
+						            errorLabel.setText("Please enter only numbers.");
+						        }
+						    });
+
+						    // Build the layout including the error label
+						    VBox layout = new VBox(10, promptLabel, answerIdField, errorLabel, confirmButton);
+						    layout.setAlignment(Pos.CENTER);
+
+						    Scene scene = new Scene(layout, 500, 300);
+						    preferredAnswerBox.setScene(scene);
+						    preferredAnswerBox.setTitle("Set Preferred Answer");
+						    preferredAnswerBox.show();
+						}); // joe ends
+
+
+
 
 						editButton.setOnAction(a -> {
 							// Set submit button text
@@ -592,7 +681,7 @@ public class StudentHomePage {
 
 						});
 
-						HBox buttonBox = new HBox(1, editButton, deleteButton);
+						HBox buttonBox = new HBox(1,setPreferredAnswerButton, editButton, deleteButton);
 						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
 						displayLabel.setAlignment(Pos.CENTER_LEFT);
@@ -661,6 +750,7 @@ public class StudentHomePage {
 		RadioButton unansweredButton = new RadioButton("Unanswered");
 		unansweredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		unansweredButton.setToggleGroup(filter);
+		;
 
 		RadioButton answeredButton = new RadioButton("Answered");
 		answeredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
@@ -708,30 +798,6 @@ public class StudentHomePage {
 		errorLabel.setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-font-size: 20px;");
 		errorLabel.setTranslateY(22);
 
-		askToBeAReviewer.setOnAction(a -> {
-
-			// Check if user is already has the Reviewer role
-			if (!databaseHelper.currentUser.getRoles().contains("Reviewer")) {
-
-				Stage newStage = new Stage();
-				newStage.initStyle(StageStyle.TRANSPARENT);
-
-				new AskToBeAReviewer(databaseHelper).show(newStage);
-			} else {
-				System.err.println("User cannot request to be a Reviewer because they already have that role.");
-				return;
-			}
-		});
-		
-		// Hide button if user already has the reviewr role
-		if (databaseHelper.currentUser.getRoles().contains("Reviewer")) {
-			askToBeAReviewer.setVisible(false);
-			askToBeAReviewer.setManaged(false);
-		} else {
-			askToBeAReviewer.setVisible(true);
-			askToBeAReviewer.setManaged(true);
-		}
-
 		// "Back to login" button will bring user back to the login screen
 		quitButton.setOnAction(a -> {
 
@@ -760,6 +826,7 @@ public class StudentHomePage {
 		searchTable.setItems(searchObservableList);
 		searchTable.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+		
 
 		// Create container to hold searchTable and allow for hiding and showing of it
 		HBox searchBox = new HBox(searchTable);
@@ -1017,7 +1084,7 @@ public class StudentHomePage {
 			} catch (SQLException e) {
 				e.printStackTrace();
 				System.err.println("Error trying to register new question into database via submit button");
-
+				;
 				return;
 			}
 
@@ -1039,18 +1106,6 @@ public class StudentHomePage {
 
 			new FindReviewerForQuestionPage(databaseHelper).show(newStage);
 
-		});
-
-		manageReviewersButton.setOnAction(a -> {
-			// Create a new stage in order to popup new window and keep this one
-
-			Stage newStage = new Stage();
-			newStage.initStyle(StageStyle.TRANSPARENT);
-
-			// Close the existing stage
-			primaryStage.close();
-
-			new ReviewerListPage(newStage, databaseHelper).show(databaseHelper.currentUser);
 		});
 
 		// Add listeners for the textArea title field
@@ -1114,16 +1169,10 @@ public class StudentHomePage {
 		HBox reviewerButtonBox = new HBox(findReviewerButton);
 		reviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
-		HBox manageReviewerButtonBox = new HBox(manageReviewersButton);
-		manageReviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
-
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
-		HBox askToBeAReviewerBox = new HBox(askToBeAReviewer);
-		askToBeAReviewerBox.setAlignment(Pos.BOTTOM_CENTER);
-
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox, askToBeAReviewerBox);
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 
@@ -1265,7 +1314,7 @@ public class StudentHomePage {
 
 		// StackPane to control layout sizing
 		StackPane root = new StackPane(layout, buttonBar);
-		StackPane.setAlignment(buttonBar, Pos.TOP_RIGHT);
+		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
 		root.setStyle("-fx-background-color: transparent;");
 		root.setStyle("-fx-background-color: derive(gray, 60%);");
 		root.setPadding(new Insets(0));
@@ -1325,6 +1374,7 @@ public class StudentHomePage {
 
 				// Recursively call addRelatedAnswers and store the list thats left
 				answers = addRelatedAnswers(answer.getId(), answers);
+
 			}
 
 			// After that, if there are any, add each answer as its own row
@@ -1345,6 +1395,33 @@ public class StudentHomePage {
 
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
+	}
+
+	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
+		try {
+			// Retrieve related answers
+			List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(parentId);
+
+			// Iterate through each answer in relatedAnswers
+			for (Answer subAnswer : relatedAnswers) {
+
+				// Remove subAnswer from the list of answers
+				answers.remove(subAnswer);
+
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, subAnswer.toDisplay(),
+						subAnswer.getId(), subAnswer.getAuthorId(), subAnswer.getRelatedId()));
+
+				// Recursively call the function to process nested related answers
+				addRelatedAnswers(subAnswer.getId(), answers);
+
+			}
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Error retrieving related answers in addRelatedAnswers()");
+		}
+		// Return list of answers that is left
+		return answers;
 	}
 
 }
