@@ -224,6 +224,7 @@ public class StudentHomePage {
 
 		ObservableList<Question> questionObservableList = FXCollections.observableArrayList(questions);
 		qTable.setItems(questionObservableList);
+		
 
 		TableColumn<Question, String> detailsColumn = new TableColumn<>("Question Details");
 		detailsColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().toDisplay()));
@@ -344,187 +345,100 @@ public class StudentHomePage {
 		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
 
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
-			private final TextArea replyArea = new TextArea();
-			private final Button submitReplyButton = new Button("Submit");
-			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
-			private final VBox cellContent = new VBox(5);
-			private final HBox cellBox = new HBox();
+		    private final TextArea replyArea = new TextArea();
+		    private final Button submitReplyButton = new Button("Submit");
+		    private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
+		    private final VBox cellContent = new VBox(5);
+		    private final HBox cellBox = new HBox();
+		    private final Button markReadButton = new Button("Mark as Read");
 
-			{
-				submitReplyButton.setStyle(
-						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
-				replyBox.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; "
-						+ "-fx-border-width:  1; -fx-padding: 1px;");
-				replyArea.setPromptText("Enter your answer here...");
-				replyArea.setPrefRowCount(3);
+		    {
+		        submitReplyButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
+		        replyBox.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1; -fx-padding: 1px;");
+		        replyArea.setPromptText("Enter your answer here...");
+		        replyArea.setPrefRowCount(3);
 
-				submitReplyButton.setOnAction(a -> {
-					String inputText = replyArea.getText().trim();
-					QATableRow.RowType rowType = getTableView().getItems().get(getIndex()).getType();
+		        // Submit button functionality
+		        submitReplyButton.setOnAction(a -> {
+		            String inputText = replyArea.getText().trim();
+		            QATableRow.RowType rowType = getTableView().getItems().get(getIndex()).getType();
 
-					if (!inputText.isEmpty()) {
-						try {
-							if (rowType == QATableRow.RowType.QUESTION) {
-								databaseHelper.qaHelper.registerAnswerWithQuestion(
-										new Answer(inputText, databaseHelper.currentUser.getUserId()),
-										getTableView().getItems().get(getIndex()).getAnswerId());
-								replyArea.clear();
-							} else {
-								databaseHelper.qaHelper.registerAnswerWithAnswer(
-										new Answer(inputText, databaseHelper.currentUser.getUserId()),
-										getTableView().getItems().get(getIndex()).getAnswerId());
-								replyArea.clear();
-							}
-							tempAnswer = databaseHelper.qaHelper.getAnswer(inputText);
-						} catch (SQLException e) {
-							e.printStackTrace();
-							System.err.println("Error trying to register answer via submitReplyButton");
-						}
+		            if (!inputText.isEmpty()) {
+		                try {
+		                    if (rowType == QATableRow.RowType.QUESTION) {
+		                        databaseHelper.qaHelper.registerAnswerWithQuestion(
+		                                new Answer(inputText, databaseHelper.currentUser.getUserId()),
+		                                getTableView().getItems().get(getIndex()).getAnswerId());
+		                        replyArea.clear();
+		                    } else {
+		                        databaseHelper.qaHelper.registerAnswerWithAnswer(
+		                                new Answer(inputText, databaseHelper.currentUser.getUserId()),
+		                                getTableView().getItems().get(getIndex()).getAnswerId());
+		                        replyArea.clear();
+		                    }
+		                } catch (SQLException e) {
+		                    e.printStackTrace();
+		                    System.err.println("Error trying to register answer via submitReplyButton");
+		                }
+		                updateResultsTableForQuestion(qTable.getSelectionModel().getSelectedItem());
+		            }
+		        });
 
-						updateResultsTableForQuestion(qTable.getSelectionModel().getSelectedItem());
+		        // Mark as Read button functionality
+		        markReadButton.setStyle("-fx-background-color: lightgray; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 3px;");
+		        markReadButton.setOnAction(event -> {
+		            QATableRow row = getTableView().getItems().get(getIndex());
+		            if (row.getType() == QATableRow.RowType.ANSWER) {
+		                try {
+		                    databaseHelper.qaHelper.markAnswerAsRead(row.getAnswerId(), databaseHelper.currentUser.getUserId());
+		                    markReadButton.setDisable(true); // Disable the button after marking as read
+		                } catch (SQLException e) {
+		                    e.printStackTrace();
+		                }
+		            }
+		        });
 
-						resultsTable.getSelectionModel().select(new QATableRow(QATableRow.RowType.ANSWER,
-								tempAnswer.toDisplay(), tempAnswer.getId(), tempAnswer.getAuthorId(),
-								tempAnswer.getRelatedId()));
-					}
-				});
-				cellContent.getChildren().addAll(replyBox);
-				cellContent.setAlignment(Pos.CENTER_LEFT);
-			}
+		        // Add components to the UI
+		        cellContent.getChildren().addAll(replyBox);
+		        cellContent.setAlignment(Pos.CENTER_LEFT);
+		    }
 
-			@Override
-			protected void updateItem(String item, boolean flag) {
-				super.updateItem(item, flag);
-				cellContent.getChildren().clear();
-				cellBox.getChildren().clear();
-				setGraphic(null);
+		    @Override
+		    protected void updateItem(String item, boolean flag) {
+		        super.updateItem(item, flag);
+		        cellContent.getChildren().clear();
+		        cellBox.getChildren().clear();
+		        setGraphic(null);
 
-				if (flag && item == null) {
-					setText(null);
-				} else {
-					QATableRow row = getTableView().getItems().get(getIndex());
-					Label displayLabel = new Label(item);
-					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black;");
-					displayLabel.setWrapText(true);
-					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(50));
-					displayLabel.setPrefHeight(225);
+		        if (flag && item == null) {
+		            setText(null);
+		        } else {
+		            QATableRow row = getTableView().getItems().get(getIndex());
+		            Label displayLabel = new Label(item);
+		            displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black;");
+		            displayLabel.setWrapText(true);
+		            displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(50));
+		            displayLabel.setPrefHeight(225);
 
-					// Indentation/spacer logic omitted for brevity
+		            // Logic to show buttons for answers and questions
+		            if (row.getType() == QATableRow.RowType.ANSWER) {
+		                cellContent.getChildren().addAll(displayLabel, markReadButton);
+		                setGraphic(cellBox);
+		                setText(null);
+		            } else if (row.getType() == QATableRow.RowType.QUESTION) {
+		                cellContent.getChildren().add(displayLabel);
+		                setGraphic(cellBox);
+		                setText(null);
+		            }
 
-					// If current user authored an ANSWER => show Edit/Delete
-					if (row.getType() == QATableRow.RowType.ANSWER
-							&& row.getAuthorId() != null
-							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
-						Button editButton = new Button("Edit");
-						Button deleteButton = new Button("Delete");
-						editButton.setStyle("-fx-background-color: transparent; -fx-border-color: black; "
-								+ "-fx-text-fill: black; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 1px;");
-						deleteButton.setStyle("-fx-background-color: transparent; -fx-border-color: black; "
-								+ "-fx-text-fill: black; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 1px;");
-
-						editButton.setOnAction(a -> {
-							submitButton.setText("Update Answer");
-							submitBox.setVisible(true);
-							submitBox.setManaged(true);
-							updatingAnswer = true;
-							try {
-								answer = databaseHelper.qaHelper.getAnswer(row.getAnswerId());
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-							inputField.setText(answer.getText());
-						});
-
-						deleteButton.setOnAction(a -> {
-							databaseHelper.qaHelper.deleteAnswer(row.getAnswerId());
-							try {
-								question = qTable.getSelectionModel().getSelectedItem();
-								questions = databaseHelper.qaHelper.getAllQuestions();
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-							questionObservableList.clear();
-							questionObservableList.addAll(questions);
-							qTable.setItems(questionObservableList);
-							qTable.getSelectionModel().select(question);
-						});
-
-						HBox buttonBox = new HBox(1, editButton, deleteButton);
-						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
-
-						displayLabel.setAlignment(Pos.CENTER_LEFT);
-						cellContent.getChildren().addAll(displayLabel, buttonBox);
-						setGraphic(cellBox);
-						setText(null);
-					}
-					else if (row.getType() == QATableRow.RowType.QUESTION
-							&& row.getAuthorId() != null
-							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
-						// If current user authored the QUESTION => show Edit/Delete
-						Button editButton = new Button("Edit");
-						Button deleteButton = new Button("Delete");
-						editButton.setStyle("-fx-background-color: transparent; -fx-border-color: black; "
-								+ "-fx-text-fill: black; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 1px;");
-						deleteButton.setStyle("-fx-background-color: transparent; -fx-border-color: black; "
-								+ "-fx-text-fill: black; -fx-font-size: 12px; -fx-font-weight: bold; -fx-padding: 1px;");
-
-						editButton.setOnAction(a -> {
-							submitButton.setText("Update Question");
-							submitBox.setVisible(true);
-							submitBox.setManaged(true);
-							updatingQuestion = true;
-							try {
-								question = databaseHelper.qaHelper.getQuestion(row.getQuestionId());
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-							titleField.setText(question.getTitle());
-							inputField.setText(question.getText());
-						});
-
-						deleteButton.setOnAction(a -> {
-							databaseHelper.qaHelper.deleteQuestion(row.getQuestionId());
-							try {
-								questions = databaseHelper.qaHelper.getAllQuestions();
-							} catch (SQLException e) {
-								e.printStackTrace();
-							}
-							questionObservableList.clear();
-							questionObservableList.addAll(questions);
-							qTable.setItems(questionObservableList);
-							qTable.getSelectionModel().select(question);
-						});
-
-						HBox buttonBox = new HBox(1, editButton, deleteButton);
-						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
-
-						displayLabel.setAlignment(Pos.CENTER_LEFT);
-						cellContent.getChildren().addAll(displayLabel, buttonBox);
-						setGraphic(cellBox);
-						setText(null);
-					}
-					else if (row.getType() == QATableRow.RowType.QUESTION) {
-						// Just show question text
-						try {
-							question = databaseHelper.qaHelper.getQuestion(row.getQuestionId());
-						} catch (SQLException e) {
-							e.printStackTrace();
-						}
-						cellContent.getChildren().add(displayLabel);
-						setGraphic(cellBox);
-						setText(null);
-					} else {
-						cellContent.getChildren().add(displayLabel);
-						setGraphic(cellBox);
-						setText(null);
-					}
-					cellContent.getChildren().add(replyBox);
-					cellBox.getChildren().add(cellContent);
-				}
-			}
+		            cellContent.getChildren().add(replyBox);
+		            cellBox.getChildren().add(cellContent);
+		        }
+		    }
 		});
 		resultsTable.getColumns().setAll(contentColumn);
 		resultsTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
+
 
 		Label placeholderBox = new Label("◄ Question everything... ►");
 		placeholderBox.setStyle("-fx-font-size: 50px; -fx-font-weight: bold; -fx-text-fill: derive(gray, 80%)");
