@@ -597,26 +597,34 @@ public class StudentHomePage {
 						        }
 						        
 						        try {
+						     
+						        	
 						            int enteredId = Integer.parseInt(inputText);
+						            
+						            Question newQuestion = databaseHelper.qaHelper.getQuestion(question.getId());
 
 						            // Validate that the entered ID exists among valid answer IDs for this question.
-						            if (!question.getRelatedId().contains(String.valueOf(enteredId))) {
+						            if (!newQuestion.getRelatedId().contains(String.valueOf(enteredId))) {
 						                errorLabel.setText("Please enter a valid answer ID for this question.");
 						                return;
 						            }
 
 						            // Update the in-memory question with the preferred answer
-						            question.setPreferredAnswer(enteredId);
+						            newQuestion.setPreferredAnswer(enteredId);
 
 						            // Update the database with the new preferred answer
 						            // (Assumes you have added an updatePreferredAnswer method in QAHelper1.)
-						            databaseHelper.qaHelper.updatePreferredAnswer(question);
+						            databaseHelper.qaHelper.updatePreferredAnswer(newQuestion);
 
 						            // Close the popup once the update is complete
 						            preferredAnswerBox.close();
+						            updateResultsTableForQuestion(newQuestion);
 						        } catch (NumberFormatException ex) {
 						            errorLabel.setText("Please enter only numbers.");
-						        }
+						        } 
+						        catch (SQLException ex) {
+                                    errorLabel.setText("Could not get the question.");
+                                }						      
 						    });
 
 						    // Build the layout including the error label
