@@ -816,6 +816,14 @@ public class StudentHomePage {
 
 			new AskToBeAReviewer(databaseHelper).show(newStage);
 		});
+		
+		if (databaseHelper.currentUser.getRoles().contains("Reviewer")) {
+			askToBeAReviewer.setVisible(false);
+			askToBeAReviewer.setManaged(false);
+		} else {
+			askToBeAReviewer.setVisible(true);
+			askToBeAReviewer.setManaged(true);
+		}
 
 		// "Back to login" button will bring user back to the login screen
 		quitButton.setOnAction(a -> {
@@ -909,56 +917,63 @@ public class StudentHomePage {
 		searchField.setOnKeyReleased(a -> {
 			String input = searchField.getText().trim();
 			if (!input.isEmpty()) {
+				
+				// Search the database for the input string
+				sortedList = databaseHelper.qaHelper.searchQuestionDatabase(input);				
 
 				searchField.setMinWidth(searchTable.getWidth());
 
 				// Make table visible
 				searchBox.setVisible(true);
 				searchBox.setManaged(true);
+				
+				if (sortedList != null && !sortedList.isEmpty()) {
 
-				// Get list words from current text input string
-				List<String> entry = databaseHelper.qaHelper.textDeserial(input);
-				try {
-					questions = databaseHelper.qaHelper.getAllQuestions();
-				} catch (SQLException e) {
-					e.printStackTrace();
-					System.err.println("Error trying to .getAllQuestions() within inputField .setOnKeyReleased()");
-					return;
-				}
-
-				// Use Hashmap to remove duplicates
-				Map<Question, Integer> similarity = new HashMap<>();
-
-				for (Question question : questions) {
-					// Get list of words to compare from current question
-					List<String> compList = question.getComp();
-					int count = 0;
-
-					// Count the matches
-					for (String word : entry) {
-						if (compList.contains(word)) {
-							count++;
-						}
-					}
-
-					// Set initial threshold to add comp to map
-					if (count > 2) {
-						similarity.put(question, count);
-					}
-				}
-
-				// Sort based on similarity score
-				sortedList = similarity.entrySet().stream()
-						.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
-						.collect(Collectors.toList());
+//				// Get list words from current text input string
+//				List<String> entry = databaseHelper.qaHelper.textDeserial(input);
+//				try {
+//					questions = databaseHelper.qaHelper.getAllQuestions();
+//				} catch (SQLException e) {
+//					e.printStackTrace();
+//					System.err.println("Error trying to .getAllQuestions() within inputField .setOnKeyReleased()");
+//					return;
+//				}
+//
+//				// Use Hashmap to remove duplicates
+//				Map<Question, Integer> similarity = new HashMap<>();
+//
+//				for (Question question : questions) {
+//					// Get list of words to compare from current question
+//					List<String> compList = question.getComp();
+//					int count = 0;
+//
+//					// Count the matches
+//					for (String word : entry) {
+//						if (compList.contains(word)) {
+//							count++;
+//						}
+//					}
+//
+//					// Set initial threshold to add comp to map
+//					if (count > 2) {
+//						similarity.put(question, count);
+//					}
+//				}
+//
+//				// Sort based on similarity score
+//				sortedList = similarity.entrySet().stream()
+//						.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
+//						.collect(Collectors.toList());
 
 				// Set the observable list
 				searchObservableList.setAll(sortedList);
+				
 
 				// Make table visible if it isn't
 				if (!searchBox.isVisible()) {
 					searchBox.setVisible(true);
 					searchBox.setManaged(true);
+				}
 				}
 			} else {
 				// Clear searchObservableList and hide searchTable

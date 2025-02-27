@@ -4,11 +4,15 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import application.Question;
 import application.Answer;
@@ -312,7 +316,7 @@ public class QAHelper1 {
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
-				List<String> comp = textDeserial(title + text);
+				List<String> comp = textDeserial(title + " " + text);
 
 				int preferredAnswer = rs.getInt("preferred_answer");
 
@@ -359,7 +363,7 @@ public class QAHelper1 {
 				// Convert to LocalDateTime format
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
-				List<String> comp = textDeserial(title + text);
+				List<String> comp = textDeserial(title + " " + text);
 
 				int preferredAnswer = rs.getInt("preferred_answer");
 
@@ -488,7 +492,7 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 				int preferredAnswer = rs.getInt("preferred_answer");
 
-				List<String> comp = textDeserial(title + text);
+				List<String> comp = textDeserial(title + " " + text);
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
@@ -535,7 +539,7 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 				int preferredAnswer = rs.getInt("preferred_answer");
 
-				List<String> comp = textDeserial(text);
+				List<String> comp = textDeserial(title + " " + text);
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
@@ -583,7 +587,7 @@ public class QAHelper1 {
 				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 				int preferredAnswer = rs.getInt("preferred_answer");
 
-				List<String> comp = textDeserial(text);
+				List<String> comp = textDeserial(title + " " + text);
 
 				User author = databaseHelper.getUser(authorId);
 				String authorName = "User";
@@ -793,6 +797,8 @@ public class QAHelper1 {
 	// Method used to convert the text of a question into a list of unique words
 	// without special characters for comparison to others
 	public List<String> textDeserial(String text) {
+		List<String> uniqueWords = new ArrayList<>();
+		Set<String> existingWords = new HashSet<>();
 		if (text == null || text.isEmpty()) {
 			// If empty return new empty list
 			return new ArrayList<>();
@@ -802,12 +808,16 @@ public class QAHelper1 {
 
 			// Split the string using the spaces
 			String[] wordsArray = cleanText.split("\\s+");
-
-			// Use set to get rid of any duplicate words in the set
-			Set<String> uniqueText = new HashSet<>(Arrays.asList(wordsArray));
+			
+			for (String word : wordsArray) {
+				if (!existingWords.contains(word)) {
+					uniqueWords.add(word);
+					existingWords.add(word);
+				}
+			}
 
 			// Convert back to list and return
-			return new ArrayList<>(uniqueText);
+			return new ArrayList<>(uniqueWords);
 		}
 	}
 	
@@ -869,5 +879,52 @@ public class QAHelper1 {
 			e.printStackTrace();
 			System.out.println("Error trying to update question in updateAnswer method.");
 		}
+	}
+	
+	// Search the question database for similar question title + text
+	public List<Question> searchQuestionDatabase(String input) {		
+		List<Question> questions;
+		// Get list words from current text input string
+		List<String> entry = databaseHelper.qaHelper.textDeserial(input);
+		try {
+			questions = databaseHelper.qaHelper.getAllQuestions();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.err.println("Error trying to .getAllQuestions() within searchQuestionDatabase method");
+			return null;
+		}
+
+		// Use Hashmap to sort
+		Map<Question, Integer> similarity = new HashMap<>();
+
+		for (Question question : questions) {
+			// This will hold words already seen
+			Set<String> existingWords = new HashSet<>();
+			// Get list of words to compare from current question
+			List<String> compList = question.getComp();
+			int count = 0;
+
+			// Count the matches
+			for (String word : entry) {
+				if (compList.contains(word) && !existingWords.contains(word)) {
+					existingWords.add(word);					
+					count++;
+				}
+			}
+			
+			 double score = ((double) count/* / compList.size()*/); 	// Factoring in size doesn't seem reliable
+
+			// Set initial threshold to add comp to map
+			if (score > 0.05) {
+				similarity.put(question, (int) score);
+			}
+		}
+
+		// Sort based on similarity score
+		List<Question> sortedList = similarity.entrySet().stream()
+				.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
+				.collect(Collectors.toList());
+		
+		return sortedList;
 	}
 }

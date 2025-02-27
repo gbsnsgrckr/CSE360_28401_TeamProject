@@ -340,31 +340,36 @@ public class PopulateQADatabase {
 			System.out.println("Error registering answer 17");
 			e.printStackTrace();
 		}
-		
-		// Add additional Question 18
-				question = new Question("Student Can produce a new question", "My group is working on Team project two and we were wonder if for \"can produce a new question based on a previous question to address the feedback I have received and any new insights gained, so I am more likely to get an answer that resolves my issue.\" we need to make a follow up button?", 1);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 18 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 18");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 19
-				question = new Question("Question on TP2", "Are we supposed to implement the questions and answers into a JavaFX gui, or can it be in the console.\r\n"
+
+		// Add additional Question 11
+		question = new Question("Student Can produce a new question",
+				"My group is working on Team project two and we were wonder if for \"can produce a new question based on a previous question to address the feedback I have received and any new insights gained, so I am more likely to get an answer that resolves my issue.\" we need to make a follow up button?",
+				1);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 18 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 18");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 12
+		question = new Question("Question on TP2",
+				"Are we supposed to implement the questions and answers into a JavaFX gui, or can it be in the console.\r\n"
 						+ "\r\n"
-						+ "I understand that we'll still need to show the testing the automated testing for the tp1 and the gui elements for the login pages to make sure the integration didn't break anything.", 1);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 19 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 19");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 20
-				question = new Question("Quiz 4 Answer Feedback", "I didn't have too many complaints about the first 3 quizzes, I thought they were straightforward enough and backed up by both the lectures and the textbook, but I am  looking at the quiz 4 answers now that they are released and think we are getting off track with the big picture here and getting too specific with what is being asked here:\r\n"
+						+ "I understand that we'll still need to show the testing the automated testing for the tp1 and the gui elements for the login pages to make sure the integration didn't break anything.",
+				1);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 19 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 19");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 13
+		question = new Question("Quiz 4 Answer Feedback",
+				"I didn't have too many complaints about the first 3 quizzes, I thought they were straightforward enough and backed up by both the lectures and the textbook, but I am  looking at the quiz 4 answers now that they are released and think we are getting off track with the big picture here and getting too specific with what is being asked here:\r\n"
 						+ "\r\n"
 						+ "1. Consider the following software project requirement and then select the best process model to develop this software.\r\n"
 						+ "\r\n"
@@ -382,144 +387,157 @@ public class PopulateQADatabase {
 						+ "\r\n"
 						+ "Here one of the correct choices is RAD (Rapid Application Development). Is this even in the textbook chapter? Is it in the slides? If I am wrong on this one sure, but at least tell me where to find it. I don't recall it being a major or minor topic of discussion.\r\n"
 						+ "\r\n"
-						+ "Last Note: If waterfall and incremental are going to be both specific models, but also classes or categories of models, I think this should be specified more when discussing them.", 2);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 20 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 20");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 21
-				question = new Question("Standup Meetings ALL Team Members Required?", "In order for my team to meet up 6 different times, there will have to be meetings where not all members can attend. Is it okay if 5/6 or even 4/6 members can not attend a meeting? Luckily we are able to have it so that each team member only misses one meeting rather than one member missing all 6. ", 3);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 21 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 21");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 22
-				question = new Question("Standup Meetings for TP2", "If we submit team phase 2 a week early, would it be fine if we only have 4 standup meetings (4 meetings for 2 weeks instead of 6 in 3 weeks)? ", 4);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 22 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 22");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 23
-				question = new Question("Comparing HW2 solutions", "Can we add our teammates as collaborators to our private repositories for individual HW2 so that we can compare our solutions for Task 1 in TP2?", 5);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 23 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 23");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 24
-				question = new Question("TP2 Phase 2 Task 5 GitHub", "In the Team Project 2 template, it says to include the URLs/screencasts for the team's solution for HW2. Just wanted to clarify if this is actually referring to the team's solution for Phase 2 (which includes all implemented Student stories)?", 6);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 24 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 24");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 25
-				question = new Question("TP2 Phase 2 Task 1", "Task 1 specifies that our team needs to \"provides evidence (e.g., screencast and console output) that the code has been tested and operates as required.\" We have chosen one of our member's HW2 to work off of, but can we use the screencast that our individual team member submitted for their HW2 assignment, or do we need to re-film a screencast for HW2 that includes our entire team presenting the individual HW2 implementation? \r\n"
+						+ "Last Note: If waterfall and incremental are going to be both specific models, but also classes or categories of models, I think this should be specified more when discussing them.",
+				2);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 20 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 20");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 14
+		question = new Question("Standup Meetings ALL Team Members Required?",
+				"In order for my team to meet up 6 different times, there will have to be meetings where not all members can attend. Is it okay if 5/6 or even 4/6 members can not attend a meeting? Luckily we are able to have it so that each team member only misses one meeting rather than one member missing all 6. ",
+				3);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 21 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 21");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 15
+		question = new Question("Standup Meetings for TP2",
+				"If we submit team phase 2 a week early, would it be fine if we only have 4 standup meetings (4 meetings for 2 weeks instead of 6 in 3 weeks)? ",
+				4);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 22 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 22");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 16
+		question = new Question("Comparing HW2 solutions",
+				"Can we add our teammates as collaborators to our private repositories for individual HW2 so that we can compare our solutions for Task 1 in TP2?",
+				5);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 23 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 23");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 17
+		question = new Question("TP2 Phase 2 Task 5 GitHub",
+				"In the Team Project 2 template, it says to include the URLs/screencasts for the team's solution for HW2. Just wanted to clarify if this is actually referring to the team's solution for Phase 2 (which includes all implemented Student stories)?",
+				6);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 24 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 24");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 18
+		question = new Question("TP2 Phase 2 Task 1",
+				"Task 1 specifies that our team needs to \"provides evidence (e.g., screencast and console output) that the code has been tested and operates as required.\" We have chosen one of our member's HW2 to work off of, but can we use the screencast that our individual team member submitted for their HW2 assignment, or do we need to re-film a screencast for HW2 that includes our entire team presenting the individual HW2 implementation? \r\n"
 						+ "\r\n"
-						+ "Also, Task 1.4 of the phase 2 PDF says to include a \"URL and access to Source Code in GitHub.\" Is this referring to the HW2 submission by our individual team member, or the URL of our overall TP2 Github? ", 7);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 25 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 25");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 26
-				question = new Question("TP2 new features clarification", "I have a couple questions about the new features we need to add to TP2:\r\n"
-						+ "\r\n"
-						+ "\"Students to ask for or suggest clarifications.\"\r\n"
-						+ "\r\n"
+						+ "Also, Task 1.4 of the phase 2 PDF says to include a \"URL and access to Source Code in GitHub.\" Is this referring to the HW2 submission by our individual team member, or the URL of our overall TP2 Github? ",
+				7);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 25 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 25");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 19
+		question = new Question("TP2 new features clarification",
+				"I have a couple questions about the new features we need to add to TP2:\r\n" + "\r\n"
+						+ "\"Students to ask for or suggest clarifications.\"\r\n" + "\r\n"
 						+ "Should clarifications be requested through a dedicated button/feature, or should replying to an answer automatically count as a clarification request? Similar to how EdDiscussions allows threaded replies?\r\n"
 						+ "\r\n"
 						+ "\"Students to announce that a specific answer addressed the issue that prompted the initial question.\"\r\n"
 						+ "\r\n"
-						+ "Who has permission to mark an answer as correct? The original poster, or can other users/admin do it as well?", 8);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 26 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 26");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 27
-				question = new Question("Quiz 4 Answers", "Are correct answers being given for past quizzes?\r\n"
-						+ "\r\n"
-						+ "For quiz 4, I have questions about the first 3 and would be curious to know what the correct answers are and how people supposedly arrived at them", 9);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 27 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 27");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 28
-				question = new Question("HW2 Github Privacy", "Hi, I emailed my grader about their github. I'm worried they won't get back to me today. Is it okay to submit everything including a link to the repository, and give them access as soon as they get back to me which may be after friday 11:59? I have everything else done.", 11);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 28 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 28");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 29
-				question = new Question("HW 2 GitHub Files", "I just realized that on my GitHub I uploaded class files instead of manually creating java files. I turned my HW2 in on time but am worried on if it's accessible, and if it isn't, am I able to change it so that I can receive credit. I also want to do this without turning it into a late submission.", 10);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 29 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 29");
-					e.printStackTrace();
-				}
-				
-				// Add additional Question 30
-				question = new Question("Regarding some of the Student User Stories", "Hello there!\r\n"
-						+ "\r\n"
-						+ "I am posting this  regarding some confusion about the student user stories to be implemented. Some of the user stories have a reviewer feature like the ones below:\r\n"
-						+ "\r\n"
-						+ "As a student, I can read the reviews of potential answers to questions and add promising reviewers to my potential trusted reviewers list so I can establish and manage a list of trusted reviewers.\r\n"
-						+ "\r\n"
-						+ "As a student, I can establish and manage a list of reviewers I trust and assign each a weight, so my curated list of answers serves me well.\r\n"
-						+ "\r\n"
-						+ "As a student, I can see when a reviewer in my list of trusted reviewers updates a review, so I can quickly benefit from the update.\r\n"
-						+ "\r\n"
-						+ "As a student, I can provide private feedback to a reviewer of a potential answer so the reviewer can provide better reviews.\r\n"
-						+ "\r\n"
-						+ "As a student, I can request to be given the role of a reviewer. My classmates can benefit from my experience and reduce the number of potential answers they need to read. An instructor must approve this request, and the role is assigned upon approval.\r\n"
-						+ "\r\n"
-						+ " As a student, I can search to find answered questions, currently unanswered questions, and reviewers so I can more quickly get my questions answered and create an effective set of reviewers to curate the results of my searches. (Epic)\r\n"
-						+ "\r\n"
-						+ "As this was mentioned in the assignment: \r\n"
-						+ "\r\n"
-						+ "Do not include stories that involve users playing the role of reviewers, instructors, or staff members. You do not need to fully implement the provided Student User Stories in this phase. I apologize for the amount of text I had to include as I just wanted to be clear on what to implement for this phase as we woulld have been done with most of the work already.", 12);
-				try {
-					qaHelper.registerQuestion(question); // Register answer in relation to question id 30 for the
-																	// relation table
-				} catch (SQLException e) {
-					System.out.println("Error registering question 30");
-					e.printStackTrace();
-				}
+						+ "Who has permission to mark an answer as correct? The original poster, or can other users/admin do it as well?",
+				8);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 26 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 26");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 20
+		question = new Question("Quiz 4 Answers", "Are correct answers being given for past quizzes?\r\n" + "\r\n"
+				+ "For quiz 4, I have questions about the first 3 and would be curious to know what the correct answers are and how people supposedly arrived at them",
+				9);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 27 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 27");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 21
+		question = new Question("HW2 Github Privacy",
+				"Hi, I emailed my grader about their github. I'm worried they won't get back to me today. Is it okay to submit everything including a link to the repository, and give them access as soon as they get back to me which may be after friday 11:59? I have everything else done.",
+				11);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 28 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 28");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 22
+		question = new Question("HW 2 GitHub Files",
+				"I just realized that on my GitHub I uploaded class files instead of manually creating java files. I turned my HW2 in on time but am worried on if it's accessible, and if it isn't, am I able to change it so that I can receive credit. I also want to do this without turning it into a late submission.",
+				10);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 29 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 29");
+			e.printStackTrace();
+		}
+
+		// Add additional Question 23
+		question = new Question("Regarding some of the Student User Stories", "Hello there!\r\n" + "\r\n"
+				+ "I am posting this  regarding some confusion about the student user stories to be implemented. Some of the user stories have a reviewer feature like the ones below:\r\n"
+				+ "\r\n"
+				+ "As a student, I can read the reviews of potential answers to questions and add promising reviewers to my potential trusted reviewers list so I can establish and manage a list of trusted reviewers.\r\n"
+				+ "\r\n"
+				+ "As a student, I can establish and manage a list of reviewers I trust and assign each a weight, so my curated list of answers serves me well.\r\n"
+				+ "\r\n"
+				+ "As a student, I can see when a reviewer in my list of trusted reviewers updates a review, so I can quickly benefit from the update.\r\n"
+				+ "\r\n"
+				+ "As a student, I can provide private feedback to a reviewer of a potential answer so the reviewer can provide better reviews.\r\n"
+				+ "\r\n"
+				+ "As a student, I can request to be given the role of a reviewer. My classmates can benefit from my experience and reduce the number of potential answers they need to read. An instructor must approve this request, and the role is assigned upon approval.\r\n"
+				+ "\r\n"
+				+ " As a student, I can search to find answered questions, currently unanswered questions, and reviewers so I can more quickly get my questions answered and create an effective set of reviewers to curate the results of my searches. (Epic)\r\n"
+				+ "\r\n" + "As this was mentioned in the assignment: \r\n" + "\r\n"
+				+ "Do not include stories that involve users playing the role of reviewers, instructors, or staff members. You do not need to fully implement the provided Student User Stories in this phase. I apologize for the amount of text I had to include as I just wanted to be clear on what to implement for this phase as we woulld have been done with most of the work already.",
+				12);
+		try {
+			qaHelper.registerQuestion(question); // Register answer in relation to question id 30 for the
+													// relation table
+		} catch (SQLException e) {
+			System.out.println("Error registering question 30");
+			e.printStackTrace();
+		}
 	}
 
 }

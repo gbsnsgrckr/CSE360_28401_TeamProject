@@ -146,7 +146,7 @@ public class Answer {
 
 	public String toString() {
 		return String.format(
-				"\nANSWER: \nID:\n	%s\nText:\n		%s\nRelatedIDs:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
+				"\nANSWER: ID:\n	%s\nText:\n		%s\nRelatedIDs:\n		%s\nAuthorId:\n	  %s\nAuthor Name:\n	  %s\nCreated On:\n	%s\nUpdated On:\n	%s\n",
 				id, text, relatedId, authorId, authorName, createdOn, updatedOn);
 	}
 
