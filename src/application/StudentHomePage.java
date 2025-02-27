@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import application.StudentHomePage.QATableRow;
 import databasePart1.DatabaseHelper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -488,7 +489,9 @@ public class StudentHomePage {
 							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
 						// Buttons to edit and delete the answer
 						Button editButton = new Button("Edit");
-						Button deleteButton = new Button("Delete");					
+						Button deleteButton = new Button("Delete");
+						Button markAsReadButton = new Button("Mark As Read");
+						
 						// Styling for buttons
 						editButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
@@ -496,7 +499,8 @@ public class StudentHomePage {
 						deleteButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
-						
+						markAsReadButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
+				
 						
 						editButton.setOnAction(a -> {
 							// Set submit button text
@@ -545,8 +549,25 @@ public class StudentHomePage {
 							qTable.getSelectionModel().select(question);
 
 						});
+						
+						markAsReadButton.setOnAction(a -> {
+						    if (row.getType() == QATableRow.RowType.ANSWER) {
+						        // Get the answer ID from the current row
+						        int answerId = row.getAnswerId();
+						        int userId = databaseHelper.currentUser.getUserId();
+						        try {
+						            // Mark the answer as read for the current user
+						            databaseHelper.qaHelper.markAnswerAsRead(answerId, userId);
+						            // Optionally, update the UI to reflect the change
+						            System.out.println("Answer marked as read.");
+						        } catch (SQLException e) {
+						            e.printStackTrace();
+						            System.err.println("Error marking answer as read.");
+						        }
+						    }
+						});
 
-						HBox buttonBox = new HBox(1, editButton, deleteButton);
+						HBox buttonBox = new HBox(1, editButton, deleteButton, markAsReadButton);
 						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
 						displayLabel.setAlignment(Pos.CENTER_LEFT);
@@ -1212,8 +1233,13 @@ public class StudentHomePage {
 		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, askToBeAReviewerBox);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
+		
+		Button viewUnresolvedBtn = createViewUnresolvedButton();
+		Button viewAllUnresolvedBtn = createViewAllUnresolvedButton();
+		
+		HBox buttonBox2 = new HBox(viewUnresolvedBtn, viewAllUnresolvedBtn);
 
-		VBox vbox1 = new VBox(10, vbox, buttonBox1);
+		VBox vbox1 = new VBox(10, vbox, buttonBox1, buttonBox2);
 		vbox1.setAlignment(Pos.CENTER);
 
 		// Hide submitBox unit needed
@@ -1432,6 +1458,324 @@ public class StudentHomePage {
 
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
+	}
+	
+	private void showUnresolvedQuestionsForCurrentUser() {
+	    Stage stage = new Stage(); 
+	    // Creates a new Stage to display the list of unresolved questions for the current user
+
+	    stage.setTitle("My Unresolved Questions"); 
+	    // Sets the window title to indicate these are the user's unresolved questions
+
+	    Label heading = new Label("My Unresolved Questions (Unread Answers)");
+	    // Creates a heading label describing the content of this window
+
+	    heading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+	    // Applies bold styling and a larger font size to the heading label
+
+	    TableView<Question> unresolvedTable = new TableView<>();
+	    // A TableView to list the current user's unresolved questions
+
+	    unresolvedTable.setStyle("-fx-border-color: black; -fx-text-fill: black; -fx-font-weight: bold;");
+	    // Gives the table a black border, bold text, etc., to match the look of your application
+
+	    unresolvedTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+	    // Ensures columns automatically resize to fit the table width
+
+	    List<Question> myUnresolvedList;
+	    // Will hold all unresolved questions for the current user
+
+	    try {
+	        myUnresolvedList = databaseHelper.qaHelper.getAllUnresolvedQuestionsForUser(
+	            databaseHelper.currentUser.getUserId()
+	        );
+	        // Retrieves all unresolved questions specific to the current user from the database
+	    } catch (SQLException ex) {
+	        ex.printStackTrace();
+	        myUnresolvedList = new ArrayList<>();
+	        // In case of error, initializes the list as empty to avoid null issues
+	    }
+
+	    ObservableList<Question> unresolvedObs = FXCollections.observableArrayList(myUnresolvedList);
+	    // Wraps the retrieved list in an ObservableList for display in the TableView
+
+	    unresolvedTable.setItems(unresolvedObs);
+	    // Populates the table with the user's unresolved questions
+
+	    TableColumn<Question, String> questCol = new TableColumn<>("Question Title");
+	    // Creates a column to display the question title
+
+	    questCol.setCellValueFactory(cellData -> 
+	        new SimpleStringProperty(cellData.getValue().getTitle())
+	    );
+	    // Binds the column to each Question object's getTitle() method
+
+	    TableColumn<Question, Number> unreadCol = new TableColumn<>("Unread Answers");
+	    // Creates a column to display how many potential answers remain unread
+
+	    unreadCol.setCellValueFactory(cellData -> 
+	        new ReadOnlyObjectWrapper<>(cellData.getValue().getUnreadCount())
+	    );
+	    // Binds the column to each Question object's unreadCount property
+
+	    unresolvedTable.getColumns().addAll(questCol, unreadCol);
+	    // Adds both columns (title and unread count) to the table
+
+	    unresolvedTable.setRowFactory(tv -> {
+	        TableRow<Question> row = new TableRow<>();
+	        // Creates a custom row to detect double-clicks
+
+	        row.setOnMouseClicked(event -> {
+	            if (!row.isEmpty() && event.getClickCount() == 2) {
+	                // Checks if the row is not empty and has been double-clicked
+	                Question question = row.getItem();
+	                // Retrieves the Question object from that row
+	                showPotentialAnswersWindow(question);
+	                // Opens a new window showing potential (unread) answers for this question
+	            }
+	        });
+	        return row;
+	    });
+
+	    VBox layout = new VBox(10, heading, unresolvedTable);
+	    // A VBox container to vertically stack the heading and the table
+
+	    layout.setAlignment(Pos.CENTER);
+	    // Centers the layout content horizontally
+
+	    layout.setPadding(new Insets(15, 15, 15, 15));
+	    // Adds padding around the VBox for visual spacing
+
+	    Scene scene = new Scene(layout, 700, 400);
+	    // Creates a Scene with the specified width and height
+
+	    stage.setScene(scene);
+	    // Sets our new scene on the stage
+
+	    stage.show();
+	    // Displays this new window on the screen
+	}
+
+
+	/**
+	 * Displays a pop-up window listing potential (unread) answers for the specified question.
+	 * Once opened, these potential answers are marked as read in the database
+	 * to update the user's unread count (User Story #1 continued).
+	 */
+	private void showPotentialAnswersWindow(Question question) {
+	    Stage stage = new Stage();
+	    // Creates a new window (Stage) to list potential answers
+
+	    stage.setTitle("Potential Answers for: " + question.getTitle());
+	    // Sets the window title dynamically to the question's title
+
+	    Label heading = new Label("Potential Answers");
+	    // Heading label indicating that these are possible/new answers
+
+	    heading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+	    // Applies a larger, bold font to the heading
+
+	    TableView<Answer> potentialAnswersTable = new TableView<>();
+	    // A table to display each potential answer
+
+	    potentialAnswersTable.setStyle("-fx-border-color: black; -fx-text-fill: black; -fx-font-weight: bold;");
+	    // Matches styling used elsewhere in your application
+
+	    potentialAnswersTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+	    // Ensures columns fit within the table width
+
+	    List<Answer> potentialAnswers = new ArrayList<>();
+	    // Will hold potential answers for the given question
+
+	    try {
+	        potentialAnswers = databaseHelper.qaHelper.getPotentialAnswersForQuestion(question.getId());
+	        // Retrieves any "potential" (i.e., not preferred) answers from the database
+	    } catch (SQLException ex) {
+	        ex.printStackTrace();
+	    }
+
+	    ObservableList<Answer> potentialObs = FXCollections.observableArrayList(potentialAnswers);
+	    // Wraps the potential answers list in an ObservableList
+
+	    potentialAnswersTable.setItems(potentialObs);
+	    // Populates the table with the newly retrieved potential answers
+
+	    TableColumn<Answer, String> ansCol = new TableColumn<>("Answer Text");
+	    // Column to display the actual text of each answer
+
+	    ansCol.setCellValueFactory(cellData -> 
+	        new SimpleStringProperty(cellData.getValue().getText())
+	    );
+	    // Binds the column to each Answer object's getText() method
+
+	    potentialAnswersTable.getColumns().add(ansCol);
+	    // Adds the "Answer Text" column to the table
+
+	    // Mark all potential answers as read upon opening this window
+	    for (Answer ans : potentialAnswers) {
+	        try {
+	            databaseHelper.qaHelper.markAnswerAsRead(ans.getId(), databaseHelper.currentUser.getUserId());
+	            // Calls a helper method to update the 'read' status in the database
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	    }
+
+	    VBox layout = new VBox(10, heading, potentialAnswersTable);
+	    // Stacks the heading label and the table inside a VBox
+
+	    layout.setAlignment(Pos.CENTER);
+	    // Centers them horizontally
+
+	    layout.setPadding(new Insets(15, 15, 15, 15));
+	    // Adds 15px padding on all sides for better spacing
+
+	    Scene scene = new Scene(layout, 600, 300);
+	    // Creates a scene with a smaller size (600x300) for a simple pop-up window
+
+	    stage.setScene(scene);
+	    // Assigns the scene to the stage
+
+	    stage.show();
+	    // Shows the stage to the user
+	}
+
+	//As a student, I can see a list of all unresolved
+	private Button createViewUnresolvedButton() {
+	    Button viewUnresolvedBtn = new Button("View My Unresolved");
+	    // Button text instructs that we are viewing the current user's unresolved questions
+
+	    viewUnresolvedBtn.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1px;");
+	    // Applies bold text and a black border, matching your UI design
+
+	    viewUnresolvedBtn.setOnAction(e -> {
+	        showUnresolvedQuestionsForCurrentUser();
+	        // When clicked, calls the method that displays the user's unresolved questions
+	    });
+	    return viewUnresolvedBtn;
+	    // Returns the newly-created button for "View My Unresolved"
+	}
+
+	// Creates a button that shows all unresolved questions for any user (User Story #2).
+	private Button createViewAllUnresolvedButton() {
+	    Button viewAllUnresolvedBtn = new Button("View All Unresolved");
+	    // Button text indicates that this lists all unresolved questions (not just the current user's)
+
+	    viewAllUnresolvedBtn.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1px;");
+	    // Same style as other buttons associated
+
+	    viewAllUnresolvedBtn.setOnAction(e -> {
+	        showAllUnresolvedQuestions();
+	        // When clicked, calls the method that displays every unresolved question
+	    });
+	    return viewAllUnresolvedBtn;
+	    // Returns the new button for "View All Unresolved"
+	}
+
+	//Displays a pop-up window listing all unresolved questions for any user (User Story #2).
+	private void showAllUnresolvedQuestions() {
+	    Stage stage = new Stage(); 
+	    // Creates a new Stage to list unresolved questions from all users
+
+	    stage.setTitle("All Unresolved Questions"); 
+	    // Sets the title to "All Unresolved Questions" for clarity
+
+	    Label heading = new Label("All Unresolved Questions");
+	    // Heading label that explains this list is for all users
+
+	    heading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+	    // Applies large, bold styling to the heading
+
+	    TableView<Question> unresolvedTable = new TableView<>();
+	    // A TableView to list all unresolved questions (regardless of user)
+
+	    unresolvedTable.setStyle("-fx-border-color: black; -fx-text-fill: black; -fx-font-weight: bold;");
+	    // Matches your application's style: black border, bold text
+
+	    unresolvedTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+	    // Automatically resizes columns to fit the table width
+
+	    List<Question> allUnresolvedList;
+	    // Will hold all unresolved questions for every user
+
+	    try {
+	        allUnresolvedList = databaseHelper.qaHelper.getAllUnresolvedQuestions();
+	        // Retrieves all unresolved questions, not filtered by user
+	    } catch (SQLException ex) {
+	        ex.printStackTrace();
+	        allUnresolvedList = new ArrayList<>();
+	        // If the DB call fails, initializes an empty list to prevent null usage
+	    }
+
+	    ObservableList<Question> unresolvedObs = FXCollections.observableArrayList(allUnresolvedList);
+	    // Wraps the retrieved list in an ObservableList for display in the table
+
+	    unresolvedTable.setItems(unresolvedObs);
+	    // Sets the table's data source to our ObservableList
+
+	    TableColumn<Question, String> questCol = new TableColumn<>("Question Title");
+	    // Column to display the question title text
+
+	    questCol.setCellValueFactory(cellData -> 
+	        new SimpleStringProperty(cellData.getValue().getTitle())
+	    );
+	    // Binds the column to each Question's getTitle() method
+
+	    TableColumn<Question, Number> potentialAnsCol = new TableColumn<>("Potential Answers");
+	    // Column showing how many potential (unpreferred) answers each question has
+
+	    potentialAnsCol.setCellValueFactory(cellData -> {
+	        Question q = cellData.getValue();
+	        int count = 0;
+	        // Will track how many potential answers exist for this question
+
+	        try {
+	            List<Answer> potential = databaseHelper.qaHelper.getPotentialAnswersForQuestion(q.getId());
+	            // Retrieves any answers that have not been chosen as the question's preferred answer
+	            count = potential.size();
+	            // Stores the number of those potential answers
+	        } catch (SQLException e) {
+	            e.printStackTrace();
+	        }
+	        return new ReadOnlyObjectWrapper<>(count);
+	        // Wraps the count in a ReadOnlyObjectWrapper so it can be displayed in the table cell
+	    });
+
+	    unresolvedTable.getColumns().addAll(questCol, potentialAnsCol);
+	    // Adds columns for question title and potential answers to the table
+
+	    // Allows double-clicking on a row to open that question's potential answers
+	    unresolvedTable.setRowFactory(tv -> {
+	        TableRow<Question> row = new TableRow<>();
+	        row.setOnMouseClicked(event -> {
+	            if (!row.isEmpty() && event.getClickCount() == 2) {
+	                // Checks if we have a valid row and a double-click
+	                Question clickedQ = row.getItem();
+	                // Retrieves the Question from that row
+	                showPotentialAnswersWindow(clickedQ);
+	                // Opens a window showing potential answers for this question
+	            }
+	        });
+	        return row;
+	    });
+
+	    VBox layout = new VBox(10, heading, unresolvedTable);
+	    // A simple vertical box to hold the heading and the table
+
+	    layout.setAlignment(Pos.CENTER);
+	    // Centers the layout content
+
+	    layout.setPadding(new Insets(15, 15, 15, 15));
+	    // Adds padding of 15px on each side
+
+	    Scene scene = new Scene(layout, 700, 400);
+	    // Creates a scene sized 700x400 for the "All Unresolved" pop-up
+
+	    stage.setScene(scene);
+	    // Sets the newly created scene on the stage
+
+	    stage.show();
+	    // Displays this stage to the user
 	}
 
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
