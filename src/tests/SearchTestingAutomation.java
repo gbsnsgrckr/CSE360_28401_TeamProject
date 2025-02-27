@@ -7,7 +7,7 @@ import java.util.List;
 import application.*;
 import databasePart1.*;
 
-public class SearchTestBed {
+public class SearchTestingAutomation {
 	private static final DatabaseHelper databaseHelper = new DatabaseHelper();
 	static int numPassed = 0;
 	static int numFailed = 0;
