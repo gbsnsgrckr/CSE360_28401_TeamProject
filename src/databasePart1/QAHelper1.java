@@ -327,6 +327,12 @@ public class QAHelper1 {
 
     // Registers a new answer in the database.
     public void registerAnswerWithQuestion(Answer answer, int relatedID) throws SQLException {
+        // Prevent duplicates
+        if (isDuplicateAnswer(relatedID, answer.getText())) {
+            System.out.println("Duplicate answer detected. Answer not inserted.");
+            return;
+        }
+
         String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
         try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
             pstmt.setString(1, answer.getText());
@@ -338,7 +344,6 @@ public class QAHelper1 {
                 int answerID = newID.getInt(1);
                 addRelationToQuestion(relatedID, answerID);
             }
-
         }
         System.out.println("Answer registered successfully.");
     }
@@ -883,4 +888,58 @@ public class QAHelper1 {
             System.out.println("Error trying to update answer in updateAnswer method.");
         }
     }
+    
+    public boolean isDuplicateAnswer(int questionID, String answerText) throws SQLException {
+        // First, retrieve the answer IDs from the question
+        String getAnswersQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(getAnswersQuery)) {
+            pstmt.setInt(1, questionID);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String answerIds = rs.getString("answer_id"); // e.g., "1, 4, 5, 6, 7"
+                if (answerIds == null || answerIds.trim().isEmpty()) {
+                    return false; // No answers exist yet, so no duplicates
+                }
+
+                // Convert "1, 4, 5, 6, 7" into (1, 4, 5, 6, 7)
+                String[] idsArray = answerIds.split(",\\s*"); // Split by comma & spaces
+                List<Integer> answerIdList = new ArrayList<>();
+                for (String id : idsArray) {
+                    try {
+                        answerIdList.add(Integer.parseInt(id.trim())); // Convert to int
+                    } catch (NumberFormatException e) {
+                        System.err.println("Invalid answer ID format: " + id);
+                    }
+                }
+
+                if (answerIdList.isEmpty()) {
+                    return false; // No valid IDs found
+                }
+
+                // Build SQL query dynamically
+                StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cse360answer WHERE text = ? AND id IN (");
+                for (int i = 0; i < answerIdList.size(); i++) {
+                    sql.append("?");
+                    if (i < answerIdList.size() - 1) {
+                        sql.append(", ");
+                    }
+                }
+                sql.append(")");
+
+                try (PreparedStatement checkStmt = connection.prepareStatement(sql.toString())) {
+                    checkStmt.setString(1, answerText.trim());
+                    for (int i = 0; i < answerIdList.size(); i++) {
+                        checkStmt.setInt(i + 2, answerIdList.get(i));
+                    }
+
+                    ResultSet checkRs = checkStmt.executeQuery();
+                    return checkRs.next() && checkRs.getInt(1) > 0;
+                }
+            }
+        }
+        return false; // Default case
+    }
+
+
 }
