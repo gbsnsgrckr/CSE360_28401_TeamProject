@@ -20,7 +20,7 @@ public class Question {
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
-			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId, int unreadCount) {
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId) {
 		this.id = id;
 		this.title = title;
 		this.text = text;
@@ -32,6 +32,21 @@ public class Question {
 		this.author = author;
 		this.authorName = authorName;
 		this.relatedId = relatedId;
+	}
+	
+	// Constructor mainly for when getAllQuestions() method is used in QAHelper1.java
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId, int unreadCount) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;
 		this.unreadCount = unreadCount;
 	}
 	
@@ -47,10 +62,9 @@ public class Question {
 		this.comp = comp;
 		this.preferredAnswer = preferredAnswer;
 		this.author = author;
-		this.authorName = authorName;		
+		this.authorName = authorName;
 	}
-	
-	
+
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author) {
 		this.id = id;
@@ -86,7 +100,7 @@ public class Question {
 		this.updatedOn = updatedOn;
 		this.comp = comp;
 	}
-
+	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn) {
 		this.id = id;
@@ -137,10 +151,6 @@ public class Question {
 		return authorId;
 	}
 
-	public int getUnreadCount() {
-		return unreadCount;
-	}
-
 	public LocalDateTime getCreatedOn() {
 		return createdOn;
 	}
@@ -155,6 +165,10 @@ public class Question {
 
 	public int getPreferredAnswer() {
 		return preferredAnswer;
+	}
+	
+	public int getUnreadCount() {
+		return unreadCount;
 	}
 
 	public User getAuthor() {
@@ -174,6 +188,10 @@ public class Question {
 	
 	public List<String> getRelatedId() {
 		return relatedId;
+	}
+	
+	public String getUnresolvedDisplay() {
+		return String.format("%s (Unread Answers: %d)", this.title, this.unreadCount);
 	}
 
 	// Setters
@@ -197,15 +215,6 @@ public class Question {
 		this.createdOn = createdOn;
 	}
 
-	public void setUnreadCount(int count) {
-	    this.unreadCount = count;
-	}
-
-	// Update "My Unresolved Questions" methods to reflect unreadCount
-	public String getUnresolvedDisplay() {
-		return String.format("%s (Unread Answers: %d)", this.title, this.unreadCount);
-	}
-
 	public void setUpdatedOn(LocalDateTime updatedOn) {
 		this.updatedOn = updatedOn;
 	}
@@ -216,6 +225,10 @@ public class Question {
 
 	public void setPreferredAnswer(int preferredAnswer) {
 		this.preferredAnswer = preferredAnswer;
+	}
+	
+	public void setUnreadCount(int count) {
+	    this.unreadCount = count;
 	}
 
 	public void setAuthor(User author) {
