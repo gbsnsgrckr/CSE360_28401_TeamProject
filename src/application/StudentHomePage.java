@@ -187,7 +187,7 @@ public class StudentHomePage {
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to find reviewers for your questions
-		Button findReviewerButton = new Button("Find Reviewer");
+		Button findReviewerButton = new Button("Find Reviewer For Question");
 		findReviewerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 		
@@ -272,57 +272,6 @@ public class StudentHomePage {
 				titleBar.setStyle("-fx-pref-height: 0; -fx-min-height: 0; -fx-max-height: 0;");
 			}
 		});
-
-		/*
-		 * Answer Database Table that we shouldn't need // Table display of the answer
-		 * database // Label to display title to user Label prompt3 = new
-		 * Label("Answer Database"); prompt3.
-		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
-		 * );
-		 * 
-		 * // Hbox to position the title HBox titleBox3 = new HBox(prompt3);
-		 * titleBox3.setAlignment(Pos.CENTER);
-		 * 
-		 * // Create table to display the answer database TableView<Answer> aTable = new
-		 * TableView<>(); aTable.
-		 * setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
-		 * ); aTable.setPrefWidth(600);
-		 * 
-		 * // if answers is null then initialize as an empty list if (answers == null) {
-		 * answers = new ArrayList<>(); }
-		 * 
-		 * // Create an observable list and assign it to the table
-		 * ObservableList<Answer> answerObservableList =
-		 * FXCollections.observableArrayList(answers);
-		 * aTable.setItems(answerObservableList);
-		 * 
-		 * // Create, assign, and associate values to table TableColumn<Answer, Integer>
-		 * idColumn2 = new TableColumn<>("Answer ID");
-		 * idColumn2.setCellValueFactory(data -> new
-		 * ReadOnlyObjectWrapper<>(data.getValue().getId()));
-		 * 
-		 * // Create a text column TableColumn<Answer, String> textColumn2 = new
-		 * TableColumn<>("Answer"); textColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("text"));
-		 * 
-		 * // Create a userID column TableColumn<Answer, Integer> authorColumn2 = new
-		 * TableColumn<>("Author ID"); authorColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("author"));
-		 * 
-		 * // Create a createOn column TableColumn<Answer, String> createdColumn2 = new
-		 * TableColumn<>("Created On"); createdColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("createdOn"));
-		 * 
-		 * // Create an updatedOn column TableColumn<Answer, String> updatedColumn2 =
-		 * new TableColumn<>("Updated On"); updatedColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("updatedOn"));
-		 * 
-		 * aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2,
-		 * createdColumn2, updatedColumn2);
-		 * 
-		 * // Container to hold the table VBox answerDB = new VBox(5, titleBox3,
-		 * aTable);
-		 */
 
 		// Label to display title to user
 		Label prompt5 = new Label("Details");

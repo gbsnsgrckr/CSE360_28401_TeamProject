@@ -18,7 +18,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import databasePart1.DatabaseHelper;
 
@@ -293,15 +296,13 @@ public class FindReviewerForQuestionPage {
 
 				try {
 					if (selection.equalsIgnoreCase("All")) {
+						// Retrive list of all reviewers
 						users = databaseHelper.getAllUsersWithRole("Reviewer");
 					} else if (selection.equalsIgnoreCase("Preferred")) {
-						/*
-						 * PLACEHOLDER FOR METHOD TO RETURN PREFERRED USERS FROM DATABASE users =
-						 * databaseHelper.getPreferredReviewers(databaseHelper.currentUser);
-						 */
-
-						// REMOVE THIS WHEN YOU ADD PROPER LOGIC
-						users = databaseHelper.getAllUsersWithRole("Reviewer");
+						// Retrieve list of preferred reviewers for the current user (converts from map to list)
+						users = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()).entrySet()
+								.stream().sorted(Map.Entry.<User, Integer>comparingByValue(Comparator.reverseOrder()))
+								.map(Map.Entry::getKey).collect(Collectors.toList());
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -348,11 +349,13 @@ public class FindReviewerForQuestionPage {
 				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
 				+ "-fx-border-width: 2, 2, 1; -fx-border-radius: 100, 100, 100;" + "-fx-border-insets: 0, 2, 4");
 
+		// Actions to allow window dragging
 		layout.setOnMousePressed(a -> {
 			offsetX[0] = a.getSceneX();
 			offsetY[0] = a.getSceneY();
 		});
 
+		// Actions to allow window dragging
 		layout.setOnMouseDragged(a -> {
 			primaryStage.setX(a.getScreenX() - offsetX[0]);
 			primaryStage.setY(a.getScreenY() - offsetY[0]);
@@ -450,7 +453,7 @@ public class FindReviewerForQuestionPage {
 		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
 		buttonBar.setAlignment(Pos.TOP_RIGHT);
 		buttonBar.setPadding(new Insets(0));
-		buttonBar.setMaxHeight(27);		
+		buttonBar.setMaxHeight(27);
 		buttonBar.setMaxWidth(80);
 
 		// Spacer to push the titleBar to the top
