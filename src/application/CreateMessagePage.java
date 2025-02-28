@@ -77,8 +77,6 @@ public class CreateMessagePage {
 
                 primaryStage.close();
 
-                new StudentHomePage(databaseHelper).show(newStage);
-
             } catch (SQLException e) {
                 System.err.println("Database error: " + e.getMessage());
                 e.printStackTrace();
