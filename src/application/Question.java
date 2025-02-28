@@ -16,6 +16,7 @@ public class Question {
 	private User author;
 	private String authorName;
 	private List<String> relatedId;
+	private int unreadCount = 0;
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
@@ -33,6 +34,22 @@ public class Question {
 		this.relatedId = relatedId;
 	}
 	
+	// Constructor mainly for when getAllQuestions() method is used in QAHelper1.java
+	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
+			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName, List<String> relatedId, int unreadCount) {
+		this.id = id;
+		this.title = title;
+		this.text = text;
+		this.authorId = authorId;
+		this.createdOn = createdOn;
+		this.updatedOn = updatedOn;
+		this.comp = comp;
+		this.preferredAnswer = preferredAnswer;
+		this.author = author;
+		this.authorName = authorName;
+		this.unreadCount = unreadCount;
+	}
+	
 	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author, String authorName) {
@@ -45,10 +62,9 @@ public class Question {
 		this.comp = comp;
 		this.preferredAnswer = preferredAnswer;
 		this.author = author;
-		this.authorName = authorName;		
+		this.authorName = authorName;
 	}
-	
-	
+
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn, List<String> comp, int preferredAnswer, User author) {
 		this.id = id;
@@ -84,7 +100,7 @@ public class Question {
 		this.updatedOn = updatedOn;
 		this.comp = comp;
 	}
-
+	
 	public Question(Integer id, String title, String text, Integer authorId, LocalDateTime createdOn,
 			LocalDateTime updatedOn) {
 		this.id = id;
@@ -150,6 +166,10 @@ public class Question {
 	public int getPreferredAnswer() {
 		return preferredAnswer;
 	}
+	
+	public int getUnreadCount() {
+		return unreadCount;
+	}
 
 	public User getAuthor() {
 		return author;
@@ -168,6 +188,10 @@ public class Question {
 	
 	public List<String> getRelatedId() {
 		return relatedId;
+	}
+	
+	public String getUnresolvedDisplay() {
+		return String.format("%s (Unread Answers: %d)", this.title, this.unreadCount);
 	}
 
 	// Setters
@@ -202,6 +226,10 @@ public class Question {
 	public void setPreferredAnswer(int preferredAnswer) {
 		this.preferredAnswer = preferredAnswer;
 	}
+	
+	public void setUnreadCount(int count) {
+	    this.unreadCount = count;
+	}
 
 	public void setAuthor(User author) {
 		this.author = author;
@@ -217,8 +245,8 @@ public class Question {
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION ID:\n	%s\nTitle:\n	%s\nText:\n	%s\nRelatedIds:\n	%s\nAuthorId:\n	%s\nAuthor Name:\n	%s  \nCreated On:\n	%s\nUpdated On:\n	%s\nPreferred Answer Id:\n	%s",
-				id, title, text, relatedId, authorId, authorName, createdOn, updatedOn, preferredAnswer);
+				"\nQUESTION: \nID:\n\t%s\nTitle:\n\t%s\nText:\n\t%s\nRelatedIds:\n\t%s\n\t%s\nAuthorId:\n\t%s\nAuthor Name:\n\t%s  \nCreated On:\n\t%s\nUpdated On:\n\t%s\nPreferred Answer Id:\n\t%s\nUnread Count:\n\t%s",
+				id, title, text, relatedId, authorId, authorName, createdOn, updatedOn, preferredAnswer, unreadCount);
 	}
 
 	public String toDisplay() {

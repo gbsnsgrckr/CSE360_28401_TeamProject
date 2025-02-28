@@ -72,7 +72,52 @@ public class QAHelper1 {
 				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
 				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
+		
+		createAnswerViewsTable();
 	}
+	
+	//Creates an auxiliary table tracking which answers each student has read
+	public void createAnswerViewsTable() throws SQLException {
+        // *** REMOVED RECURSIVE CALL TO createAnswerViewsTable() ***
+        String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews ("
+                + "answer_id INT NOT NULL, "
+                + "user_id INT NOT NULL, "
+                + "is_read BOOLEAN DEFAULT FALSE, "
+                + "PRIMARY KEY (answer_id, user_id))";
+
+        statement.execute(answerViewsTable);
+    }
+	
+	// This helps us keep track of how many 'unread' answers remain for each question or user.
+    public void markAnswerAsRead(int answerId, int userId) throws SQLException {
+        // Check if record exists
+        String checkQuery = "SELECT * FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
+        try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
+            checkStmt.setInt(1, answerId);
+            checkStmt.setInt(2, userId);
+            ResultSet rs = checkStmt.executeQuery();
+            if (!rs.next()) {
+                // Insert new record
+                String insertQuery = "INSERT INTO cse360answerviews (answer_id, user_id, is_read) VALUES (?, ?, TRUE)";
+                try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
+                    insertStmt.setInt(1, answerId);
+                    insertStmt.setInt(2, userId);
+                    insertStmt.executeUpdate();
+                }
+            } else {
+                // If record is found but is_read is FALSE, update it
+                boolean isRead = rs.getBoolean("is_read");
+                if (!isRead) {
+                    String updateQuery = "UPDATE cse360answerviews SET is_read = TRUE WHERE answer_id = ? AND user_id = ?";
+                    try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+                        updateStmt.setInt(1, answerId);
+                        updateStmt.setInt(2, userId);
+                        updateStmt.executeUpdate();
+                    }
+                }
+            }
+        }
+    }
 
 	// Check if the database is empty - Only checks the question database at the
 	// moment
@@ -133,6 +178,58 @@ public class QAHelper1 {
 		}
 		System.out.println("Answer registered successfully.");
 	}
+	
+	public boolean isDuplicateAnswer(int questionID, String answerText) throws SQLException {
+        // First, retrieve the answer IDs from the question
+        String getAnswersQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(getAnswersQuery)) {
+            pstmt.setInt(1, questionID);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String answerIds = rs.getString("answer_id"); // e.g., "1, 4, 5, 6, 7"
+                if (answerIds == null || answerIds.trim().isEmpty()) {
+                    return false; // No answers exist yet, so no duplicates
+                }
+
+                // Convert "1, 4, 5, 6, 7" into (1, 4, 5, 6, 7)
+                String[] idsArray = answerIds.split(",\\s*"); // Split by comma & spaces
+                List<Integer> answerIdList = new ArrayList<>();
+                for (String id : idsArray) {
+                    try {
+                        answerIdList.add(Integer.parseInt(id.trim())); // Convert to int
+                    } catch (NumberFormatException e) {
+                        System.err.println("Invalid answer ID format: " + id);
+                    }
+                }
+
+                if (answerIdList.isEmpty()) {
+                    return false; // No valid IDs found
+                }
+
+                // Build SQL query dynamically
+                StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cse360answer WHERE text = ? AND id IN (");
+                for (int i = 0; i < answerIdList.size(); i++) {
+                    sql.append("?");
+                    if (i < answerIdList.size() - 1) {
+                        sql.append(", ");
+                    }
+                }
+                sql.append(")");
+
+                try (PreparedStatement checkStmt = connection.prepareStatement(sql.toString())) {
+                    checkStmt.setString(1, answerText.trim());
+                    for (int i = 0; i < answerIdList.size(); i++) {
+                        checkStmt.setInt(i + 2, answerIdList.get(i));
+                    }
+
+                    ResultSet checkRs = checkStmt.executeQuery();
+                    return checkRs.next() && checkRs.getInt(1) > 0;
+                }
+            }
+        }
+        return false; // Default case
+    }
 
 	// Deletes a question row from the SQL table
 	public boolean deleteQuestion(int id) {
@@ -516,6 +613,44 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
+	
+	//Retrieves how many answers a given student has not yet read across all questions
+    public int getUnreadAnswersCountForUser(int userId, Integer questionId) throws SQLException {
+        // We will gather all answers from cse360answer, then see which are not in cse360answerviews for is_read=TRUE.
+        // If questionId != null, we only check answers linked to that question.
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("SELECT COUNT(a.id) AS unreadCount ");
+        sb.append("FROM cse360answer a ");
+
+        if (questionId != null) {
+            // Join to question for only relevant answers
+            sb.append("JOIN cse360question q ON q.answer_id LIKE CONCAT('%', a.id, '%') OR q.answer_id = a.id ");
+            sb.append("WHERE q.id = ? ");
+            sb.append("AND a.id NOT IN (");
+            sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
+            sb.append(")");
+        } else {
+            // For all questions
+            sb.append("WHERE a.id NOT IN (");
+            sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
+            sb.append(")");
+        }
+
+        try (PreparedStatement pstmt = connection.prepareStatement(sb.toString())) {
+            if (questionId != null) {
+                pstmt.setInt(1, questionId);
+                pstmt.setInt(2, userId);
+            } else {
+                pstmt.setInt(1, userId);
+            }
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("unreadCount");
+            }
+        }
+        return 0;
+    }
 
 	public List<Question> getAllUnansweredQuestions() throws SQLException {
 		String query = "SELECT * FROM cse360question WHERE answer_id IS NULL OR answer_id = ''"; // selecting all of the
@@ -563,6 +698,114 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
+	
+	//Returns a list of all questions that are still "unresolved." Interpreted here
+    public List<Question> getAllUnresolvedQuestions() throws SQLException {
+        // "preferred_answer" is the int column that can store a chosen "best" or "accepted" answer
+        // We treat null or 0 as “unresolved.”
+        String query = "SELECT * FROM cse360question WHERE preferred_answer IS NULL OR preferred_answer = 0";
+        List<Question> questions = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String title = rs.getString("title");
+                String text = rs.getString("text");
+                int authorId = rs.getInt("author");
+                Timestamp created = rs.getTimestamp("created_on");
+                LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+                Timestamp updated = rs.getTimestamp("updated_on");
+                LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+                int preferredAnswer = rs.getInt("preferred_answer");
+
+                User author = databaseHelper.getUser(authorId);
+                String authorName = "User";
+                if (author != null) {
+                    authorName = author.getName();
+                }
+                String answerIDs = rs.getString("answer_id");
+                List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
+
+                Question q = new Question(
+                    id, title, text, authorId, createdOn, updatedOn,
+                    textDeserial(title + text),
+                    preferredAnswer, author, authorName, relatedId
+                );
+                questions.add(q);
+            }
+        }
+        return questions;
+    }
+    
+    //Returns a list of the current user's unresolved questions
+    public List<Question> getAllUnresolvedQuestionsForUser(int userId) throws SQLException {
+        String query = "SELECT q.*, " +
+                       "(SELECT COUNT(a.id) FROM cse360answer a " +
+                       " WHERE q.answer_id LIKE CONCAT('%', a.id, '%') " +
+                       " AND a.id NOT IN (SELECT answer_id FROM cse360answerviews " +
+                       "                  WHERE user_id = ? AND is_read = TRUE)) AS unread_count " +
+                       "FROM cse360question q " +
+                       "WHERE (q.preferred_answer IS NULL OR q.preferred_answer = 0) " +
+                       "AND q.author = ?";
+
+        List<Question> questions = new ArrayList<>();
+
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setInt(1, userId); // For unread answers
+            pstmt.setInt(2, userId); // For questions posted by the user
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String title = rs.getString("title");
+                String text = rs.getString("text");
+                int authorId = rs.getInt("author");
+                Timestamp created = rs.getTimestamp("created_on");
+                LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+                Timestamp updated = rs.getTimestamp("updated_on");
+                LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+                int preferredAnswer = rs.getInt("preferred_answer");
+                int unreadCount = rs.getInt("unread_count"); // Store unread answer count
+
+                User author = databaseHelper.getUser(authorId);
+                String authorName = (author != null) ? author.getName() : "User";
+                String answerIDs = rs.getString("answer_id");
+                List<String> relatedId = (answerIDs != null) ? List.of(answerIDs.split(",\\s")) : null;
+
+                // Create Question object and set the unread count as metadata
+                Question q = new Question(id, title, text, authorId, createdOn, updatedOn,
+                                          textDeserial(title + text),
+                                          preferredAnswer, author, authorName, relatedId);
+                q.setUnreadCount(unreadCount); // Custom method in Question class to store unread count
+                questions.add(q);
+            }
+        }
+        return questions;
+    }
+    
+    //Retrieves only those answers that are not the chosen preferred answer
+    public List<Answer> getPotentialAnswersForQuestion(int questionId) throws SQLException {
+        Question q = getQuestion(questionId);
+        if (q == null) {
+            return new ArrayList<>();
+        }
+
+        int preferredId = q.getPreferredAnswer();
+
+        // Get all answers for the question
+        List<Answer> allAnswers = getAllAnswersForQuestion(questionId);
+        List<Answer> potentialAnswers = new ArrayList<>();
+
+        // Filter out the preferred answer
+        for (Answer ans : allAnswers) {
+            if (ans.getId() != preferredId) {
+                potentialAnswers.add(ans);
+            }
+        }
+
+        return potentialAnswers;
+    }
 
 	public List<Question> getAllAnsweredQuestions() throws SQLException {
 		String query = "SELECT * FROM cse360question WHERE answer_id IS NOT NULL AND answer_id <> ''"; // selecting all
