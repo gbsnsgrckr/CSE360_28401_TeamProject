@@ -36,7 +36,10 @@ public class PopulateQADatabase {
 		try {
 			qaHelper.registerAnswerWithQuestion(answer, 1); // Register answer in relation to question id 1 for the
 															// relation table
+
+			answer = qaHelper.getAnswer(answer.getText());
 			qaHelper.setPreferredAnswer(1, answer.getId()); // Sets preferred answer for question id 1
+			
 		} catch (SQLException e) {
 			System.out.println("Error registering/setting preferred answer 1");
 			e.printStackTrace();
@@ -61,7 +64,9 @@ public class PopulateQADatabase {
 		try {
 			qaHelper.registerAnswerWithQuestion(answer, 2); // Register answer in relation to question id 2 for the
 															// relation table
+			answer = qaHelper.getAnswer(answer.getText());
 			qaHelper.setPreferredAnswer(2, answer.getId()); // Sets preferred answer for question id 2
+			
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 2");
 			e.printStackTrace();
@@ -105,7 +110,9 @@ public class PopulateQADatabase {
 		try {
 			qaHelper.registerAnswerWithQuestion(answer, 4); // Register answer in relation to question id 4 for the
 															// relation table
+			answer = qaHelper.getAnswer(answer.getText());
 			qaHelper.setPreferredAnswer(4, answer.getId()); // Sets preferred answer for question id 4
+			
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 4");
 			e.printStackTrace();
@@ -130,7 +137,9 @@ public class PopulateQADatabase {
 		try {
 			qaHelper.registerAnswerWithQuestion(answer, 5); // Register answer in relation to question id 5 for the
 															// relation table
+			answer = qaHelper.getAnswer(answer.getText());
 			qaHelper.setPreferredAnswer(5, answer.getId()); // Sets preferred answer for question id 5
+			
 		} catch (SQLException e) {
 			System.out.println("Error registering answer 5");
 			e.printStackTrace();
