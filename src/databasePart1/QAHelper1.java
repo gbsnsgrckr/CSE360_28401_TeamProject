@@ -18,6 +18,7 @@ import application.Question;
 import application.Answer;
 import application.QuestionsSet;
 import application.AnswersSet;
+import application.Message;
 import tests.*;
 
 import application.User;
@@ -73,7 +74,17 @@ public class QAHelper1 {
 				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
 		
-		createAnswerViewsTable();
+		String messageTable = "CREATE TABLE IF NOT EXISTS cse360message ("
+		        + "messageid INT AUTO_INCREMENT PRIMARY KEY, "
+//		        + "referenceid INT, "
+//		        + "referencetype VARCHAR(20), "
+		        + "senderid INT, "
+		        + "recipientid INT, "
+		        + "subject TEXT, "
+		        + "message TEXT, "
+		        + "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+		        + "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
+		statement.execute(messageTable);
 	}
 	
 	//Creates an auxiliary table tracking which answers each student has read
@@ -1189,4 +1200,85 @@ public class QAHelper1 {
 		
 		return sortedList;
 	}
+
+	/*
+	 * 
+	 * Methods for private messages
+	 * 
+	 */
+	
+	// Registers a new private message in the database.
+	public void createMessage(Message message) throws SQLException {
+	    String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message) VALUES (?, ?, ?, ?)";
+	    try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
+	        pstmt.setInt(1, message.getSenderID());
+	        pstmt.setInt(2, message.getRecipientID());
+	        pstmt.setString(3, message.getSubject());
+	        pstmt.setString(4, message.getMessage());
+	        pstmt.executeUpdate();
+
+	        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+	            if (generatedKeys.next()) {
+	                int messageID = generatedKeys.getInt(1);
+	                // Set the messageID in the Message object if necessary
+	                message.setMessageID(messageID);
+	            }
+	        }
+	    }
+	}
+
+	public boolean deleteMessage(int messageID) throws SQLException {
+	    String query = "DELETE FROM cse360message WHERE messageid = ?";
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, messageID);
+	        int affectedRows = pstmt.executeUpdate();
+	        return affectedRows > 0;
+	    }
+	}
+
+	public List<Message> retrieveAllMessages() throws SQLException {
+	    String query = "SELECT * FROM cse360message";
+	    List<Message> messages = new ArrayList<>();
+
+	    try (PreparedStatement pstmt = connection.prepareStatement(query);
+	         ResultSet rs = pstmt.executeQuery()) {
+	        
+	        while (rs.next()) {
+	            Message message = new Message(
+	                rs.getInt("messageid"),
+	                rs.getInt("senderid"),
+	                rs.getInt("recipientid"),
+	                rs.getString("subject"),
+	                rs.getString("message")
+	            );
+	            messages.add(message);
+	        }
+	    }
+	    return messages;
+	}
+	
+	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
+	    String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
+	    List<Message> messages = new ArrayList<>();
+
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, id);
+	        pstmt.setInt(2, id);
+	        
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                Message message = new Message(
+	                    rs.getInt("messageid"),
+	                    rs.getInt("senderid"),
+	                    rs.getInt("recipientid"),
+	                    rs.getString("subject"),
+	                    rs.getString("message")
+	                );
+	                messages.add(message);
+	            }
+	        }
+	    }
+	    return messages;
+	}
+
 }
