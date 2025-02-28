@@ -17,11 +17,9 @@ public class UpdateQAEvaluationTestingAutomation {
 	static int size;
 	private static Question question;
 	private static Answer answer;
-	private static QuestionsSet questionsSet;
-	private static AnswersSet answersSet;
 	private static List<Question> questions;
 	private static List<Answer> answers;
-	private static List<AnswersSet> Aset;
+
 
 	public static void main(String[] args) {
 		// Initialize the test environment

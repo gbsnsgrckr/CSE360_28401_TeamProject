@@ -15,11 +15,8 @@ public class SearchEvaluationTestingAutomation {
 	private static Question searchResult; // will hold the question object that is at the top of the returned list
 	private static Question question;
 	private static Answer answer;
-	private static QuestionsSet questionsSet;
-	private static AnswersSet answersSet;
 	private static List<Question> questions;
 	private static List<Answer> answers;
-	private static List<AnswersSet> Aset;
 	private static String deco = "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~";
 
 	// This class is a test bed to test the searchQuestionDatabase() method within

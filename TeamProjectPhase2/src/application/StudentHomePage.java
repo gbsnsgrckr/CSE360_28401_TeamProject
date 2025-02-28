@@ -106,8 +106,6 @@ public class StudentHomePage {
 	private Answer answer;
 	private List<Question> questions;
 	private List<Answer> answers;
-	private List<QuestionsSet> questionsSet;
-	private List<AnswersSet> answersSet;
 	private ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
 	private TableView<Question> qTable;
 	private List<Question> sortedList;

@@ -23,7 +23,6 @@ public class StartCSE360 extends Application {
 		
 		try {
 			databaseHelper.connectToDatabase(); // Connect to the database
-			//databaseHelper.qaHelper.connectToDatabase();
 			if (databaseHelper.isDatabaseEmpty()) {
 
 				new AdminSetupPage(databaseHelper).show(primaryStage);
@@ -34,11 +33,6 @@ public class StartCSE360 extends Application {
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
-		
-		// Removes icon from title bar in alert window		
-		//primaryStage.getIcons().clear();
-		
-		
 		
 		primaryStage.setTitle("");
 	}

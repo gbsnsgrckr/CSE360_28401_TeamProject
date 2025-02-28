@@ -16,8 +16,6 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import application.Question;
 import application.Answer;
-import application.QuestionsSet;
-import application.AnswersSet;
 import application.Message;
 import tests.*;
 
@@ -73,77 +71,73 @@ public class QAHelper1 {
 				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
 				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
-		
+
 		String messageTable = "CREATE TABLE IF NOT EXISTS cse360message ("
-		        + "messageid INT AUTO_INCREMENT PRIMARY KEY, "
+				+ "messageid INT AUTO_INCREMENT PRIMARY KEY, "
 //		        + "referenceid INT, "
 //		        + "referencetype VARCHAR(20), "
-		        + "senderid INT, "
-		        + "recipientid INT, "
-		        + "subject TEXT, "
-		        + "message TEXT, "
-		        + "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
-		        + "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
+				+ "senderid INT, " + "recipientid INT, " + "subject TEXT, " + "message TEXT, "
+				+ "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
+				+ "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
 		statement.execute(messageTable);
-		
-		String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews ("
-                + "answer_id INT NOT NULL, "
-                + "user_id INT NOT NULL, "
-                + "is_read BOOLEAN DEFAULT FALSE, "
-                + "PRIMARY KEY (answer_id, user_id))";
 
-        statement.execute(answerViewsTable);
-		
+		String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews (" + "answer_id INT NOT NULL, "
+				+ "user_id INT NOT NULL, " + "is_read BOOLEAN DEFAULT FALSE, " + "PRIMARY KEY (answer_id, user_id))";
+
+		statement.execute(answerViewsTable);
+
 	}
-	
-	//Creates an auxiliary table tracking which answers each student has read
+
+	// Creates an auxiliary table tracking which answers each student has read
 	public void createAnswerViewsTable() throws SQLException {
-        // *** REMOVED RECURSIVE CALL TO createAnswerViewsTable() ***
-        
-    }
-	
-	// This helps us keep track of how many 'unread' answers remain for each question or user.
-    public void markAnswerAsRead(int answerId, int userId) throws SQLException {
-        // Check if record exists
-        String checkQuery = "SELECT * FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
-        try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
-            checkStmt.setInt(1, answerId);
-            checkStmt.setInt(2, userId);
-            ResultSet rs = checkStmt.executeQuery();
-            if (!rs.next()) {
-                // Insert new record
-                String insertQuery = "INSERT INTO cse360answerviews (answer_id, user_id, is_read) VALUES (?, ?, TRUE)";
-                try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
-                    insertStmt.setInt(1, answerId);
-                    insertStmt.setInt(2, userId);
-                    insertStmt.executeUpdate();
-                }
-            } else {
-                // If record is found but is_read is FALSE, update it
-                boolean isRead = rs.getBoolean("is_read");
-                if (!isRead) {
-                    String updateQuery = "UPDATE cse360answerviews SET is_read = TRUE WHERE answer_id = ? AND user_id = ?";
-                    try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
-                        updateStmt.setInt(1, answerId);
-                        updateStmt.setInt(2, userId);
-                        updateStmt.executeUpdate();
-                    }
-                }
-            }
-        }
-    }
+		// *** REMOVED RECURSIVE CALL TO createAnswerViewsTable() ***
+
+	}
+
+	// This helps us keep track of how many 'unread' answers remain for each
+	// question or user.
+	public void markAnswerAsRead(int answerId, int userId) throws SQLException {
+		// Check if record exists
+		String checkQuery = "SELECT * FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
+		try (PreparedStatement checkStmt = connection.prepareStatement(checkQuery)) {
+			checkStmt.setInt(1, answerId);
+			checkStmt.setInt(2, userId);
+			ResultSet rs = checkStmt.executeQuery();
+			if (!rs.next()) {
+				// Insert new record
+				String insertQuery = "INSERT INTO cse360answerviews (answer_id, user_id, is_read) VALUES (?, ?, TRUE)";
+				try (PreparedStatement insertStmt = connection.prepareStatement(insertQuery)) {
+					insertStmt.setInt(1, answerId);
+					insertStmt.setInt(2, userId);
+					insertStmt.executeUpdate();
+				}
+			} else {
+				// If record is found but is_read is FALSE, update it
+				boolean isRead = rs.getBoolean("is_read");
+				if (!isRead) {
+					String updateQuery = "UPDATE cse360answerviews SET is_read = TRUE WHERE answer_id = ? AND user_id = ?";
+					try (PreparedStatement updateStmt = connection.prepareStatement(updateQuery)) {
+						updateStmt.setInt(1, answerId);
+						updateStmt.setInt(2, userId);
+						updateStmt.executeUpdate();
+					}
+				}
+			}
+		}
+	}
+
 	public boolean isAnswerMarkedAsRead(int answerId, int userId) throws SQLException {
-        String query = "SELECT is_read FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, answerId);
-            pstmt.setInt(2, userId);
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getBoolean("is_read"); // Returns true if the answer is already marked as read
-            }
-        }
-        return false; 
-    }
+		String query = "SELECT is_read FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, answerId);
+			pstmt.setInt(2, userId);
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getBoolean("is_read"); // Returns true if the answer is already marked as read
+			}
+		}
+		return false;
+	}
 
 	// Check if the database is empty - Only checks the question database at the
 	// moment
@@ -171,13 +165,13 @@ public class QAHelper1 {
 	// Registers a new answer in the database.
 	public void registerAnswerWithQuestion(Answer answer, int relatedID) throws SQLException {
 		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
-		
+
 		// Prevent duplicates
 		if (isDuplicateAnswer(relatedID, answer.getText())) {
 			System.out.println("Duplicate answer detected. Answer not inserted.");
 			return;
 		}
-		
+
 		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
 			pstmt.setString(1, answer.getText());
 			pstmt.setInt(2, answer.getAuthorId());
@@ -211,58 +205,59 @@ public class QAHelper1 {
 		}
 		System.out.println("Answer registered successfully.");
 	}
-	
+
+	// Checks if answer text is found within questions related answers
 	public boolean isDuplicateAnswer(int questionID, String answerText) throws SQLException {
-        // First, retrieve the answer IDs from the question
-        String getAnswersQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
-        try (PreparedStatement pstmt = connection.prepareStatement(getAnswersQuery)) {
-            pstmt.setInt(1, questionID);
-            ResultSet rs = pstmt.executeQuery();
+		// First, retrieve the answer IDs from the question
+		String getAnswersQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(getAnswersQuery)) {
+			pstmt.setInt(1, questionID);
+			ResultSet rs = pstmt.executeQuery();
 
-            if (rs.next()) {
-                String answerIds = rs.getString("answer_id"); // e.g., "1, 4, 5, 6, 7"
-                if (answerIds == null || answerIds.trim().isEmpty()) {
-                    return false; // No answers exist yet, so no duplicates
-                }
+			if (rs.next()) {
+				String answerIds = rs.getString("answer_id"); // e.g., "1, 4, 5, 6, 7"
+				if (answerIds == null || answerIds.trim().isEmpty()) {
+					return false; // No answers exist yet, so no duplicates
+				}
 
-                // Convert "1, 4, 5, 6, 7" into (1, 4, 5, 6, 7)
-                String[] idsArray = answerIds.split(",\\s*"); // Split by comma & spaces
-                List<Integer> answerIdList = new ArrayList<>();
-                for (String id : idsArray) {
-                    try {
-                        answerIdList.add(Integer.parseInt(id.trim())); // Convert to int
-                    } catch (NumberFormatException e) {
-                        System.err.println("Invalid answer ID format: " + id);
-                    }
-                }
+				// Convert "1, 4, 5, 6, 7" into (1, 4, 5, 6, 7)
+				String[] idsArray = answerIds.split(",\\s*"); // Split by comma & spaces
+				List<Integer> answerIdList = new ArrayList<>();
+				for (String id : idsArray) {
+					try {
+						answerIdList.add(Integer.parseInt(id.trim())); // Convert to int
+					} catch (NumberFormatException e) {
+						System.err.println("Invalid answer ID format: " + id);
+					}
+				}
 
-                if (answerIdList.isEmpty()) {
-                    return false; // No valid IDs found
-                }
+				if (answerIdList.isEmpty()) {
+					return false; // No valid IDs found
+				}
 
-                // Build SQL query dynamically
-                StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cse360answer WHERE text = ? AND id IN (");
-                for (int i = 0; i < answerIdList.size(); i++) {
-                    sql.append("?");
-                    if (i < answerIdList.size() - 1) {
-                        sql.append(", ");
-                    }
-                }
-                sql.append(")");
+				// Build SQL query dynamically
+				StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM cse360answer WHERE text = ? AND id IN (");
+				for (int i = 0; i < answerIdList.size(); i++) {
+					sql.append("?");
+					if (i < answerIdList.size() - 1) {
+						sql.append(", ");
+					}
+				}
+				sql.append(")");
 
-                try (PreparedStatement checkStmt = connection.prepareStatement(sql.toString())) {
-                    checkStmt.setString(1, answerText.trim());
-                    for (int i = 0; i < answerIdList.size(); i++) {
-                        checkStmt.setInt(i + 2, answerIdList.get(i));
-                    }
+				try (PreparedStatement checkStmt = connection.prepareStatement(sql.toString())) {
+					checkStmt.setString(1, answerText.trim());
+					for (int i = 0; i < answerIdList.size(); i++) {
+						checkStmt.setInt(i + 2, answerIdList.get(i));
+					}
 
-                    ResultSet checkRs = checkStmt.executeQuery();
-                    return checkRs.next() && checkRs.getInt(1) > 0;
-                }
-            }
-        }
-        return false; // Default case
-    }
+					ResultSet checkRs = checkStmt.executeQuery();
+					return checkRs.next() && checkRs.getInt(1) > 0;
+				}
+			}
+		}
+		return false; // Default case
+	}
 
 	// Deletes a question row from the SQL table
 	public boolean deleteQuestion(int id) {
@@ -559,47 +554,47 @@ public class QAHelper1 {
 		}
 		return null;
 	}
-	
+
 	// Get an answer object with a provided answer text
-		public Answer getAnswer(String answerText) throws SQLException {
-			// Search the answer database for a match to the answer text
-			String query = "SELECT * FROM cse360answer AS c WHERE c.text = ?	";
+	public Answer getAnswer(String answerText) throws SQLException {
+		// Search the answer database for a match to the answer text
+		String query = "SELECT * FROM cse360answer AS c WHERE c.text = ?	";
 
-			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-				pstmt.setString(1, answerText);
-				ResultSet rs = pstmt.executeQuery();
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setString(1, answerText);
+			ResultSet rs = pstmt.executeQuery();
 
-				if (rs.next()) {
-					int id = rs.getInt("id");
-					String text = rs.getString("text");
-					int authorId = rs.getInt("author");
-					Timestamp created = rs.getTimestamp("created_On");
-					// Convert to LocalDateTime format
-					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
-					Timestamp updated = rs.getTimestamp("updated_On");
-					// Convert to LocalDateTime format
-					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+			if (rs.next()) {
+				int id = rs.getInt("id");
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_On");
+				// Convert to LocalDateTime format
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_On");
+				// Convert to LocalDateTime format
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
 
-					User author = databaseHelper.getUser(authorId);
-					String authorName = "User";
+				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
 
-					if (author != null) {
-						authorName = author.getName();
-					}
-
-					String answerIDs = rs.getString("answer_id");
-					// convert comma separated list into an array
-					List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
-
-					// Create a new answer object with the pulled info
-					Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
-
-					// Return the answer object
-					return answer;
+				if (author != null) {
+					authorName = author.getName();
 				}
+
+				String answerIDs = rs.getString("answer_id");
+				// convert comma separated list into an array
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
+
+				// Create a new answer object with the pulled info
+				Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, author, authorName, relatedId);
+
+				// Return the answer object
+				return answer;
 			}
-			return null;
 		}
+		return null;
+	}
 
 	// Retrieve all questions from the question database
 	public List<Question> getAllQuestions() throws SQLException {
@@ -646,45 +641,48 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
-	
-	//Retrieves how many answers a given student has not yet read across all questions
-    public int getUnreadAnswersCountForUser(int userId, Integer questionId) throws SQLException {
-        // We will gather all answers from cse360answer, then see which are not in cse360answerviews for is_read=TRUE.
-        // If questionId != null, we only check answers linked to that question.
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("SELECT COUNT(a.id) AS unreadCount ");
-        sb.append("FROM cse360answer a ");
+	// Retrieves how many answers a given student has not yet read across all
+	// questions
+	public int getUnreadAnswersCountForUser(int userId, Integer questionId) throws SQLException {
+		// We will gather all answers from cse360answer, then see which are not in
+		// cse360answerviews for is_read=TRUE.
+		// If questionId != null, we only check answers linked to that question.
 
-        if (questionId != null) {
-            // Join to question for only relevant answers
-            sb.append("JOIN cse360question q ON q.answer_id LIKE CONCAT('%', a.id, '%') OR q.answer_id = a.id ");
-            sb.append("WHERE q.id = ? ");
-            sb.append("AND a.id NOT IN (");
-            sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
-            sb.append(")");
-        } else {
-            // For all questions
-            sb.append("WHERE a.id NOT IN (");
-            sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
-            sb.append(")");
-        }
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT COUNT(a.id) AS unreadCount ");
+		sb.append("FROM cse360answer a ");
 
-        try (PreparedStatement pstmt = connection.prepareStatement(sb.toString())) {
-            if (questionId != null) {
-                pstmt.setInt(1, questionId);
-                pstmt.setInt(2, userId);
-            } else {
-                pstmt.setInt(1, userId);
-            }
-            ResultSet rs = pstmt.executeQuery();
-            if (rs.next()) {
-                return rs.getInt("unreadCount");
-            }
-        }
-        return 0;
-    }
+		if (questionId != null) {
+			// Join to question for only relevant answers
+			sb.append("JOIN cse360question q ON q.answer_id LIKE CONCAT('%', a.id, '%') OR q.answer_id = a.id ");
+			sb.append("WHERE q.id = ? ");
+			sb.append("AND a.id NOT IN (");
+			sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
+			sb.append(")");
+		} else {
+			// For all questions
+			sb.append("WHERE a.id NOT IN (");
+			sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
+			sb.append(")");
+		}
 
+		try (PreparedStatement pstmt = connection.prepareStatement(sb.toString())) {
+			if (questionId != null) {
+				pstmt.setInt(1, questionId);
+				pstmt.setInt(2, userId);
+			} else {
+				pstmt.setInt(1, userId);
+			}
+			ResultSet rs = pstmt.executeQuery();
+			if (rs.next()) {
+				return rs.getInt("unreadCount");
+			}
+		}
+		return 0;
+	}
+
+	// Returns a list of all questions that have no potential answers
 	public List<Question> getAllUnansweredQuestions() throws SQLException {
 		String query = "SELECT * FROM cse360question WHERE answer_id IS NULL OR answer_id = ''"; // selecting all of the
 																									// rows in the
@@ -731,115 +729,110 @@ public class QAHelper1 {
 		// Return the assembled list of question objects
 		return questions;
 	}
-	
-	//Returns a list of all questions that are still "unresolved." Interpreted here
-    public List<Question> getAllUnresolvedQuestions() throws SQLException {
-        // "preferred_answer" is the int column that can store a chosen "best" or "accepted" answer
-        // We treat null or 0 as “unresolved.”
-        String query = "SELECT * FROM cse360question WHERE preferred_answer IS NULL OR preferred_answer = 0";
-        List<Question> questions = new ArrayList<>();
 
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String title = rs.getString("title");
-                String text = rs.getString("text");
-                int authorId = rs.getInt("author");
-                Timestamp created = rs.getTimestamp("created_on");
-                LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
-                Timestamp updated = rs.getTimestamp("updated_on");
-                LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-                int preferredAnswer = rs.getInt("preferred_answer");
+	// Returns a list of all questions that are still "unresolved." Interpreted here
+	public List<Question> getAllUnresolvedQuestions() throws SQLException {
+		// "preferred_answer" is the int column that can store a chosen "best" or
+		// "accepted" answer
+		// We treat null or 0 as “unresolved.”
+		String query = "SELECT * FROM cse360question WHERE preferred_answer IS NULL OR preferred_answer = 0";
+		List<Question> questions = new ArrayList<>();
 
-                User author = databaseHelper.getUser(authorId);
-                String authorName = "User";
-                if (author != null) {
-                    authorName = author.getName();
-                }
-                String answerIDs = rs.getString("answer_id");
-                List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title");
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_on");
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_on");
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				int preferredAnswer = rs.getInt("preferred_answer");
 
-                Question q = new Question(
-                    id, title, text, authorId, createdOn, updatedOn,
-                    textDeserial(title + text),
-                    preferredAnswer, author, authorName, relatedId
-                );
-                questions.add(q);
-            }
-        }
-        return questions;
-    }
-    
-    //Returns a list of the current user's unresolved questions
-    public List<Question> getAllUnresolvedQuestionsForUser(int userId) throws SQLException {
-        String query = "SELECT q.*, " +
-                       "(SELECT COUNT(a.id) FROM cse360answer a " +
-                       " WHERE q.answer_id LIKE CONCAT('%', a.id, '%') " +
-                       " AND a.id NOT IN (SELECT answer_id FROM cse360answerviews " +
-                       "                  WHERE user_id = ? AND is_read = TRUE)) AS unread_count " +
-                       "FROM cse360question q " +
-                       "WHERE (q.preferred_answer IS NULL OR q.preferred_answer = 0) " +
-                       "AND q.author = ?";
+				User author = databaseHelper.getUser(authorId);
+				String authorName = "User";
+				if (author != null) {
+					authorName = author.getName();
+				}
+				String answerIDs = rs.getString("answer_id");
+				List<String> relatedId = answerIDs != null ? List.of(answerIDs.split(",\\s")) : null;
 
-        List<Question> questions = new ArrayList<>();
+				Question q = new Question(id, title, text, authorId, createdOn, updatedOn, textDeserial(title + text),
+						preferredAnswer, author, authorName, relatedId);
+				questions.add(q);
+			}
+		}
+		return questions;
+	}
 
-        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-            pstmt.setInt(1, userId); // For unread answers
-            pstmt.setInt(2, userId); // For questions posted by the user
-            ResultSet rs = pstmt.executeQuery();
+	// Returns a list of the current user's unresolved questions
+	public List<Question> getAllUnresolvedQuestionsForUser(int userId) throws SQLException {
+		String query = "SELECT q.*, " + "(SELECT COUNT(a.id) FROM cse360answer a "
+				+ " WHERE q.answer_id LIKE CONCAT('%', a.id, '%') "
+				+ " AND a.id NOT IN (SELECT answer_id FROM cse360answerviews "
+				+ "                  WHERE user_id = ? AND is_read = TRUE)) AS unread_count " + "FROM cse360question q "
+				+ "WHERE (q.preferred_answer IS NULL OR q.preferred_answer = 0) " + "AND q.author = ?";
 
-            while (rs.next()) {
-                int id = rs.getInt("id");
-                String title = rs.getString("title");
-                String text = rs.getString("text");
-                int authorId = rs.getInt("author");
-                Timestamp created = rs.getTimestamp("created_on");
-                LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
-                Timestamp updated = rs.getTimestamp("updated_on");
-                LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-                int preferredAnswer = rs.getInt("preferred_answer");
-                int unreadCount = rs.getInt("unread_count"); // Store unread answer count
+		List<Question> questions = new ArrayList<>();
 
-                User author = databaseHelper.getUser(authorId);
-                String authorName = (author != null) ? author.getName() : "User";
-                String answerIDs = rs.getString("answer_id");
-                List<String> relatedId = (answerIDs != null) ? List.of(answerIDs.split(",\\s")) : null;
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, userId); // For unread answers
+			pstmt.setInt(2, userId); // For questions posted by the user
+			ResultSet rs = pstmt.executeQuery();
 
-                // Create Question object and set the unread count as metadata
-                Question q = new Question(id, title, text, authorId, createdOn, updatedOn,
-                                          textDeserial(title + text),
-                                          preferredAnswer, author, authorName, relatedId);
-                q.setUnreadCount(unreadCount); // Custom method in Question class to store unread count
-                questions.add(q);
-            }
-        }
-        return questions;
-    }
-    
-    //Retrieves only those answers that are not the chosen preferred answer
-    public List<Answer> getPotentialAnswersForQuestion(int questionId) throws SQLException {
-        Question q = getQuestion(questionId);
-        if (q == null) {
-            return new ArrayList<>();
-        }
+			while (rs.next()) {
+				int id = rs.getInt("id");
+				String title = rs.getString("title");
+				String text = rs.getString("text");
+				int authorId = rs.getInt("author");
+				Timestamp created = rs.getTimestamp("created_on");
+				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+				Timestamp updated = rs.getTimestamp("updated_on");
+				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+				int preferredAnswer = rs.getInt("preferred_answer");
+				int unreadCount = rs.getInt("unread_count"); // Store unread answer count
 
-        int preferredId = q.getPreferredAnswer();
+				User author = databaseHelper.getUser(authorId);
+				String authorName = (author != null) ? author.getName() : "User";
+				String answerIDs = rs.getString("answer_id");
+				List<String> relatedId = (answerIDs != null) ? List.of(answerIDs.split(",\\s")) : null;
 
-        // Get all answers for the question
-        List<Answer> allAnswers = getAllAnswersForQuestion(questionId);
-        List<Answer> potentialAnswers = new ArrayList<>();
+				// Create Question object and set the unread count as metadata
+				Question q = new Question(id, title, text, authorId, createdOn, updatedOn, textDeserial(title + text),
+						preferredAnswer, author, authorName, relatedId);
+				q.setUnreadCount(unreadCount); // Custom method in Question class to store unread count
+				questions.add(q);
+			}
+		}
+		return questions;
+	}
 
-        // Filter out the preferred answer
-        for (Answer ans : allAnswers) {
-            if (ans.getId() != preferredId) {
-                potentialAnswers.add(ans);
-            }
-        }
+	// Retrieves only those answers that are not the chosen preferred answer
+	public List<Answer> getPotentialAnswersForQuestion(int questionId) throws SQLException {
+		Question q = getQuestion(questionId);
+		if (q == null) {
+			return new ArrayList<>();
+		}
 
-        return potentialAnswers;
-    }
+		int preferredId = q.getPreferredAnswer();
 
+		// Get all answers for the question
+		List<Answer> allAnswers = getAllAnswersForQuestion(questionId);
+		List<Answer> potentialAnswers = new ArrayList<>();
+
+		// Filter out the preferred answer
+		for (Answer ans : allAnswers) {
+			if (ans.getId() != preferredId) {
+				potentialAnswers.add(ans);
+			}
+		}
+
+		return potentialAnswers;
+	}
+
+	// Retrieve all questions that have potential answers
 	public List<Question> getAllAnsweredQuestions() throws SQLException {
 		String query = "SELECT * FROM cse360question WHERE answer_id IS NOT NULL AND answer_id <> ''"; // selecting all
 																										// of the rows
@@ -944,7 +937,8 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					// System.err.println("Error: There are no answers related to this question.");	// Debug
+					// System.err.println("Error: There are no answers related to this question.");
+					// // Debug
 					return answers;
 				}
 
@@ -1014,7 +1008,8 @@ public class QAHelper1 {
 				String answerIDs = rs.getString("answer_id");
 
 				if (answerIDs == null || answerIDs.trim().isEmpty()) {
-					// System.err.println("Error: There are no answers related to this answer."); 			// Debug
+					// System.err.println("Error: There are no answers related to this answer."); //
+					// Debug
 					return answers;
 				}
 
@@ -1084,7 +1079,7 @@ public class QAHelper1 {
 
 			// Split the string using the spaces
 			String[] wordsArray = cleanText.split("\\s+");
-			
+
 			for (String word : wordsArray) {
 				if (!existingWords.contains(word)) {
 					uniqueWords.add(word);
@@ -1096,25 +1091,24 @@ public class QAHelper1 {
 			return new ArrayList<>(uniqueWords);
 		}
 	}
-	
+
 	// Update a question object with a preferred answer id
 	public void updatePreferredAnswer(Question question) {
-	    String query = "UPDATE cse360question SET preferred_answer = ?, updated_on = CURRENT_TIMESTAMP WHERE id = ?";
-	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-	        pstmt.setInt(1, question.getPreferredAnswer());
-	        pstmt.setInt(2, question.getId());
-	        int updated = pstmt.executeUpdate();
-	        if (updated > 0) {
-	            System.out.println("Preferred answer updated.");
-	        } else {
-	            System.out.println("No matching question found.");
-	        }
-	    } catch (SQLException e) {
-	        e.printStackTrace();
-	        System.out.println("Error trying to update question in updatePreferredAnswer method.");
-	    }
+		String query = "UPDATE cse360question SET preferred_answer = ?, updated_on = CURRENT_TIMESTAMP WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, question.getPreferredAnswer());
+			pstmt.setInt(2, question.getId());
+			int updated = pstmt.executeUpdate();
+			if (updated > 0) {
+				System.out.println("Preferred answer updated.");
+			} else {
+				System.out.println("No matching question found.");
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			System.out.println("Error trying to update question in updatePreferredAnswer method.");
+		}
 	}
-
 
 	// Update the contents of a question object with those of pass question object
 	public void updateQuestion(Question question) {
@@ -1156,9 +1150,9 @@ public class QAHelper1 {
 			System.out.println("Error trying to update question in updateAnswer method.");
 		}
 	}
-	
+
 	// Search the question database for similar question title + text
-	public List<Question> searchQuestionDatabase(String input) {		
+	public List<Question> searchQuestionDatabase(String input) {
 		List<Question> questions;
 		// Get list words from current text input string
 		List<String> entry = databaseHelper.qaHelper.textDeserial(input);
@@ -1183,12 +1177,12 @@ public class QAHelper1 {
 			// Count the matches
 			for (String word : entry) {
 				if (compList.contains(word) && !existingWords.contains(word)) {
-					existingWords.add(word);					
+					existingWords.add(word);
 					count++;
 				}
 			}
-			
-			 double score = ((double) count/* / compList.size()*/); 	// Factoring in size doesn't seem reliable
+
+			double score = ((double) count/* / compList.size() */); // Factoring in size doesn't seem reliable
 
 			// Set initial threshold to add comp to map
 			if (score > 0.05) {
@@ -1200,88 +1194,71 @@ public class QAHelper1 {
 		List<Question> sortedList = similarity.entrySet().stream()
 				.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
 				.collect(Collectors.toList());
-		
+
 		return sortedList;
 	}
 
-	/*
-	 * 
-	 * Methods for private messages
-	 * 
-	 */
-	
 	// Registers a new private message in the database.
 	public void createMessage(Message message) throws SQLException {
-	    String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message) VALUES (?, ?, ?, ?)";
-	    try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
-	        pstmt.setInt(1, message.getSenderID());
-	        pstmt.setInt(2, message.getRecipientID());
-	        pstmt.setString(3, message.getSubject());
-	        pstmt.setString(4, message.getMessage());
-	        pstmt.executeUpdate();
+		String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message) VALUES (?, ?, ?, ?)";
+		try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
+			pstmt.setInt(1, message.getSenderID());
+			pstmt.setInt(2, message.getRecipientID());
+			pstmt.setString(3, message.getSubject());
+			pstmt.setString(4, message.getMessage());
+			pstmt.executeUpdate();
 
-	        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-	            if (generatedKeys.next()) {
-	                int messageID = generatedKeys.getInt(1);
-	                // Set the messageID in the Message object if necessary
-	                message.setMessageID(messageID);
-	            }
-	        }
-	    }
+			try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+				if (generatedKeys.next()) {
+					int messageID = generatedKeys.getInt(1);
+					// Set the messageID in the Message object if necessary
+					message.setMessageID(messageID);
+				}
+			}
+		}
 	}
 
 	public boolean deleteMessage(int messageID) throws SQLException {
-	    String query = "DELETE FROM cse360message WHERE messageid = ?";
-	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-	        pstmt.setInt(1, messageID);
-	        int affectedRows = pstmt.executeUpdate();
-	        return affectedRows > 0;
-	    }
+		String query = "DELETE FROM cse360message WHERE messageid = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, messageID);
+			int affectedRows = pstmt.executeUpdate();
+			return affectedRows > 0;
+		}
 	}
 
 	public List<Message> retrieveAllMessages() throws SQLException {
-	    String query = "SELECT * FROM cse360message";
-	    List<Message> messages = new ArrayList<>();
+		String query = "SELECT * FROM cse360message";
+		List<Message> messages = new ArrayList<>();
 
-	    try (PreparedStatement pstmt = connection.prepareStatement(query);
-	         ResultSet rs = pstmt.executeQuery()) {
-	        
-	        while (rs.next()) {
-	            Message message = new Message(
-	                rs.getInt("messageid"),
-	                rs.getInt("senderid"),
-	                rs.getInt("recipientid"),
-	                rs.getString("subject"),
-	                rs.getString("message")
-	            );
-	            messages.add(message);
-	        }
-	    }
-	    return messages;
+		try (PreparedStatement pstmt = connection.prepareStatement(query); ResultSet rs = pstmt.executeQuery()) {
+
+			while (rs.next()) {
+				Message message = new Message(rs.getInt("messageid"), rs.getInt("senderid"), rs.getInt("recipientid"),
+						rs.getString("subject"), rs.getString("message"));
+				messages.add(message);
+			}
+		}
+		return messages;
 	}
-	
-	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
-	    String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
-	    List<Message> messages = new ArrayList<>();
 
-	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-	        pstmt.setInt(1, id);
-	        pstmt.setInt(2, id);
-	        
-	        try (ResultSet rs = pstmt.executeQuery()) {
-	            while (rs.next()) {
-	                Message message = new Message(
-	                    rs.getInt("messageid"),
-	                    rs.getInt("senderid"),
-	                    rs.getInt("recipientid"),
-	                    rs.getString("subject"),
-	                    rs.getString("message")
-	                );
-	                messages.add(message);
-	            }
-	        }
-	    }
-	    return messages;
+	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
+		String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
+		List<Message> messages = new ArrayList<>();
+
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			pstmt.setInt(1, id);
+			pstmt.setInt(2, id);
+
+			try (ResultSet rs = pstmt.executeQuery()) {
+				while (rs.next()) {
+					Message message = new Message(rs.getInt("messageid"), rs.getInt("senderid"),
+							rs.getInt("recipientid"), rs.getString("subject"), rs.getString("message"));
+					messages.add(message);
+				}
+			}
+		}
+		return messages;
 	}
 
 }
