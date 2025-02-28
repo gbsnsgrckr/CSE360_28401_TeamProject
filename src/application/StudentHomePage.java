@@ -195,10 +195,15 @@ public class StudentHomePage {
 		Button manageReviewersButton = new Button("Manage my Reviewers");
 		manageReviewersButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
-		
+
 		Button askToBeAReviewer = new Button("Ask to be a reviewer");
 		askToBeAReviewer.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+
+		// Button to check inbox for private messages
+		Button inboxButton = new Button("Inbox (#)"); // TODO: NEED TO GET NUMBER OF UNREAD PRIVATE MESSAGES
+		inboxButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to open the ui to submit a new question
 		Button newQuestionButton = new Button("New");
@@ -278,6 +283,57 @@ public class StudentHomePage {
 			}
 		});
 
+		/*
+		 * Answer Database Table that we shouldn't need // Table display of the answer
+		 * database // Label to display title to user Label prompt3 = new
+		 * Label("Answer Database"); prompt3.
+		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
+		 * );
+		 * 
+		 * // Hbox to position the title HBox titleBox3 = new HBox(prompt3);
+		 * titleBox3.setAlignment(Pos.CENTER);
+		 * 
+		 * // Create table to display the answer database TableView<Answer> aTable = new
+		 * TableView<>(); aTable.
+		 * setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
+		 * ); aTable.setPrefWidth(600);
+		 * 
+		 * // if answers is null then initialize as an empty list if (answers == null) {
+		 * answers = new ArrayList<>(); }
+		 * 
+		 * // Create an observable list and assign it to the table
+		 * ObservableList<Answer> answerObservableList =
+		 * FXCollections.observableArrayList(answers);
+		 * aTable.setItems(answerObservableList);
+		 * 
+		 * // Create, assign, and associate values to table TableColumn<Answer, Integer>
+		 * idColumn2 = new TableColumn<>("Answer ID");
+		 * idColumn2.setCellValueFactory(data -> new
+		 * ReadOnlyObjectWrapper<>(data.getValue().getId()));
+		 * 
+		 * // Create a text column TableColumn<Answer, String> textColumn2 = new
+		 * TableColumn<>("Answer"); textColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("text"));
+		 * 
+		 * // Create a userID column TableColumn<Answer, Integer> authorColumn2 = new
+		 * TableColumn<>("Author ID"); authorColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("author"));
+		 * 
+		 * // Create a createOn column TableColumn<Answer, String> createdColumn2 = new
+		 * TableColumn<>("Created On"); createdColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("createdOn"));
+		 * 
+		 * // Create an updatedOn column TableColumn<Answer, String> updatedColumn2 =
+		 * new TableColumn<>("Updated On"); updatedColumn2.setCellValueFactory(new
+		 * PropertyValueFactory<>("updatedOn"));
+		 * 
+		 * aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2,
+		 * createdColumn2, updatedColumn2);
+		 * 
+		 * // Container to hold the table VBox answerDB = new VBox(5, titleBox3,
+		 * aTable);
+		 */
+
 		// Label to display title to user
 		Label prompt5 = new Label("Details");
 		prompt5.setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;");
@@ -320,7 +376,9 @@ public class StudentHomePage {
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
 			private final TextArea replyArea = new TextArea();
 			private final Button submitReplyButton = new Button("Submit");
-			private final VBox replyBox = new VBox(5, submitReplyButton, replyArea);
+			private final Button MessageButton = new Button("Message User");
+			HBox buttonBox = new HBox(10, submitReplyButton, MessageButton);
+			private final VBox replyBox = new VBox(5, buttonBox, replyArea);
 			private final VBox cellContent = new VBox(5);
 			private final HBox cellBox = new HBox();
 
@@ -330,10 +388,23 @@ public class StudentHomePage {
 				replyBox.setStyle(
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 				replyBox.setStyle("-fx-padding: 1px;");
+				
+				MessageButton.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				replyBox.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				replyBox.setStyle("-fx-padding: 1px;");
 
 				// Set prompt text for replyArea
 				replyArea.setPromptText("Enter your answer here...");
 				replyArea.setPrefRowCount(3);
+				
+				MessageButton.setOnAction(a -> {
+					Stage newStage = new Stage();
+					newStage.initStyle(StageStyle.TRANSPARENT);
+					QATableRow row = getTableView().getItems().get(getIndex());
+					new CreateMessagePage(databaseHelper, row.getAuthorId()).show(newStage);
+				});
 
 				submitReplyButton.setOnAction(a -> {
 					String inputText = replyArea.getText().trim();
@@ -360,7 +431,7 @@ public class StudentHomePage {
 						} catch (SQLException e) {
 							e.printStackTrace();
 							System.err
-									.println("Error trying to register answer in results table via submitReplyButton");
+							.println("Error trying to register answer in results table via submitReplyButton");
 						}
 
 						// Update the table after submitting new answer
@@ -373,7 +444,7 @@ public class StudentHomePage {
 										tempAnswer.getId(), tempAnswer.getAuthorId(), tempAnswer.getRelatedId()));
 
 					}
-				});
+				});			
 				cellContent.getChildren().addAll(replyBox);
 				cellContent.setAlignment(Pos.CENTER_LEFT);
 			}
@@ -792,6 +863,7 @@ public class StudentHomePage {
 
 			new AskToBeAReviewer(databaseHelper).show(newStage);
 		});
+
 		
 		if (databaseHelper.currentUser.getRoles().contains("Reviewer")) {
 			askToBeAReviewer.setVisible(false);
@@ -1164,7 +1236,8 @@ public class StudentHomePage {
 		HBox askToBeAReviewerBox = new HBox(askToBeAReviewer);
 		askToBeAReviewerBox.setAlignment(Pos.BOTTOM_CENTER);
 
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewersButton, askToBeAReviewerBox);
+
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox, askToBeAReviewerBox, inboxButton);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 		
@@ -1188,6 +1261,13 @@ public class StudentHomePage {
 			submitBox.setVisible(true);
 			submitBox.setManaged(true);
 
+		});
+		
+		inboxButton.setOnAction(a -> {
+		    Inbox inbox = new Inbox(databaseHelper);
+		    Stage inboxStage = new Stage();
+		    inboxStage.initStyle(StageStyle.DECORATED);
+		    inbox.show(inboxStage);
 		});
 
 		questionCloseButton.setOnAction(a -> {
@@ -1738,5 +1818,4 @@ public class StudentHomePage {
 		// Return list of answers that is left
 		return answers;
 	}
-
 }
