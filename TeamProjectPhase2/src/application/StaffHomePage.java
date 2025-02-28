@@ -187,12 +187,6 @@ public class StaffHomePage {
 		root.setAlignment(buttonBar, Pos.TOP_RIGHT);		
 		root.setStyle("-fx-background-color: transparent;");
 		root.setPadding(new Insets(0));
-		
-		//titleBox.prefWidthProperty().bind(root.widthProperty());
-		//titleBox.prefHeightProperty().bind(root.heightProperty());
-		
-		//layout.prefWidthProperty().bind(root.widthProperty());
-		//layout.prefHeightProperty().bind(root.heightProperty());
 
 		layout.getChildren().addAll(staffLabel, quitButton);		
 		layout.setAlignment(Pos.CENTER);
