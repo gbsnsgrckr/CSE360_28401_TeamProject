@@ -14,7 +14,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -195,8 +194,7 @@ public class Inbox {
         hbox.setAlignment(Pos.CENTER);
         VBox layout = new VBox(10, prompt, table, hbox);
         layout.setAlignment(Pos.CENTER);
-        
-        layout.setMinSize(1300, 900);
+		layout.setMinSize(1300, 900);
 		layout.setMaxSize(1300, 900);
 		layout.setStyle("-fx-padding: 20; -fx-background-color: derive(gray, 80%); -fx-background-radius: 100;"
 				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
@@ -325,14 +323,12 @@ public class Inbox {
 		root.setPadding(new Insets(0));
 
         Scene scene = new Scene(root, 1300, 930);
-        scene.setFill(Color.TRANSPARENT);
 
         // Removes icon from title bar in alert window
         primaryStage.getIcons().clear();
 
         primaryStage.setScene(scene);
         primaryStage.setTitle("Inbox");
-        primaryStage.centerOnScreen();
         primaryStage.show();
     }
 }
