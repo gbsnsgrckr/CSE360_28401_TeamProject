@@ -1,6 +1,9 @@
 package application;
 
+import java.sql.SQLException;
 import java.time.LocalDateTime;
+
+import databasePart1.DatabaseHelper;
 
 public class Message {
 	private int messageID;
@@ -12,6 +15,8 @@ public class Message {
 	private String message;
 	private LocalDateTime createdOn;
 	private LocalDateTime updatedOn;
+	private User sender;
+	private User recipient;
 		
 	// Constructors
     public Message() {
@@ -24,12 +29,20 @@ public class Message {
         this.message = message;
     }
 
-    public Message(int messageID, int senderID, int recipientID, String subject, String message) {
+    public Message(DatabaseHelper dbHelper, int messageID, int senderID, int recipientID, String subject, String message) {
         this.messageID = messageID;
         this.senderID = senderID;
         this.recipientID = recipientID;
         this.subject = subject;
         this.message = message;
+        try {
+            this.sender = dbHelper.getUser(senderID);
+            this.recipient = dbHelper.getUser(recipientID);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            this.sender = null;
+            this.recipient = null;
+        }
     }
     
     public Message(int referenceID, String referenceType, int senderID, int recipientID, String subject, String message) {
@@ -97,6 +110,10 @@ public class Message {
     public void setSenderID(int senderID) {
         this.senderID = senderID;
     }
+    
+    public User getSender() {
+        return sender;
+    }
 
     public int getRecipientID() {
         return recipientID;
@@ -104,6 +121,10 @@ public class Message {
 
     public void setRecipientID(int recipientID) {
         this.recipientID = recipientID;
+    }
+    
+    public User getRecipient() {
+        return recipient;
     }
 
     public String getSubject() {
