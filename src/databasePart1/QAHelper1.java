@@ -118,6 +118,18 @@ public class QAHelper1 {
             }
         }
     }
+	public boolean isAnswerMarkedAsRead(int answerId, int userId) throws SQLException {
+        String query = "SELECT is_read FROM cse360answerviews WHERE answer_id = ? AND user_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+            pstmt.setInt(1, answerId);
+            pstmt.setInt(2, userId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getBoolean("is_read"); // Returns true if the answer is already marked as read
+            }
+        }
+        return false; 
+    }
 
 	// Check if the database is empty - Only checks the question database at the
 	// moment
