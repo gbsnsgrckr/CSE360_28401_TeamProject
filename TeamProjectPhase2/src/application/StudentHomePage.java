@@ -375,6 +375,7 @@ public class StudentHomePage {
 			private final TextArea replyArea = new TextArea();
 			private final Button submitReplyButton = new Button("Submit");
 			private final Button MessageButton = new Button("Message User");
+			private final Button markAsReadButton = new Button("Mark As Read");
 			HBox buttonBox = new HBox(10, submitReplyButton, MessageButton);
 			private final VBox replyBox = new VBox(5, buttonBox, replyArea);
 			private final VBox cellContent = new VBox(5);
@@ -388,6 +389,12 @@ public class StudentHomePage {
 				replyBox.setStyle("-fx-padding: 1px;");
 				
 				MessageButton.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				replyBox.setStyle(
+						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				replyBox.setStyle("-fx-padding: 1px;");
+
+				markAsReadButton.setStyle(
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 				replyBox.setStyle(
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
@@ -476,6 +483,36 @@ public class StudentHomePage {
 					// Set the preferred height of the cell
 					displayLabel.setPrefHeight(225);
 
+					
+					boolean isQuestionAuthor = row.getType() == QATableRow.RowType.QUESTION &&
+						row.getAuthorId().equals(databaseHelper.currentUser.getUserId());
+					if (isQuestionAuthor) {
+						if (!buttonBox.getChildren().contains(markAsReadButton)) {
+							buttonBox.getChildren().add(markAsReadButton);
+						}
+						
+					} else {
+						buttonBox.getChildren().remove(markAsReadButton);
+						
+					} if (!buttonBox.getChildren().contains(markAsReadButton) && !row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
+						buttonBox.getChildren().add(markAsReadButton);
+					} try {
+						boolean isRead = databaseHelper.qaHelper.isAnswerMarkedAsRead(row.getAnswerId(), databaseHelper.currentUser.getUserId());
+						if (isRead) {
+							markAsReadButton.setDisable(true);
+						}
+					} catch (SQLException e) {
+						e.printStackTrace();
+					}
+					markAsReadButton.setOnAction(a -> {
+						try {
+							databaseHelper.qaHelper.markAnswerAsRead(row.getAnswerId(), databaseHelper.currentUser.getUserId());
+							markAsReadButton.setDisable(true);
+						} catch (SQLException e) {
+							e.printStackTrace();
+						}
+					});
+					
 					// Make sure you're on at least the second row
 					if (getIndex() > 0) {
 						QATableRow currentRow = getTableView().getItems().get(getIndex());
@@ -512,7 +549,6 @@ public class StudentHomePage {
 						// Buttons to edit and delete the answer
 						Button editButton = new Button("Edit");
 						Button deleteButton = new Button("Delete");
-						Button markAsReadButton = new Button("Mark As Read");
 						
 						// Styling for buttons
 						editButton.setStyle(
@@ -521,7 +557,6 @@ public class StudentHomePage {
 						deleteButton.setStyle(
 								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
-						markAsReadButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1;");
 				
 						
 						editButton.setOnAction(a -> {
@@ -591,7 +626,7 @@ public class StudentHomePage {
 					        }
 						});
 
-						HBox buttonBox = new HBox(1, editButton, deleteButton, markAsReadButton);
+						HBox buttonBox = new HBox(1, editButton, deleteButton);
 						buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
 						displayLabel.setAlignment(Pos.CENTER_LEFT);
@@ -1622,16 +1657,6 @@ public class StudentHomePage {
 
 	    potentialAnswersTable.getColumns().add(ansCol);
 	    // Adds the "Answer Text" column to the table
-
-	    // Mark all potential answers as read upon opening this window
-	    for (Answer ans : potentialAnswers) {
-	        try {
-	            databaseHelper.qaHelper.markAnswerAsRead(ans.getId(), databaseHelper.currentUser.getUserId());
-	            // Calls a helper method to update the 'read' status in the database
-	        } catch (SQLException e) {
-	            e.printStackTrace();
-	        }
-	    }
 
 	    VBox layout = new VBox(10, heading, potentialAnswersTable);
 	    // Stacks the heading label and the table inside a VBox
