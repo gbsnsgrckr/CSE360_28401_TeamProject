@@ -1262,10 +1262,11 @@ public class StudentHomePage {
 		});
 		
 		inboxButton.setOnAction(a -> {
-		    Inbox inbox = new Inbox(databaseHelper);
-		    Stage inboxStage = new Stage();
-		    inboxStage.initStyle(StageStyle.DECORATED);
-		    inbox.show(inboxStage);
+			// Create a new stage in order to popup new window and keep this one
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+
+			new Inbox(databaseHelper).show(newStage);
 		});
 
 		questionCloseButton.setOnAction(a -> {

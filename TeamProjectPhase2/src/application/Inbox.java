@@ -14,6 +14,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -323,6 +324,7 @@ public class Inbox {
 		root.setPadding(new Insets(0));
 
         Scene scene = new Scene(root, 1300, 930);
+        scene.setFill(Color.TRANSPARENT);
 
         // Removes icon from title bar in alert window
         primaryStage.getIcons().clear();
