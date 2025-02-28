@@ -1236,28 +1236,30 @@ public class QAHelper1 {
 	    }
 	}
 
-	public List<Message> retrieveAllMessages() throws SQLException {
-	    String query = "SELECT * FROM cse360message";
+	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
+	    String query = "SELECT * FROM cse360message WHERE recipientid = ?";
 	    List<Message> messages = new ArrayList<>();
 
-	    try (PreparedStatement pstmt = connection.prepareStatement(query);
-	         ResultSet rs = pstmt.executeQuery()) {
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, id);
 	        
-	        while (rs.next()) {
-	            Message message = new Message(
-	                rs.getInt("messageid"),
-	                rs.getInt("senderid"),
-	                rs.getInt("recipientid"),
-	                rs.getString("subject"),
-	                rs.getString("message")
-	            );
-	            messages.add(message);
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                int messageID = rs.getInt("messageid");
+	                int senderID = rs.getInt("senderid");
+	                int recipientID = rs.getInt("recipientid");
+	                String subject = rs.getString("subject");
+	                String content = rs.getString("message");
+
+	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
+	                messages.add(message);
+	            }
 	        }
 	    }
 	    return messages;
 	}
 	
-	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
+	public List<Message> retrieveMessagesRelatedToUserId(int id) throws SQLException {
 	    String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
 	    List<Message> messages = new ArrayList<>();
 
@@ -1267,18 +1269,17 @@ public class QAHelper1 {
 	        
 	        try (ResultSet rs = pstmt.executeQuery()) {
 	            while (rs.next()) {
-	                Message message = new Message(
-	                    rs.getInt("messageid"),
-	                    rs.getInt("senderid"),
-	                    rs.getInt("recipientid"),
-	                    rs.getString("subject"),
-	                    rs.getString("message")
-	                );
+	                int messageID = rs.getInt("messageid");
+	                int senderID = rs.getInt("senderid");
+	                int recipientID = rs.getInt("recipientid");
+	                String subject = rs.getString("subject");
+	                String content = rs.getString("message");
+
+	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
 	                messages.add(message);
 	            }
 	        }
 	    }
 	    return messages;
 	}
-
 }
