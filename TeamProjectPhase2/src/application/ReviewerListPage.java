@@ -40,17 +40,21 @@ public class ReviewerListPage {
 
 	private Stage primaryStage; 
 	private VBox layout; 
+	private List<User> myReviewers;
+	
+	
 	
 	public ReviewerListPage(Stage primaryStage, DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
-		this.primaryStage = primaryStage;	
+		this.primaryStage = primaryStage;
+		myReviewers = new ArrayList<>();
 	}
 
 	public void show( User user) {
-		
-		TableView<User> userTable = createUserTable(user);
 		TableView<User> reviewerTable = createReviewerTable(user);
 		
+		TableView<User> userTable = createUserTable(user);
+
 		Label userLabel = new Label("Reviewers Available");
 		userLabel.setStyle("-fx-text-fill: black; -fx-font-size: 18px; -fx-font-weight: bold;");
 		userLabel.setAlignment(Pos.CENTER);
@@ -120,8 +124,8 @@ public class ReviewerListPage {
 	        popupStage.setTitle("User Information");
 
 	        // User Information
-	        Label nameLabel = new Label("Name: " + user.getName());
-	        Label emailLabel = new Label("Email: " + user.getEmail());
+	        Label nameLabel = new Label("Name: " + newReviewer.getName());
+	        Label emailLabel = new Label("Email: " + newReviewer.getEmail());
 
 	        // Dropdown for assigning weight (1-6)
 	        ComboBox<Integer> weightDropdown = new ComboBox<>();
@@ -156,8 +160,8 @@ public class ReviewerListPage {
 	    popupStage.setTitle("Manage User");
 
 	    // User Information Labels
-	    Label nameLabel = new Label("Name: " + user.getName());
-	    Label emailLabel = new Label("Email: " + user.getEmail());
+	    Label nameLabel = new Label("Name: " + reviewer.getName());
+	    Label emailLabel = new Label("Email: " + reviewer.getEmail());
 
 	    // Dropdown for reassigning weight (1-6)
 	    ComboBox<Integer> weightDropdown = new ComboBox<>();
@@ -211,6 +215,18 @@ public class ReviewerListPage {
 			
 			users = databaseHelper.getAllUsersWithRole("Reviewer");
 			//users = databaseHelper.getAllUsers();
+			
+			if (users.contains(databaseHelper.currentUser)) {
+				users.remove(databaseHelper.currentUser);
+			}
+			
+			for (User u : myReviewers) {
+				if (users.contains(u)) {
+					users.remove(u);
+				}
+				
+			}
+			
 		} catch (SQLException e) {
 			System.out.println("Should never reach here, can't get all users");
 		}
@@ -236,7 +252,7 @@ public class ReviewerListPage {
 
 		System.out.println("USERS:" + users.toString()); // debug
 
-
+		
 		ObservableList<User> userObservableList = FXCollections.observableArrayList(users);
 		table.setItems(userObservableList);
 
@@ -350,6 +366,7 @@ public class ReviewerListPage {
 		
 
 		List<User> users = new ArrayList<>(finalReviewers.keySet());
+		myReviewers = users; 
 		
 		ObservableList<User> userObservableList = FXCollections.observableArrayList(users);
 		table.setItems(userObservableList);
