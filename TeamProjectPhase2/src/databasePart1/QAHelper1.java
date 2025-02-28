@@ -205,6 +205,17 @@ public class QAHelper1 {
 		}
 		System.out.println("Answer registered successfully.");
 	}
+	
+	public void setPreferredAnswer(int questionId, int answerId) throws SQLException {
+		String updateQuery = "UPDATE cse360question SET preferred_answer = ? WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(updateQuery)) {
+			pstmt.setInt(1, answerId);
+			pstmt.setInt(2, questionId);
+			pstmt.executeUpdate();
+		}
+		System.out.println("Preferred answer set for question ID: " + questionId);
+	}
+
 
 	// Checks if answer text is found within questions related answers
 	public boolean isDuplicateAnswer(int questionID, String answerText) throws SQLException {
