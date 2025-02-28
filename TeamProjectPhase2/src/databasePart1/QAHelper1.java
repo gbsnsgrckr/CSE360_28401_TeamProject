@@ -85,18 +85,21 @@ public class QAHelper1 {
 		        + "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
 		        + "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
 		statement.execute(messageTable);
-	}
-	
-	//Creates an auxiliary table tracking which answers each student has read
-	public void createAnswerViewsTable() throws SQLException {
-        // *** REMOVED RECURSIVE CALL TO createAnswerViewsTable() ***
-        String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews ("
+		
+		String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews ("
                 + "answer_id INT NOT NULL, "
                 + "user_id INT NOT NULL, "
                 + "is_read BOOLEAN DEFAULT FALSE, "
                 + "PRIMARY KEY (answer_id, user_id))";
 
         statement.execute(answerViewsTable);
+		
+	}
+	
+	//Creates an auxiliary table tracking which answers each student has read
+	public void createAnswerViewsTable() throws SQLException {
+        // *** REMOVED RECURSIVE CALL TO createAnswerViewsTable() ***
+        
     }
 	
 	// This helps us keep track of how many 'unread' answers remain for each question or user.

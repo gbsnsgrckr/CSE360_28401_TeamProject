@@ -655,7 +655,7 @@ public class StudentHomePage {
 						            Question newQuestion = databaseHelper.qaHelper.getQuestion(question.getId());
 
 						            // Validate that the entered ID exists among valid answer IDs for this question.
-						            if (!newQuestion.getRelatedId().contains(String.valueOf(enteredId))) {
+						            if (newQuestion.getRelatedId() == null || !newQuestion.getRelatedId().contains(String.valueOf(enteredId))) {
 						                errorLabel.setText("Please enter a valid answer ID for this question.");
 						                return;
 						            }
