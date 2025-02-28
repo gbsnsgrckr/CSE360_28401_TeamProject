@@ -192,6 +192,10 @@ public class StudentHomePage {
 		findReviewerButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 		
+		Button manageReviewersButton = new Button("Manage my Reviewers");
+		manageReviewersButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+		
 		Button askToBeAReviewer = new Button("Ask to be a reviewer");
 		askToBeAReviewer.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
@@ -899,42 +903,6 @@ public class StudentHomePage {
 				
 				if (sortedList != null && !sortedList.isEmpty()) {
 
-//				// Get list words from current text input string
-//				List<String> entry = databaseHelper.qaHelper.textDeserial(input);
-//				try {
-//					questions = databaseHelper.qaHelper.getAllQuestions();
-//				} catch (SQLException e) {
-//					e.printStackTrace();
-//					System.err.println("Error trying to .getAllQuestions() within inputField .setOnKeyReleased()");
-//					return;
-//				}
-//
-//				// Use Hashmap to remove duplicates
-//				Map<Question, Integer> similarity = new HashMap<>();
-//
-//				for (Question question : questions) {
-//					// Get list of words to compare from current question
-//					List<String> compList = question.getComp();
-//					int count = 0;
-//
-//					// Count the matches
-//					for (String word : entry) {
-//						if (compList.contains(word)) {
-//							count++;
-//						}
-//					}
-//
-//					// Set initial threshold to add comp to map
-//					if (count > 2) {
-//						similarity.put(question, count);
-//					}
-//				}
-//
-//				// Sort based on similarity score
-//				sortedList = similarity.entrySet().stream()
-//						.sorted(Map.Entry.<Question, Integer>comparingByValue().reversed()).map(Map.Entry::getKey)
-//						.collect(Collectors.toList());
-
 				// Set the observable list
 				searchObservableList.setAll(sortedList);
 				
@@ -1111,6 +1079,18 @@ public class StudentHomePage {
 			new FindReviewerForQuestionPage(databaseHelper).show(newStage);
 
 		});
+		
+		manageReviewersButton.setOnAction(a -> {
+			// Create a new stage in order to popup new window and keep this one
+
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+
+			// Close the existing stage
+			primaryStage.close();
+
+			new ReviewerListPage(newStage, databaseHelper).show(databaseHelper.currentUser);
+		});
 
 		// Add listeners for the textArea title field
 		titleField.focusedProperty().addListener((obs, wasFocused, isFocused) -> {
@@ -1172,6 +1152,9 @@ public class StudentHomePage {
 
 		HBox reviewerButtonBox = new HBox(findReviewerButton);
 		reviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
+		
+		HBox manageReviewerButtonBox = new HBox(manageReviewersButton);
+		manageReviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
 
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
@@ -1179,7 +1162,7 @@ public class StudentHomePage {
 		HBox askToBeAReviewerBox = new HBox(askToBeAReviewer);
 		askToBeAReviewerBox.setAlignment(Pos.BOTTOM_CENTER);
 
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, askToBeAReviewerBox);
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewersButton, askToBeAReviewerBox);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 		

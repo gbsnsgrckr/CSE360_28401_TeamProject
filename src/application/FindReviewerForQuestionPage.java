@@ -102,7 +102,9 @@ public class FindReviewerForQuestionPage {
 
 		if (users == null || users.isEmpty()) {
 			try {
-				users = databaseHelper.getAllUsersWithRole("Reviewer");
+				users = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()).entrySet()
+						.stream().sorted(Map.Entry.<User, Integer>comparingByValue(Comparator.reverseOrder()))
+						.map(Map.Entry::getKey).collect(Collectors.toList()).reversed();
 			} catch (SQLException e) {
 				e.printStackTrace();
 				System.err
@@ -299,10 +301,11 @@ public class FindReviewerForQuestionPage {
 						// Retrive list of all reviewers
 						users = databaseHelper.getAllUsersWithRole("Reviewer");
 					} else if (selection.equalsIgnoreCase("Preferred")) {
-						// Retrieve list of preferred reviewers for the current user (converts from map to list)
+						// Retrieve list of preferred reviewers for the current user (converts from map
+						// to list)
 						users = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()).entrySet()
 								.stream().sorted(Map.Entry.<User, Integer>comparingByValue(Comparator.reverseOrder()))
-								.map(Map.Entry::getKey).collect(Collectors.toList());
+								.map(Map.Entry::getKey).collect(Collectors.toList()).reversed();
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -314,6 +317,9 @@ public class FindReviewerForQuestionPage {
 				rTable.refresh();
 			}
 		});
+
+		// Set selection to preferred by default
+		reviewerFilter.selectToggle(reviewerPreferredButton);
 
 		// Add listeners for table selections to read selected objects from tables
 		qTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -445,6 +451,7 @@ public class FindReviewerForQuestionPage {
 			minButton.setMaxSize(25, 25);
 		});
 
+		// Event to minimize the window
 		minButton.setOnAction(a -> {
 			primaryStage.setIconified(true);
 		});

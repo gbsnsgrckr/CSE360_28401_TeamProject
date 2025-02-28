@@ -209,7 +209,7 @@ public class ReviewerListPage {
 			///// for debugging, use the getAllUsers()
 			///// for actual use the getAllUsersWithRole
 			
-			users = databaseHelper.getAllUsersWithRole("reviewer");
+			users = databaseHelper.getAllUsersWithRole("Reviewer");
 			//users = databaseHelper.getAllUsers();
 		} catch (SQLException e) {
 			System.out.println("Should never reach here, can't get all users");
