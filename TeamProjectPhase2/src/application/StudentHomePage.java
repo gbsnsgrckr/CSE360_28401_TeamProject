@@ -468,7 +468,7 @@ public class StudentHomePage {
 					QATableRow row = getTableView().getItems().get(getIndex());
 					// Create a label to hold the text
 					Label displayLabel = new Label(item);
-					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;-fx-border-color: black;");
+					displayLabel.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 					displayLabel.setWrapText(true);
 
 					displayLabel.maxWidthProperty().bind(contentColumn.widthProperty().subtract(50));
@@ -483,7 +483,8 @@ public class StudentHomePage {
 
 						// Add a spacer for any thread below the main question
 						Region spacer = new Region();
-						spacer.setStyle("-fx-border-color: black;");
+						// Use to outline spacer when setting up indentation
+						//spacer.setStyle("-fx-border-color: black;");
 						spacer.setMinSize(50, 5);
 						spacer.setMaxSize(50, 5);
 						cellBox.getChildren().add(spacer);

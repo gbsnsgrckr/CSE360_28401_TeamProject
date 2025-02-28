@@ -266,7 +266,7 @@ public class Question {
 				displayAuthor = authorName;
 			}
 
-			return String.format("%s\n%s               %sd", title, displayAuthor, daysSinceCreated);
+			return String.format("%s\n%s             	  %sd", title, displayAuthor, daysSinceCreated);
 		}
 	}
 	
@@ -291,7 +291,7 @@ public class Question {
 				displayAuthor = author.getName();
 			}
 
-			return String.format("QuestionId: %s\n%s\n\n%s\n\nRelatedIDs: %s\n\n%s           									    %sd", id, title, text, relatedId,  displayAuthor, daysSinceCreated);
+			return String.format("Question Id: %s\n\n%s\n\n%s\n\nRelated Ids: %s\n\n%s           									    %sd", id, title, text, relatedId,  displayAuthor, daysSinceCreated);
 		}
 	}
 
