@@ -6,13 +6,13 @@
 
 ### Contents
 
-1. ScreencastFile       - file containing Screencast1 and Screencast2
-3. StandupMeetingsFile   - file containing Standup Meeting recordings and notes   
-1. TeamProjectPhase2   - file containing Team Project Phase 2 program submission
+1. Screencasts       - folder containing Screencast1 and Screencast2
+3. StandupMeetings   - folder containing Standup Meeting recordings and notes   
+1. TeamProjectPhase2   - folder containing Team Project Phase 2 program submission
 
 
 
-This is a WIP project program that is meant to be a trusted Q&A search program that will allow a user to login, generate invite codes to invite new members, maintain the database of users including their roles/password-reset, and much more. Many features are not yet implemented as we add support for additional user roles and interactions. 
+This is a WIP project program that is meant to be a trusted Q&A search program that will allow a user to maintain a database of users and facilitate an efficient Question & Answer system where students can ask questions and receive curated and reviewed answers to their questions. All this knowledge will be available to users so that they may also benefit from the knowledge of others, and much more. Many features are not yet implemented as we add support for additional user roles and interactions. 
 
 
 
