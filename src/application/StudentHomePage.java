@@ -503,21 +503,23 @@ public class StudentHomePage {
 
 						});
 						
+						// Check if the answer is already marked as read
+						try {
+					        boolean isRead = databaseHelper.qaHelper.isAnswerMarkedAsRead(row.getAnswerId(), databaseHelper.currentUser.getUserId());
+					        if (isRead) {
+					            markAsReadButton.setDisable(true); 
+					        }
+						} catch (SQLException e) {
+					        e.printStackTrace();
+						}
+						
 						markAsReadButton.setOnAction(a -> {
-						    if (row.getType() == QATableRow.RowType.ANSWER) {
-						        // Get the answer ID from the current row
-						        int answerId = row.getAnswerId();
-						        int userId = databaseHelper.currentUser.getUserId();
-						        try {
-						            // Mark the answer as read for the current user
-						            databaseHelper.qaHelper.markAnswerAsRead(answerId, userId);
-						            // Optionally, update the UI to reflect the change
-						            System.out.println("Answer marked as read.");
-						        } catch (SQLException e) {
-						            e.printStackTrace();
-						            System.err.println("Error marking answer as read.");
-						        }
-						    }
+					        try {
+					            databaseHelper.qaHelper.markAnswerAsRead(row.getAnswerId(), databaseHelper.currentUser.getUserId()); 
+					            markAsReadButton.setDisable(true); // Disable button after clicking
+					        } catch (SQLException e) {
+					            e.printStackTrace();
+					        }
 						});
 
 						HBox buttonBox = new HBox(1, editButton, deleteButton, markAsReadButton);
