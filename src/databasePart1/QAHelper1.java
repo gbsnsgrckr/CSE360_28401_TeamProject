@@ -145,6 +145,13 @@ public class QAHelper1 {
 	// Registers a new answer in the database.
 	public void registerAnswerWithQuestion(Answer answer, int relatedID) throws SQLException {
 		String insertAnswer = "INSERT INTO cse360answer (text, author) VALUES (?, ?)";
+		
+		// Prevent duplicates
+		if (isDuplicateAnswer(relatedID, answer.getText())) {
+			System.out.println("Duplicate answer detected. Answer not inserted.");
+			return;
+		}
+		
 		try (PreparedStatement pstmt = connection.prepareStatement(insertAnswer, Statement.RETURN_GENERATED_KEYS)) {
 			pstmt.setString(1, answer.getText());
 			pstmt.setInt(2, answer.getAuthorId());
