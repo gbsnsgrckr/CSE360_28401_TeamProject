@@ -196,7 +196,7 @@ public class StudentHomePage {
 
 		Button askToBeAReviewer = new Button("Ask to be a reviewer");
 		askToBeAReviewer.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to check inbox for private messages
 		Button inboxButton = new Button("Inbox (#)"); // TODO: NEED TO GET NUMBER OF UNREAD PRIVATE MESSAGES
@@ -280,57 +280,6 @@ public class StudentHomePage {
 				titleBar.setStyle("-fx-pref-height: 0; -fx-min-height: 0; -fx-max-height: 0;");
 			}
 		});
-
-		/*
-		 * Answer Database Table that we shouldn't need // Table display of the answer
-		 * database // Label to display title to user Label prompt3 = new
-		 * Label("Answer Database"); prompt3.
-		 * setStyle("-fx-text-fill: black; -fx-font-size: 16px; -fx-font-weight: bold;"
-		 * );
-		 * 
-		 * // Hbox to position the title HBox titleBox3 = new HBox(prompt3);
-		 * titleBox3.setAlignment(Pos.CENTER);
-		 * 
-		 * // Create table to display the answer database TableView<Answer> aTable = new
-		 * TableView<>(); aTable.
-		 * setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;"
-		 * ); aTable.setPrefWidth(600);
-		 * 
-		 * // if answers is null then initialize as an empty list if (answers == null) {
-		 * answers = new ArrayList<>(); }
-		 * 
-		 * // Create an observable list and assign it to the table
-		 * ObservableList<Answer> answerObservableList =
-		 * FXCollections.observableArrayList(answers);
-		 * aTable.setItems(answerObservableList);
-		 * 
-		 * // Create, assign, and associate values to table TableColumn<Answer, Integer>
-		 * idColumn2 = new TableColumn<>("Answer ID");
-		 * idColumn2.setCellValueFactory(data -> new
-		 * ReadOnlyObjectWrapper<>(data.getValue().getId()));
-		 * 
-		 * // Create a text column TableColumn<Answer, String> textColumn2 = new
-		 * TableColumn<>("Answer"); textColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("text"));
-		 * 
-		 * // Create a userID column TableColumn<Answer, Integer> authorColumn2 = new
-		 * TableColumn<>("Author ID"); authorColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("author"));
-		 * 
-		 * // Create a createOn column TableColumn<Answer, String> createdColumn2 = new
-		 * TableColumn<>("Created On"); createdColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("createdOn"));
-		 * 
-		 * // Create an updatedOn column TableColumn<Answer, String> updatedColumn2 =
-		 * new TableColumn<>("Updated On"); updatedColumn2.setCellValueFactory(new
-		 * PropertyValueFactory<>("updatedOn"));
-		 * 
-		 * aTable.getColumns().addAll(idColumn2, textColumn2, authorColumn2,
-		 * createdColumn2, updatedColumn2);
-		 * 
-		 * // Container to hold the table VBox answerDB = new VBox(5, titleBox3,
-		 * aTable);
-		 */
 
 		// Label to display title to user
 		Label prompt5 = new Label("Details");
@@ -1227,24 +1176,26 @@ public class StudentHomePage {
 		
 		HBox manageReviewerButtonBox = new HBox(manageReviewersButton);
 		manageReviewerButtonBox.setAlignment(Pos.BOTTOM_RIGHT);
+		
+		HBox inboxButtonBox = new HBox(inboxButton);
+		inboxButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 
 		HBox quitButtonBox = new HBox(quitButton);
 		quitButtonBox.setAlignment(Pos.BOTTOM_LEFT);
 		
 		HBox askToBeAReviewerBox = new HBox(askToBeAReviewer);
 		askToBeAReviewerBox.setAlignment(Pos.BOTTOM_CENTER);
-
-
-		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox, askToBeAReviewerBox, inboxButton);
-		quitButton.setAlignment(Pos.BOTTOM_LEFT);
-		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);
 		
 		Button viewUnresolvedBtn = createViewUnresolvedButton();
 		Button viewAllUnresolvedBtn = createViewAllUnresolvedButton();
 		
-		HBox buttonBox2 = new HBox(viewUnresolvedBtn, viewAllUnresolvedBtn);
+		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn);
 
-		VBox vbox1 = new VBox(10, vbox, buttonBox1, buttonBox2);
+		HBox buttonBox1 = new HBox(10, quitButtonBox, reviewerButtonBox, manageReviewerButtonBox, inboxButtonBox, buttonBox2, askToBeAReviewerBox);
+		quitButton.setAlignment(Pos.BOTTOM_LEFT);
+		findReviewerButton.setAlignment(Pos.BOTTOM_RIGHT);		
+
+		VBox vbox1 = new VBox(10, vbox, buttonBox1);
 		vbox1.setAlignment(Pos.CENTER);
 
 		// Hide submitBox unit needed
@@ -1261,11 +1212,13 @@ public class StudentHomePage {
 
 		});
 		
-		inboxButton.setOnAction(a -> {
-		    Inbox inbox = new Inbox(databaseHelper);
-		    Stage inboxStage = new Stage();
-		    inboxStage.initStyle(StageStyle.DECORATED);
-		    inbox.show(inboxStage);
+		inboxButton.setOnAction(a -> {		    
+		 // Create a new stage in order to popup new window and keep this one
+		 Stage newStage = new Stage();
+		 newStage.initStyle(StageStyle.TRANSPARENT);
+
+		 new Inbox(databaseHelper).show(primaryStage);
+		    
 		});
 
 		questionCloseButton.setOnAction(a -> {
@@ -1790,6 +1743,7 @@ public class StudentHomePage {
 	    // Displays this stage to the user
 	}
 
+	// Recursive method to add related answers to resultsTable and to prevent duplicates
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
 			// Retrieve related answers
