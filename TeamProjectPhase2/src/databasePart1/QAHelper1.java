@@ -180,7 +180,6 @@ public class QAHelper1 {
 			ResultSet newID = pstmt.getGeneratedKeys();
 			if (newID.next()) {
 				int answerID = newID.getInt(1);
-				answer.setId(answerID);
 				addRelationToQuestion(relatedID, answerID);
 			}
 
