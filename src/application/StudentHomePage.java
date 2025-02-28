@@ -1818,32 +1818,4 @@ public class StudentHomePage {
 		// Return list of answers that is left
 		return answers;
 	}
-
-	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
-		try {
-			// Retrieve related answers
-			List<Answer> relatedAnswers = databaseHelper.qaHelper.getAllAnswersForAnswer(parentId);
-
-			// Iterate through each answer in relatedAnswers
-			for (Answer subAnswer : relatedAnswers) {
-
-				// Remove subAnswer from the list of answers
-				answers.remove(subAnswer);
-
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, subAnswer.toDisplay(),
-						subAnswer.getId(), subAnswer.getAuthorId(), subAnswer.getRelatedId()));
-
-				// Recursively call the function to process nested related answers
-				addRelatedAnswers(subAnswer.getId(), answers);
-
-			}
-
-		} catch (SQLException e) {
-			e.printStackTrace();
-			System.err.println("Error retrieving related answers in addRelatedAnswers()");
-		}
-		// Return list of answers that is left
-		return answers;
-	}
-
 }
