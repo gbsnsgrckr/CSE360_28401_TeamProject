@@ -655,42 +655,78 @@ public class QAHelper1 {
 
 	// Retrieves how many answers a given student has not yet read across all
 	// questions
-	public int getUnreadAnswersCountForUser(int userId, Integer questionId) throws SQLException {
-		// We will gather all answers from cse360answer, then see which are not in
-		// cse360answerviews for is_read=TRUE.
-		// If questionId != null, we only check answers linked to that question.
+	public Map<String, List<Answer>> getReadAndUnreadAnswers(int questionId, int userId) throws SQLException {
+	    Map<String, List<Answer>> result = new HashMap<>();
+	    List<Answer> unreadAnswers = new ArrayList<>();
+	    List<Answer> readAnswers = new ArrayList<>();
 
-		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT COUNT(a.id) AS unreadCount ");
-		sb.append("FROM cse360answer a ");
+	    // Retrieve answer_id as a single string
+	    String getAnswerIdsQuery = "SELECT answer_id FROM cse360question WHERE id = ?";
+	    String answerIdStr = null;
 
-		if (questionId != null) {
-			// Join to question for only relevant answers
-			sb.append("JOIN cse360question q ON q.answer_id LIKE CONCAT('%', a.id, '%') OR q.answer_id = a.id ");
-			sb.append("WHERE q.id = ? ");
-			sb.append("AND a.id NOT IN (");
-			sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
-			sb.append(")");
-		} else {
-			// For all questions
-			sb.append("WHERE a.id NOT IN (");
-			sb.append(" SELECT answer_id FROM cse360answerviews WHERE user_id = ? AND is_read = TRUE ");
-			sb.append(")");
-		}
+	    try (PreparedStatement stmt = connection.prepareStatement(getAnswerIdsQuery)) {
+	        stmt.setInt(1, questionId);
+	        ResultSet rs = stmt.executeQuery();
+	        if (rs.next()) {
+	            answerIdStr = rs.getString("answer_id"); 
+	        }
+	    }
 
-		try (PreparedStatement pstmt = connection.prepareStatement(sb.toString())) {
-			if (questionId != null) {
-				pstmt.setInt(1, questionId);
-				pstmt.setInt(2, userId);
-			} else {
-				pstmt.setInt(1, userId);
-			}
-			ResultSet rs = pstmt.executeQuery();
-			if (rs.next()) {
-				return rs.getInt("unreadCount");
-			}
-		}
-		return 0;
+	    // If no answer IDs exist, return empty lists
+	    if (answerIdStr == null || answerIdStr.trim().isEmpty()) {
+	        result.put("unread", unreadAnswers);
+	        result.put("read", readAnswers);
+	        return result;
+	    }
+		
+	    List<Integer> answerIds = Arrays.stream(answerIdStr.split(",\\s*"))
+	            .map(Integer::parseInt)
+	            .collect(Collectors.toList());
+
+	    if (answerIds.isEmpty()) {
+	        result.put("unread", unreadAnswers);
+	        result.put("read", readAnswers);
+	        return result;
+	    }
+
+	    // dynamic SQL query
+	    String placeholders = answerIds.stream().map(id -> "?").collect(Collectors.joining(", "));
+	    String query = "SELECT a.*, " +
+	                   "CASE WHEN av.is_read IS NULL OR av.is_read = FALSE THEN 'unread' ELSE 'read' END AS read_status " +
+	                   "FROM cse360answer a " +
+	                   "LEFT JOIN cse360answerviews av ON a.id = av.answer_id AND av.user_id = ? " +
+	                   "WHERE a.id IN (" + placeholders + ")";
+
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, userId);
+	        for (int i = 0; i < answerIds.size(); i++) {
+	            pstmt.setInt(i + 2, answerIds.get(i)); 
+	        }
+
+	        ResultSet rs = pstmt.executeQuery();
+	        while (rs.next()) {
+	            int id = rs.getInt("id");
+	            String text = rs.getString("text");
+	            int authorId = rs.getInt("author");
+	            Timestamp created = rs.getTimestamp("created_on");
+	            LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+	            Timestamp updated = rs.getTimestamp("updated_on");
+	            LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+	            String readStatus = rs.getString("read_status");
+
+	            Answer answer = new Answer(id, text, authorId, createdOn, updatedOn, null, null, null);
+
+	            if ("unread".equals(readStatus)) {
+	                unreadAnswers.add(answer);
+	            } else {
+	                readAnswers.add(answer);
+	            }
+	        }
+	    }
+
+	    result.put("unread", unreadAnswers);
+	    result.put("read", readAnswers);
+	    return result;
 	}
 
 	// Returns a list of all questions that have no potential answers
