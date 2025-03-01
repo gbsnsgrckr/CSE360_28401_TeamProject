@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import databasePart1.DatabaseHelper;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Pos;
@@ -36,168 +37,130 @@ public class Inbox {
         List<Message> messageList = new ArrayList<>();
 
         // Label to display title to user
-        Label prompt = new Label("Inbox" );
-        prompt.setStyle("-fx-text-fill: black; -fx-font-size: 18px; -fx-font-weight: bold;");
-        prompt.setAlignment(Pos.CENTER);
-
+        
         try {
-            messageList = databaseHelper.qaHelper.retrieveMessagesByUserId(databaseHelper.currentUser.getUserId()); // TODO: GET MESSAGES SPECIFIC TO USER
+            messageList = databaseHelper.qaHelper.retrieveMessagesByUserId(databaseHelper.currentUser.getUserId());
         } catch (SQLException e) {
             System.out.println("Error fetching messages from the database.");
             e.printStackTrace();
         }
 
         // TableColumn for Message ID
-        TableColumn<Message, Integer> messageIdColumn = new TableColumn<>("ID");
+        TableColumn<Message, Integer> messageIdColumn = new TableColumn<>("MsgID");
         messageIdColumn.setCellValueFactory(new PropertyValueFactory<>("messageID"));
-        messageIdColumn.setPrefWidth(25);
+        messageIdColumn.setPrefWidth(50);
 
         // TableColumn for Sender
-        TableColumn<Message, Integer> senderColumn = new TableColumn<>("From");
-        senderColumn.setCellValueFactory(new PropertyValueFactory<>("senderID"));
-        senderColumn.setPrefWidth(75);
+        TableColumn<Message, String> senderColumn = new TableColumn<>("From");
+        senderColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getSender() != null ? cellData.getValue().getSender().getUsername() : "Unknown"
+        ));
 
-        // TableColumn for Recipient ID
-        TableColumn<Message, Integer> recipientColumn = new TableColumn<>("To");
-        recipientColumn.setCellValueFactory(new PropertyValueFactory<>("recipientID"));
-        recipientColumn.setPrefWidth(75);
+        // TableColumn for Recipient
+        TableColumn<Message, String> recipientColumn = new TableColumn<>("To");
+        recipientColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getRecipient() != null ? cellData.getValue().getRecipient().getUsername() : "Unknown"
+        ));
+        recipientColumn.setVisible(false); // Hide column
 
         // TableColumn for Subject
         TableColumn<Message, String> subjectColumn = new TableColumn<>("Subject");
         subjectColumn.setCellValueFactory(new PropertyValueFactory<>("subject"));
         subjectColumn.setPrefWidth(175);
 
-        // TableColumn for Message
+        // TableColumn for Message Content
         TableColumn<Message, String> messageColumn = new TableColumn<>("Message");
         messageColumn.setCellValueFactory(new PropertyValueFactory<>("message"));
-        messageColumn.setPrefWidth(390);
+        messageColumn.setPrefWidth(618);
+
+        // Fixed row height
+        table.setFixedCellSize(70);  
 
         // Add columns to the table
-        table.getColumns().addAll(messageIdColumn,
-//        		referenceIdColumn, referenceTypeColumn, 
-        		senderColumn, recipientColumn, subjectColumn, messageColumn);
+        table.getColumns().addAll(messageIdColumn, senderColumn, recipientColumn, subjectColumn, messageColumn);
 
         ObservableList<Message> messageObservableList = FXCollections.observableArrayList(messageList);
         table.setItems(messageObservableList);
 
-        // Read Column
-        TableColumn<Message, Void> readColumn = new TableColumn<>("Read");
-        readColumn.setPrefWidth(80);
-        readColumn.setCellFactory(tc -> new TableCell<>() {
-            private final Button readButton = new Button("Read");
-
-            {
-                readButton.setStyle(
-                        "-fx-text-fill: white; -fx-background-color: green; -fx-font-weight: bold;");
-
-                readButton.setOnAction(event -> {
-                    Message selectedMessage = getTableView().getItems().get(getIndex());
-
-                    // Open MessagePage to display message details
-                    Stage detailsStage = new Stage();
-
-                    new ReadMessagePage(databaseHelper, selectedMessage).show(detailsStage);
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(readButton);
-                }
-            }
-        });
-
-        // Delete Column
-        TableColumn<Message, Void> deleteColumn = new TableColumn<>("Delete");
-        deleteColumn.setPrefWidth(80);
-        deleteColumn.setCellFactory(tc -> new TableCell<>() {
-            private final Button deleteButton = new Button("Delete");
-
-            {
-                deleteButton.setStyle(
-                        "-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold;");
-
-                deleteButton.setOnAction(event -> {
-                    Message selectedMessage = getTableView().getItems().get(getIndex());
-
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Confirm Deletion");
-                    alert.setHeaderText("Are you sure you want to delete this message?");
-                    alert.setContentText("Message ID: " + selectedMessage.getMessageID() +
-                            "\nMessage: " + selectedMessage.getMessage());
-
-                    Optional<ButtonType> result = alert.showAndWait();
-                    if (result.isPresent() && result.get() == ButtonType.OK) {
-                        try {
-                            if (databaseHelper.qaHelper.deleteMessage(selectedMessage.getMessageID())) {
-                                getTableView().getItems().remove(selectedMessage);
-                                System.out.println("Message deleted: " + selectedMessage.getMessageID());
-                            } else {
-                                System.out.println("Failed to delete message: " + selectedMessage.getMessageID());
-                            }
-                        } catch (SQLException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(deleteButton);
-                }
-            }
-        });
-
+        // Buttons
+        Button readButton = new Button("Read");
+        readButton.setStyle("-fx-text-fill: white; -fx-background-color: green; -fx-font-weight: bold;");
         
+        Button replyButton = new Button("Reply");
+        replyButton.setStyle("-fx-text-fill: white; -fx-background-color: blue; -fx-font-weight: bold;");
+        
+        Button deleteButton = new Button("Delete");
+        deleteButton.setStyle("-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold;");
 
-        // Add the Read, Delete, and Edit columns to the table
-        table.getColumns().addAll(readColumn, deleteColumn);
+        // Disable buttons by default until a message is selected
+        readButton.setDisable(true);
+        replyButton.setDisable(true);
+        deleteButton.setDisable(true);
 
-        // Adjust the table styling and layout
-        table.setStyle("-fx-font-weight: bold; -fx-font-size: 12px;");
+        // Enable Buttons on Selection
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            boolean hasSelection = newSelection != null;
+            readButton.setDisable(!hasSelection);
+            replyButton.setDisable(!hasSelection);
+            deleteButton.setDisable(!hasSelection);
+        });
 
-        // Make the table fill the available space
-        VBox.setVgrow(table, Priority.ALWAYS);
+        // Read Button Action
+        readButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Stage detailsStage = new Stage();
+                new ReadMessagePage(databaseHelper, selectedMessage).show(detailsStage);
+            }
+        });
 
-        // Back Button
-        Button backButton = new Button("Back");
-        backButton.setStyle(
-                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; " +
-                        "-fx-border-width: 2, 1;" +
-                        "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-        backButton.setOnAction(a -> {
+        // Reply Button Action
+        replyButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Stage replyStage = new Stage();
+                new CreateMessagePage(databaseHelper, selectedMessage.getSenderID()).show(replyStage);
+            }
+        });
 
-            // Create new stage to get rid of transparency for following pages
-            Stage newStage = new Stage();
-            newStage.initStyle(StageStyle.TRANSPARENT);
+        // Delete Button Action
+        deleteButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm Deletion");
+                alert.setHeaderText("Are you sure you want to delete this message?");
+                alert.setContentText("Message ID: " + selectedMessage.getMessageID());
 
-            // Close the existing stage
-            primaryStage.close();
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    try {
+                        if (databaseHelper.qaHelper.deleteMessage(selectedMessage.getMessageID())) {
+                            table.getItems().remove(selectedMessage);
+                            System.out.println("Message deleted: " + selectedMessage.getMessageID());
+                        } else {
+                            System.out.println("Failed to delete message.");
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
         });
 
         // Layout
-        HBox hbox = new HBox(5, backButton);
-        hbox.setAlignment(Pos.CENTER);
-        VBox vbox = new VBox(10, prompt, table, hbox);
+        HBox buttonBox = new HBox(10, readButton, replyButton, deleteButton);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
+
+        VBox vbox = new VBox(10, table, buttonBox);
         vbox.setAlignment(Pos.CENTER);
         vbox.setStyle("-fx-padding: 20;");
 
         Scene scene = new Scene(vbox, 940, 500);
-
-        // Removes icon from title bar in alert window
-        primaryStage.getIcons().clear();
-
         primaryStage.setScene(scene);
         primaryStage.setTitle("Inbox");
         primaryStage.show();
     }
+
+
 }
