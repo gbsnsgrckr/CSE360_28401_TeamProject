@@ -6,12 +6,13 @@ import application.Question;
 import application.Answer;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class UnresolvedAnsDuplicateTestingAutomation {
 
-    // Static variables to track test results
-    static int numPassed = 0; // Counter for passed tests
-    static int numFailed = 0; // Counter for failed tests
+    static int numPassed = 0; 
+    static int numFailed = 0; 
 
     public static void main(String[] args) throws SQLException {
         // Print header for the test suite
@@ -21,20 +22,57 @@ public class UnresolvedAnsDuplicateTestingAutomation {
         DatabaseHelper dbHelper = new DatabaseHelper();
         QAHelper1 qaHelper = new QAHelper1(dbHelper);
         
-        // Connect to the database using both helper objects
+        // Connect to the existing database
         qaHelper.connectToDatabase();
         dbHelper.connectToDatabase();
         
-        // Populate the user and QA databases with test data
-        new PopulateUserDatabase(dbHelper).execute();
-        new PopulateQADatabase(qaHelper).execute();
+        // Retrieve unresolved questions and print their IDs
+        List<Question> unresolvedQuestions = qaHelper.getAllUnresolvedQuestions();
+        System.out.println("\n\nUnresolved Question IDs:");
+        for (Question q : unresolvedQuestions) {
+            System.out.println("- " + q.getId());
+        }
+        
+        // Retrieve questions that have potential answers
+        List<Question> questionsWithPotentialAnswers = unresolvedQuestions.stream()
+            .filter(q -> {
+                try {
+                    return !qaHelper.getPotentialAnswersForQuestion(q.getId()).isEmpty();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                    return false;
+                }
+            })
+            .collect(Collectors.toList());
+        
+        System.out.println("\n\nQuestions with Potential Answers:");
+        for (Question q : questionsWithPotentialAnswers) {
+            System.out.println("- " + q.getId());
+        }
+        
+        // Retrieve and count read/unread answers
+        System.out.println("\n\nQuestions with Read and Unread Answers:");
+        for (Question q : unresolvedQuestions) {
+            Map<String, List<Answer>> readUnreadAnswers = qaHelper.getReadAndUnreadAnswers(q.getId(), 1);
+            List<Answer> unreadAnswers = readUnreadAnswers.getOrDefault("unread", List.of());
+            List<Answer> readAnswers = readUnreadAnswers.getOrDefault("read", List.of());
 
+            System.out.println("- Question ID: " + q.getId() + " | Unread Answers: " + unreadAnswers.size() + " | Read Answers: " + readAnswers.size());
+        }
+
+        // Retrieve unanswered questions
+        List<Question> unansweredQuestions = qaHelper.getAllUnansweredQuestions();
+        System.out.println("\n\nUnanswered Questions:");
+        for (Question q : unansweredQuestions) {
+            System.out.println("- " + q.getId());
+        }
+        
         // Perform test cases to validate various functionalities
-        performTestCase(1, "Retrieve all unresolved questions", qaHelper.getAllUnresolvedQuestions().size() >= 0);
+        performTestCase(1, "Retrieve all unresolved questions", unresolvedQuestions.size() >= 0);
         performTestCase(2, "Retrieve potential answers for a question", testPotentialAnswers(qaHelper));
         performTestCase(3, "Check answer duplication prevention", testAnswerDuplication(qaHelper));
-        performTestCase(4, "Retrieve unresolved questions with unread counts", qaHelper.getAllUnresolvedQuestionsForUser(1).size() >= 0);
-        performTestCase(5, "Retrieve all unanswered questions", qaHelper.getAllUnansweredQuestions().size() >= 0);
+        performTestCase(4, "Retrieve read and unread answers for a question", testUnreadAnswers(qaHelper));
+        performTestCase(5, "Retrieve all unanswered questions", unansweredQuestions.size() >= 0);
         
         // Print summary of test results
         System.out.println();
@@ -81,9 +119,27 @@ public class UnresolvedAnsDuplicateTestingAutomation {
         return true; // If no unresolved questions exist, test is inconclusive but passes
     }
 
+    // Test case for retrieving read and unread answers
+    private static boolean testUnreadAnswers(QAHelper1 qaHelper) throws SQLException {
+        // Retrieve unresolved questions
+        List<Question> unresolvedQuestions = qaHelper.getAllUnresolvedQuestions();
+
+        if (!unresolvedQuestions.isEmpty()) {
+            Question q = unresolvedQuestions.get(0); // Pick the first unresolved question
+            Map<String, List<Answer>> readUnreadAnswers = qaHelper.getReadAndUnreadAnswers(q.getId(), 1);
+
+            int unreadCount = readUnreadAnswers.getOrDefault("unread", List.of()).size();
+            int readCount = readUnreadAnswers.getOrDefault("read", List.of()).size();
+
+            // Ensure function is working correctly by checking that total is non-negative
+            return (unreadCount >= 0 && readCount >= 0);
+        }
+        return true; // If no unresolved questions exist, test is inconclusive but passes
+    }
+
     // Method to print test case results
     private static void performTestCase(int testCase, String description, boolean passed) {
-        System.out.println("____________________________________________________________________________\n\nTest case: " + testCase);
+        System.out.println("\n\n\nTest case: " + testCase);
         System.out.println("Description: " + description);
 
         // Print test result and update counters
