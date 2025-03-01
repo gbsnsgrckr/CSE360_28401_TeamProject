@@ -1238,38 +1238,50 @@ public class QAHelper1 {
 		}
 	}
 
-	public List<Message> retrieveAllMessages() throws SQLException {
-		String query = "SELECT * FROM cse360message";
-		List<Message> messages = new ArrayList<>();
-
-		try (PreparedStatement pstmt = connection.prepareStatement(query); ResultSet rs = pstmt.executeQuery()) {
-
-			while (rs.next()) {
-				Message message = new Message(rs.getInt("messageid"), rs.getInt("senderid"), rs.getInt("recipientid"),
-						rs.getString("subject"), rs.getString("message"));
-				messages.add(message);
-			}
-		}
-		return messages;
-	}
-
 	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
-		String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
-		List<Message> messages = new ArrayList<>();
+	    String query = "SELECT * FROM cse360message WHERE recipientid = ?";
+	    List<Message> messages = new ArrayList<>();
 
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, id);
-			pstmt.setInt(2, id);
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, id);
+	        
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                int messageID = rs.getInt("messageid");
+	                int senderID = rs.getInt("senderid");
+	                int recipientID = rs.getInt("recipientid");
+	                String subject = rs.getString("subject");
+	                String content = rs.getString("message");
 
-			try (ResultSet rs = pstmt.executeQuery()) {
-				while (rs.next()) {
-					Message message = new Message(rs.getInt("messageid"), rs.getInt("senderid"),
-							rs.getInt("recipientid"), rs.getString("subject"), rs.getString("message"));
-					messages.add(message);
-				}
-			}
-		}
-		return messages;
+	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
+	                messages.add(message);
+	            }
+	        }
+	    }
+	    return messages;
 	}
+	
+	public List<Message> retrieveMessagesRelatedToUserId(int id) throws SQLException {
+	    String query = "SELECT * FROM cse360message WHERE senderid = ? OR recipientid = ?";
+	    List<Message> messages = new ArrayList<>();
 
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, id);
+	        pstmt.setInt(2, id);
+	        
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                int messageID = rs.getInt("messageid");
+	                int senderID = rs.getInt("senderid");
+	                int recipientID = rs.getInt("recipientid");
+	                String subject = rs.getString("subject");
+	                String content = rs.getString("message");
+
+	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
+	                messages.add(message);
+	            }
+	        }
+	    }
+	    return messages;
+	}
 }
