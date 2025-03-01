@@ -32,7 +32,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 2
-		user = new User(404, "BigxSusan", "Suzanne", "Password8*", "Suzie79@gmail.com",
+		user = new User(404, "cespina3", "Chris", "Password123!", "Chris@gmail.com",
 				List.of("Student", "Reviewer", "Instructor"), false);
 		try {
 			databaseHelper.register(user);
