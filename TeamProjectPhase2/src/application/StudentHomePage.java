@@ -355,7 +355,6 @@ public class StudentHomePage {
 				
 				MessageButton.setOnAction(a -> {
 					Stage newStage = new Stage();
-					newStage.initStyle(StageStyle.TRANSPARENT);
 					QATableRow row = getTableView().getItems().get(getIndex());
 					new CreateMessagePage(databaseHelper, row.getAuthorId()).show(newStage);
 				});
