@@ -1458,55 +1458,67 @@ public class StudentHomePage {
 	}
 	
 	private void showUnresolvedQuestionsForCurrentUser() {
-	    Stage stage = new Stage();
-	    stage.setTitle("My Unresolved Questions");
+		// Create a new stage (window) to display unresolved questions
+		Stage stage = new Stage();
+		stage.setTitle("My Unresolved Questions");
+		// Create a heading label with styling for emphasis
+		Label heading = new Label("My Unresolved Questions");
+		heading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
-	    Label heading = new Label("My Unresolved Questions");
-	    heading.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
-
-	    TableView<Question> unresolvedTable = new TableView<>();
-	    unresolvedTable.setStyle("-fx-border-color: black; -fx-text-fill: black; -fx-font-weight: bold;");
-	    unresolvedTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-	    List<Question> myUnresolvedList;
-	    try {
-	        myUnresolvedList = databaseHelper.qaHelper.getAllUnresolvedQuestionsForUser(
-	            databaseHelper.currentUser.getUserId()
-	        );
-	    } catch (SQLException ex) {
-	        ex.printStackTrace();
-	        myUnresolvedList = new ArrayList<>();
-	    }
-
-	    ObservableList<Question> unresolvedObs = FXCollections.observableArrayList(myUnresolvedList);
-	    unresolvedTable.setItems(unresolvedObs);
-
-	    TableColumn<Question, String> questCol = new TableColumn<>("Question Title");
-	    questCol.setCellValueFactory(cellData -> 
-	        new SimpleStringProperty(cellData.getValue().getTitle())
-	    );
-
-	    unresolvedTable.getColumns().add(questCol);
-
-	    unresolvedTable.setRowFactory(tv -> {
-	        TableRow<Question> row = new TableRow<>();
-	        row.setOnMouseClicked(event -> {
-	            if (!row.isEmpty() && event.getClickCount() == 2) {
-	                Question question = row.getItem();
-	                showPotentialAnswersWindow(question);
-	            }
-	        });
-	        return row;
-	    });
-
-	    VBox layout = new VBox(10, heading, unresolvedTable);
-	    layout.setAlignment(Pos.CENTER);
-	    layout.setPadding(new Insets(15, 15, 15, 15));
-
-	    Scene scene = new Scene(layout, 700, 400);
-	    stage.setScene(scene);
-	    stage.show();
+		// Create a TableView to display the list of unresolved questions
+		unresolvedTable.setStyle("-fx-border-color: black; -fx-text-fill: black; -fx-font-weight: bold;");
+		unresolvedTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+		
+		// Declare a list to store unresolved questions for the current user
+		List<Question> myUnresolvedList;
+		try {
+			// Retrieve unresolved questions from the database for the logged-in user
+			myUnresolvedList = databaseHelper.qaHelper.getAllUnresolvedQuestionsForUser(
+				databaseHelper.currentUser.getUserId()
+			);
+		} catch (SQLException ex) {
+			// Handle SQL exceptions and initialize an empty list to avoid null issues
+			ex.printStackTrace();
+			myUnresolvedList = new ArrayList<>();
+		}
+		// Convert the retrieved list into an observable list for TableView
+		ObservableList<Question> unresolvedObs = FXCollections.observableArrayList(myUnresolvedList);
+		unresolvedTable.setItems(unresolvedObs);
+		// Define a column to display question titles
+		TableColumn<Question, String> questCol = new TableColumn<>("Question Title");
+    
+		// Set cell value factory to retrieve the title property from each Question object
+		questCol.setCellValueFactory(cellData -> 
+					     new SimpleStringProperty(cellData.getValue().getTitle())
+					    );
+		
+		// Add the column to the TableView
+		unresolvedTable.getColumns().add(questCol);
+		
+		// Set a row factory to detect double-clicks on a question row
+		unresolvedTable.setRowFactory(tv -> {
+			TableRow<Question> row = new TableRow<>();
+			row.setOnMouseClicked(event -> {
+				
+				// If the row is not empty and a double-click is detected
+				if (!row.isEmpty() && event.getClickCount() == 2) {
+					
+					// Retrieve the selected question and open its potential answers window
+					Question question = row.getItem();
+					showPotentialAnswersWindow(question);
+				}
+			});
+			return row; // Return the modified row
+		});
+		
+		VBox layout = new VBox(10, heading, unresolvedTable);
+		layout.setAlignment(Pos.CENTER);
+		layout.setPadding(new Insets(15, 15, 15, 15));
+		Scene scene = new Scene(layout, 700, 400);
+		stage.setScene(scene);
+		stage.show();
 	}
+
 
 	// Displays a pop-up window listing potential (unread and read) answers for the specified question.
 	private void showPotentialAnswersWindow(Question question) {
