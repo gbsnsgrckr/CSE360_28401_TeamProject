@@ -1250,8 +1250,6 @@ public class StudentHomePage {
 		inboxButton.setOnAction(a -> {
 			// Create a new stage in order to popup new window and keep this one
 			Stage newStage = new Stage();
-			newStage.initStyle(StageStyle.TRANSPARENT);
-
 			new Inbox(databaseHelper).show(newStage);
 		});
 
