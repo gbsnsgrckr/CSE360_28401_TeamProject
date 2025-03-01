@@ -7,6 +7,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -24,42 +26,57 @@ public class ReadMessagePage {
             this.sender = databaseHelper.getUser(message.getSenderID());
         } catch (SQLException e) {
             e.printStackTrace();
-            this.sender = null; 
+            this.sender = null;
         }
     }
 
     public void show(Stage stage) {
+        // Sender Label
         Label senderLabel = new Label("From: " + (sender != null ? sender.getUsername() : "Unknown"));
         senderLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
+        // Subject Label
         Label subjectLabel = new Label("Subject: " + message.getSubject());
-        subjectLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        subjectLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #555;");
 
-        Label messageLabel = new Label("Message: " + message.getMessage());
-        messageLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        // Message Content Area
+        TextArea messageTextArea = new TextArea(message.getMessage());
+        messageTextArea.setWrapText(true);
+        messageTextArea.setEditable(false);
+        messageTextArea.setPrefHeight(250);
+        messageTextArea.setStyle("-fx-font-size: 14px; -fx-border-color: gray;");
+        ScrollPane scrollPane = new ScrollPane();
+        scrollPane.setContent(messageTextArea);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setFitToHeight(true);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
 
-        Button closeButton = new Button("Close");
-        closeButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold; " +
-                             "-fx-border-color: black, gray; -fx-border-width: 2, 1; " +
-                             "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-        closeButton.setOnAction(a -> stage.close());
+        // Reply Button
+        Button replyButton = new Button("Reply");
+        replyButton.setStyle("-fx-text-fill: white; -fx-background-color: blue; -fx-font-weight: bold; -fx-padding: 5px 15px;");
+        replyButton.setOnAction(event -> {
+            if (sender != null) {
+                Stage replyStage = new Stage();
+                new CreateMessagePage(databaseHelper, sender.getUserId()).show(replyStage);
+            }
+        });
 
-        VBox contentLayout = new VBox(10, senderLabel, subjectLabel, messageLabel);
+        // Button Box
+        HBox buttonBox = new HBox(replyButton);
+        buttonBox.setAlignment(Pos.BOTTOM_RIGHT);
+        buttonBox.setPadding(new Insets(10, 20, 10, 20));
+
+        // Layout
+        VBox contentLayout = new VBox(10, senderLabel, subjectLabel, scrollPane, buttonBox);
         contentLayout.setPadding(new Insets(20));
         contentLayout.setAlignment(Pos.TOP_LEFT);
+        contentLayout.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: gray; -fx-border-width: 1px;");
 
-        ScrollPane scrollPane = new ScrollPane(contentLayout);
-        scrollPane.setFitToWidth(true);
-
-        VBox mainLayout = new VBox(10, scrollPane, closeButton);
-        mainLayout.setAlignment(Pos.CENTER);
-        mainLayout.setPadding(new Insets(20));
-
-        Scene scene = new Scene(mainLayout, 600, 400);
-
+        // Scene
+        Scene scene = new Scene(contentLayout, 600, 400);
         stage.setScene(scene);
         stage.setTitle("Message ID: " + message.getMessageID());
         stage.show();
     }
 }
-
