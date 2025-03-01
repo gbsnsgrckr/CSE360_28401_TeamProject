@@ -780,46 +780,42 @@ public class QAHelper1 {
 
 	// Returns a list of the current user's unresolved questions
 	public List<Question> getAllUnresolvedQuestionsForUser(int userId) throws SQLException {
-		String query = "SELECT q.*, " + "(SELECT COUNT(a.id) FROM cse360answer a "
-				+ " WHERE q.answer_id LIKE CONCAT('%', a.id, '%') "
-				+ " AND a.id NOT IN (SELECT answer_id FROM cse360answerviews "
-				+ "                  WHERE user_id = ? AND is_read = TRUE)) AS unread_count " + "FROM cse360question q "
-				+ "WHERE (q.preferred_answer IS NULL OR q.preferred_answer = 0) " + "AND q.author = ?";
+	    String query = "SELECT q.* FROM cse360question q " +
+	                   "WHERE (q.preferred_answer IS NULL OR q.preferred_answer = 0) " +
+	                   "AND q.author = ?";
 
-		List<Question> questions = new ArrayList<>();
+	    List<Question> questions = new ArrayList<>();
 
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, userId); // For unread answers
-			pstmt.setInt(2, userId); // For questions posted by the user
-			ResultSet rs = pstmt.executeQuery();
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, userId); // For questions posted by the user
+	        ResultSet rs = pstmt.executeQuery();
 
-			while (rs.next()) {
-				int id = rs.getInt("id");
-				String title = rs.getString("title");
-				String text = rs.getString("text");
-				int authorId = rs.getInt("author");
-				Timestamp created = rs.getTimestamp("created_on");
-				LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
-				Timestamp updated = rs.getTimestamp("updated_on");
-				LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
-				int preferredAnswer = rs.getInt("preferred_answer");
-				int unreadCount = rs.getInt("unread_count"); // Store unread answer count
+	        while (rs.next()) {
+	            int id = rs.getInt("id");
+	            String title = rs.getString("title");
+	            String text = rs.getString("text");
+	            int authorId = rs.getInt("author");
+	            Timestamp created = rs.getTimestamp("created_on");
+	            LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+	            Timestamp updated = rs.getTimestamp("updated_on");
+	            LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+	            int preferredAnswer = rs.getInt("preferred_answer");
 
-				User author = databaseHelper.getUser(authorId);
-				String authorName = (author != null) ? author.getName() : "User";
-				String answerIDs = rs.getString("answer_id");
-				List<String> relatedId = (answerIDs != null) ? List.of(answerIDs.split(",\\s")) : null;
+	            User author = databaseHelper.getUser(authorId);
+	            String authorName = (author != null) ? author.getName() : "User";
+	            String answerIDs = rs.getString("answer_id");
+	            List<String> relatedId = (answerIDs != null) ? List.of(answerIDs.split(",\\s")) : null;
 
-				// Create Question object and set the unread count as metadata
-				Question q = new Question(id, title, text, authorId, createdOn, updatedOn, textDeserial(title + text),
-						preferredAnswer, author, authorName, relatedId);
-				q.setUnreadCount(unreadCount); // Custom method in Question class to store unread count
-				questions.add(q);
-			}
-		}
-		return questions;
+	            // Create Question object without unread count (since we now get unread answers dynamically)
+	            Question q = new Question(id, title, text, authorId, createdOn, updatedOn, 
+	                                      textDeserial(title + text), preferredAnswer, author, authorName, relatedId);
+	            
+	            questions.add(q);
+	        }
+	    }
+	    return questions;
 	}
-
+	
 	// Retrieves only those answers that are not the chosen preferred answer
 	public List<Answer> getPotentialAnswersForQuestion(int questionId) throws SQLException {
 		Question q = getQuestion(questionId);
