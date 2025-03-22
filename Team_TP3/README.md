@@ -1,4 +1,4 @@
-# Team Project (Phase 2)
+# Team Project (Phase 3)
 
 ## CSE360-28401(Online)
 
@@ -8,7 +8,7 @@
 
 1. Screencasts       - folder containing a file with the URL to Screencast1 and Screencast2(files too large for GitHub)
 3. StandupMeetings   - folder containing Standup Meeting recordings and notes   
-1. TeamProjectPhase2   - folder containing Team Project Phase 2 program submission
+1. TP3               - folder containing Team Project Phase 3 program submission
 
 
 
@@ -27,7 +27,7 @@ Java JDK 23.0.1
 
 JavaFX SDK 23.0.1
 
-
+Junit 4
 
 
 1. Download and install Eclipse IDE(https://www.eclipse.org/downloads/)
