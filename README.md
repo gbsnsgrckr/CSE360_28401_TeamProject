@@ -1,4 +1,4 @@
-# Individual Homework Repository
+# Team Project Repository
 
 ## CSE360-28401(Online Group 8)
 
@@ -7,10 +7,7 @@
 ### Contents
 
 
-1. Individual_HW2           -  folder containing submission materials for HW2
-2. Individual_HW3			-  folder containing submission materials for HW3
-3. Individual_HW4      	    -  folder containing submission materials for HW4
-  
+1. Team_TP3           -  folder containing submission materials for TP3  
 
 
 
