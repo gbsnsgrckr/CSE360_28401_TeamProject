@@ -1,6 +1,6 @@
 # Individual Homework 2
 
-## CSE360-28401(Online)
+## CSE360-28401(Online Group 8)
 
 
 
@@ -43,6 +43,16 @@ JavaFX SDK 23.0.1
 
 ### Contributors & Contact
 
+
+Zachary Chalmers - zchalmer@asu.edu
+
+Chris Espinal - cespina3@asu.edu
+
+Darren Fernandes - dkferna1@asu.edu
+
+Dara Gafoor - dgafoor@asu.edu
+
+Joseph Morgan - jmorga90@asu.edu
 
 Kyle Pierce - Kapierc8@asu.edu
 

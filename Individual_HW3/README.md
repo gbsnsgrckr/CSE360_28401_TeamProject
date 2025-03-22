@@ -1,6 +1,6 @@
 # Individual HW3
 
-## CSE360-28401(Online)
+## CSE360-28401(Online Group 8)
 
 
 
@@ -9,10 +9,9 @@
 1. Screencasts       - folder containing the Screencast file 
 2. HW3   			 - folder containing HW3 program submission
 
-
-
-This is a WIP project program that is meant to be a trusted Q&A search program that will allow a user to maintain a database of users and facilitate an efficient Question & Answer system where students can ask questions and receive curated and reviewed answers to their questions. All this knowledge will be available to users so that they may also benefit from the knowledge of others, and much more. Many features are not yet implemented as we add support for additional user roles and interactions. 
-
+### Specific file location for this phase
+#### CSE360_HW3 -> HW3 -> src -> tests -> SearchEvaluationTestingAutomation.java
+##### Make sure you select the proper src folder as the source folder so that Eclipse recognizes it as a java file src -> Build Path -> Use as Source Folder
 
 
 
@@ -26,7 +25,7 @@ Java JDK 23.0.1
 
 JavaFX SDK 23.0.1
 
-
+Junit 4
 
 
 1. Download and install Eclipse IDE(https://www.eclipse.org/downloads/)

@@ -1,15 +1,15 @@
-# Individual Homework 2
+# Individual Homework Repository
 
-## CSE360-28401(Online)
+## CSE360-28401(Online Group 8)
 
 
 
 ### Contents
 
 
-1. HW2              -  file containing HW2 and all source code
-   (When running the code in Eclipse, the StartCSE360 is the start of the GUI application. If you wish to run the testbed then you must run the file in the tests package named HW2TestBed.)
-3. Screencast       -  file containing Screencast 
+1. Individual_HW2           -  folder containing submission materials for HW2
+2. Individual_HW3			-  folder containing submission materials for HW3
+3. Individual_HW4      	    -  folder containing submission materials for HW4
   
 
 
@@ -29,8 +29,7 @@ Java JDK 23.0.1
 
 JavaFX SDK 23.0.1
 
-
-
+Junit 4
 
 1. Download and install Eclipse IDE(https://www.eclipse.org/downloads/)
 2. Clone/Download the Code from the repository(https://github.com/zchalmers/CSE360-TeamProject) into the desired directory(You will need to remember this location).
@@ -43,6 +42,16 @@ JavaFX SDK 23.0.1
 
 ### Contributors & Contact
 
+
+Zachary Chalmers - zchalmer@asu.edu
+
+Chris Espinal - cespina3@asu.edu
+
+Darren Fernandes - dkferna1@asu.edu
+
+Dara Gafoor - dgafoor@asu.edu
+
+Joseph Morgan - jmorga90@asu.edu
 
 Kyle Pierce - Kapierc8@asu.edu
 

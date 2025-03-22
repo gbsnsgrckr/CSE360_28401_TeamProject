@@ -31,9 +31,11 @@ import databasePart1.DatabaseHelper;
  * </p>
  * @author Kyle Pierce
  * 
- * @version 0.00 2025-02-28 Initial baseline
- * @version 0.01 2025-03-20 Added Junit formatting and Javadoc support
- * 
+ * @version 0.00 2025-02-28 - Initial baseline
+ * <p>
+ * 0.01 2025-03-20 - Added Junit formatting and Javadoc support
+ * </p>
+ *
  */
 public class SearchEvaluationTestingAutomation {
 	/**
@@ -340,12 +342,12 @@ public class SearchEvaluationTestingAutomation {
 	 * @throws SQLException	In case the database throws an error
 	 */
 	@Before
-	public static void setUp() throws SQLException {
+	public void setUp() throws SQLException {
 		databaseHelper.connectToDatabase();
 	}
 	
 	/**
-	 * Test 1. This method performs test 1 which will simply test the database size
+	 * Test 1 - This method performs test 1 which will simply test the database size
 	 * to ensure the expected number of questions exists in the database to ensure
 	 * that all questions are accessible and able to be searched.
 	 * 
@@ -368,7 +370,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 2. This method performs test 2 which will test the method,
+	 * Test 2 - This method performs test 2 which will test the method,
 	 * searchQuestionDatabase by searching using a partial existing title and expect
 	 * to find that specific question
 	 * 
@@ -393,7 +395,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 3. This method performs test 3 which will test the method,
+	 * Test 3 - This method performs test 3 which will test the method,
 	 * searchQuestionDatabase by searching using a partial existing title and expect
 	 * to find that specific question
 	 * 
@@ -419,7 +421,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 4. This method performs test 4 which will test the method,
+	 * Test 4 - This method performs test 4 which will test the method,
 	 * searchQuestionDatabase by searching using a partial existing text and expect
 	 * to find that specific question
 	 * 
@@ -445,7 +447,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 5. This method performs test 5 which will test the method,
+	 * Test 5 - This method performs test 5 which will test the method,
 	 * searchQuestionDatabase by searching using a partial existing text and expect
 	 * to find that specific question
 	 * 
@@ -470,7 +472,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 6. This method performs test 6 which will test the method,
+	 * Test 6 - This method performs test 6 which will test the method,
 	 * searchQuestionDatabase by searching using a partial existing text and expect
 	 * to find that specific question
 	 * 
@@ -495,7 +497,7 @@ public class SearchEvaluationTestingAutomation {
 	}
 
 	/**
-	 * Test 7. This method performs test 7 which will simply test the database size
+	 * Test 7 - This method performs test 7 which will simply test the database size
 	 * to ensure the expected number of questions exists in the database to ensure
 	 * that all questions are accessible and able to be searched.
 	 * 
