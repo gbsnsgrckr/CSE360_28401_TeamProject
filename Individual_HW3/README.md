@@ -11,7 +11,7 @@
 
 ### Specific file location for this phase
 #### CSE360_HW3 -> HW3 -> src -> tests -> SearchEvaluationTestingAutomation.java
-##### Make sure you select the proper src folder as the source folder so that Eclipse recognizes it as a java file src -> Build Path -> Use as Source Folder
+##### 🔴 Make sure you select the proper src folder as the source folder so that Eclipse recognizes it as a java file src -> Build Path -> Use as Source Folder
 
 
 
