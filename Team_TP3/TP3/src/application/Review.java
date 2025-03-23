@@ -15,10 +15,11 @@ public class Review {
 	private User author;
 	private String authorName;
 	private Integer messageCount;
+	private Integer voteCount;
 
 	// Constructor mainly for when getAllQuestions() method is used in QAHelper.java
 	public Review(Integer id, Boolean forQuestion, Integer relatedId, String text, Integer authorId, LocalDateTime createdOn,
-			LocalDateTime updatedOn, User author, String authorName, Integer messageCount) {
+			LocalDateTime updatedOn, User author, String authorName, Integer messageCount, Integer voteCount) {
 		this.id = id;
 		this.forQuestion = forQuestion;
 		this.relatedId = relatedId;
@@ -29,6 +30,7 @@ public class Review {
 		this.author = author;
 		this.authorName = authorName;
 		this.messageCount = messageCount;
+		this.voteCount = voteCount;
 	}
 	
 	public Review(Boolean forQuestion, Integer relatedId, String text, Integer authorId, User author, String authorName) {
@@ -61,11 +63,16 @@ public class Review {
 		this.authorId = null;
 		this.createdOn = null;
 		this.updatedOn = null;
+		this.voteCount = null;
 	}
 
 	// Getters
 	public Integer getId() {
 		return id;
+	}
+	
+	public Integer getVoteCount() {
+		return voteCount;
 	}
 	
 	public Integer getMessageCount() {
@@ -116,6 +123,10 @@ public class Review {
 		this.id = id;
 	}
 	
+	public void setVoteCount(Integer voteCount) {
+		this.voteCount = voteCount;
+	}
+	
 	public void setMessageCount(Integer messageCount) {
 		this.messageCount = messageCount;
 	}
@@ -154,7 +165,7 @@ public class Review {
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n\t%s\nTitle:\n\t%s\nText:\n\t%s\nRelatedIds:\n\t%s\n\t%s\nAuthorId:\n\t%s\nAuthor Name:\n\t%s  \nCreated On:\n\t%s\nUpdated On:\n\t%s\nPreferred Answer Id:\n\t%s",
+				"\nQUESTIONID:\n\t%s\nTitle:\n\t%s\nText:\n\t%s\nRelatedIds:\n\t%s\nAuthorId:\n\t%s\nAuthor Name:\n\t%s  \nCreated On:\n\t%s\nUpdated On:\n\t%s",
 				id, forQuestion, relatedId, text, authorId, authorName, createdOn, updatedOn);
 	}
 
@@ -178,7 +189,14 @@ public class Review {
 	
 	public String toDisplayWithText() {
 		String displayAuthor;
+		String voteValue;
 		int daysSinceCreated = getDaysSinceCreated();
+		// Adds a " - " before the value if it is positive for display
+		if (voteCount <= 0) {
+			voteValue = String.valueOf(voteCount);
+		} else {
+			voteValue = "+" + String.valueOf(voteCount);
+		}
 
 			// If author returns null(In case of test cases or populated database without
 			// proper users)
@@ -189,7 +207,7 @@ public class Review {
 				displayAuthor = author.getName();
 			}
 
-			return String.format("Review Id: %s\n\n%s\n\n%s           					    			 %sd", id, text, displayAuthor, daysSinceCreated);
+			return String.format("Review Id: %s\n\n%s           					    		Rating: %s\n\n%s           					    			 						%sd", id, text, voteValue, displayAuthor, daysSinceCreated);
 		}
 	
 

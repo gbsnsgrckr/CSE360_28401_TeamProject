@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import application.StudentHomePage.QATableRow;
+import application.QATableRow;
 import databasePart1.DatabaseHelper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -40,66 +40,6 @@ import javafx.stage.StageStyle;
  * This page displays a simple welcome message for the user.
  */
 public class StudentHomePage {
-	// Class to allow for dynamic rows within a table
-	public class QATableRow {
-		public enum RowType {
-			QUESTION, ANSWER
-		}
-
-		private final RowType type;
-		private final String text;
-		private final Integer contentId;
-		private final Integer authorId;
-		private final List<String> relatedId;
-
-		// Wrapper class for resultsTable to allow for dynamic rows
-		public QATableRow(RowType type, String text, Integer contentId, List<String> relatedId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = null;
-			this.relatedId = relatedId;
-
-		}
-
-		public QATableRow(RowType type, String text, Integer contentId, Integer authorId, List<String> relatedId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = authorId;
-			this.relatedId = relatedId;
-
-		}
-
-		public Integer getQuestionId() {
-			return contentId;
-		}
-
-		public Integer getAnswerId() {
-			return contentId;
-		}
-
-		public Integer getAuthorId() {
-			return authorId;
-		}
-
-		public String getText() {
-			return text;
-		}
-
-		public RowType getType() {
-			return type;
-		}
-
-		public List<String> getRelatedId() {
-			return relatedId;
-		}
-
-		@Override
-		public String toString() {
-			return text;
-		}
-	}
 
 	private final DatabaseHelper databaseHelper;
 	private Question question;

@@ -171,7 +171,7 @@ public class Answer {
 				displayAuthor = getAuthorName();
 			}
 
-			return String.format("Answer Id: %s\n\n%s\nRelated Ids: %s\n\n%s             					  					%sd", id, text, relatedId, displayAuthor, daysSinceCreated);
+			return String.format("Answer Id: %s\n\n%s\nRelated Ids: %s\n\n%s           															    %sd", id, text, relatedId, displayAuthor, daysSinceCreated);
 		}
 	}
 

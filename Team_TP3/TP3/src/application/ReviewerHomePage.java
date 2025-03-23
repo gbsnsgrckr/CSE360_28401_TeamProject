@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import application.StudentHomePage.QATableRow;
+import application.QATableRow;
 import databasePart1.DatabaseHelper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -41,79 +41,6 @@ import javafx.stage.StageStyle;
  * This page displays a simple welcome message for the user.
  */
 public class ReviewerHomePage {
-	// Class to allow for dynamic rows within a table
-	public class QATableRow {
-		public enum RowType {
-			QUESTION, ANSWER, REVIEW
-		}
-
-		private final RowType type;
-		private final String text;
-		private final Integer contentId;
-		private final Integer authorId;
-		private final List<String> relatedId;
-
-		// Wrapper class for resultsTable to allow for dynamic rows
-		public QATableRow(RowType type, String text, Integer contentId, List<String> relatedId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = null;
-			this.relatedId = relatedId;
-
-		}
-
-		public QATableRow(RowType type, String text, Integer contentId, Integer authorId, List<String> relatedId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = authorId;
-			this.relatedId = relatedId;
-
-		}
-
-		public QATableRow(RowType type, String text, Integer contentId, Integer authorId) {
-			this.type = type;
-			this.text = text;
-			this.contentId = contentId;
-			this.authorId = authorId;
-			this.relatedId = null;
-
-		}
-
-		public Integer getQuestionId() {
-			return contentId;
-		}
-
-		public Integer getAnswerId() {
-			return contentId;
-		}
-
-		public Integer getReviewId() {
-			return contentId;
-		}
-
-		public Integer getAuthorId() {
-			return authorId;
-		}
-
-		public String getText() {
-			return text;
-		}
-
-		public RowType getType() {
-			return type;
-		}
-
-		public List<String> getRelatedId() {
-			return relatedId;
-		}
-
-		@Override
-		public String toString() {
-			return text;
-		}
-	}
 
 	private final DatabaseHelper databaseHelper;
 	private Question question;
@@ -547,10 +474,10 @@ public class ReviewerHomePage {
 
 								// Trying to get compounding indentation to work here. private variable indent
 								// already exists at class level
-								spacer.setMinSize(25 * indent, 5);
-								spacer.setMaxSize(25 * indent, 5);
-
-								indent += 1;
+//								spacer.setMinSize(25 * indent, 5);
+//								spacer.setMaxSize(25 * indent, 5);
+//
+//								indent += 1;
 
 							} else {
 								// Reset indent counter on an unrelated row
@@ -564,7 +491,7 @@ public class ReviewerHomePage {
 						// Label to identify review to the user
 						Label reviewLabel = new Label("REVIEW");
 						reviewLabel.setAlignment(Pos.CENTER);
-						reviewLabel.setRotate(90);
+						reviewLabel.setRotate(-90);
 						reviewLabel.setMaxSize(200, 20);
 						reviewLabel.setPrefSize(200, 20);
 						reviewLabel.setStyle(
@@ -573,6 +500,105 @@ public class ReviewerHomePage {
 
 						cellBox.getChildren().add(0, reviewLabel);
 						cellBox.setAlignment(Pos.CENTER_LEFT);
+						
+						// Button to open the upvote a review
+						Button upVoteButton = new Button("\uD83D\uDC4D UpVote");
+						upVoteButton.setStyle(
+								"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+
+						// Button to open the downvote a review
+						Button downVoteButton = new Button("\uD83D\uDC4E DownVote");
+						downVoteButton.setStyle(
+								"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+
+						// Container for the vote buttons
+						HBox voteBox = new HBox(5, upVoteButton, downVoteButton);
+
+						// Event to handle upvote button - add 1 to vote for review
+						upVoteButton.setOnAction(a -> {
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+
+							// Register a positive vote for the selected review
+							databaseHelper.qaHelper.registerVoteForReview(currentRow.getReviewId(), 1);
+
+							try {
+								// Retrieve the review object in the cell
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
+
+								// Retrieve an updated list of questions from the database
+								questions = databaseHelper.qaHelper.getAllQuestions();
+
+								// Refresh contents of tables manually
+								questionObservableList.clear();
+								questionObservableList.addAll(questions);
+								qTable.setItems(questionObservableList);
+
+								if (review.getForQuestion()) {
+									// Set qTable to previous question
+									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
+											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+								} else {
+									// Set qTable to previous question
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper
+													.getQuestionForAnswer(
+															databaseHelper.qaHelper
+																	.getAnswer(databaseHelper.qaHelper
+																			.getReview(currentRow.getReviewId()).getRelatedId())
+																	.getId()));
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println(
+										"Error trying update questions object via getALLQuestions() in upVoteButton action");
+							}
+
+						});
+
+						// Event to handle downVote button - subtract 1 from vote for review
+						downVoteButton.setOnAction(a -> {
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+
+							// Register a negative vote for the selected review
+							databaseHelper.qaHelper.registerVoteForReview(currentRow.getReviewId(), -1);
+
+							try {
+								// Retrieve the review object in the cell
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
+
+								// Retrieve an updated list of questions from the database
+								questions = databaseHelper.qaHelper.getAllQuestions();
+
+								// Refresh contents of tables manually
+								questionObservableList.clear();
+								questionObservableList.addAll(questions);
+								qTable.setItems(questionObservableList);
+
+								if (review.getForQuestion()) {
+									// Set qTable to previous question
+									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
+											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+								} else {
+									// Set qTable to previous question
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper
+													.getQuestionForAnswer(
+															databaseHelper.qaHelper
+																	.getAnswer(databaseHelper.qaHelper
+																			.getReview(currentRow.getReviewId()).getRelatedId())
+																	.getId()));
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println(
+										"Error trying update questions object via getALLQuestions() in downVoteButton action");
+							}
+
+						});
+
+						cellContent.getChildren().add(voteBox);
 					}
 
 					// Check if row is a Review type and if currentUser is author
@@ -591,6 +617,9 @@ public class ReviewerHomePage {
 										+ "-fx-font-weight: bold; -fx-padding: 1px;");
 
 						editButton.setOnAction(a -> {
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+							
 							// Set submit button text
 							submitButton.setText("Update Review");
 
@@ -603,7 +632,7 @@ public class ReviewerHomePage {
 
 							try {
 								// Set review to current row object
-								review = databaseHelper.qaHelper.getReview(row.getReviewId());
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
 							} catch (SQLException e) {
 								e.printStackTrace();
 								System.err.println("Error trying to get review in results table via editButton");
@@ -614,17 +643,25 @@ public class ReviewerHomePage {
 						});
 
 						deleteButton.setOnAction(a -> {
-							// Delete selected review
-							databaseHelper.qaHelper.deleteReview(row.getReviewId());
-
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+							
 							try {
+								// Set review to current row object
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
 								// Retrieve an updated list of questions from the database
 								questions = databaseHelper.qaHelper.getAllQuestions();
+								// Store related question object for review before deleting review to use later
+								Question question = databaseHelper.qaHelper.getQuestion(review.getRelatedId());
 							} catch (SQLException e) {
 								e.printStackTrace();
 								System.err.println(
 										"Error trying update questions object via getALLQuestions() in resultsTable");
 							}
+							
+							
+							// Delete selected review
+							databaseHelper.qaHelper.deleteReview(currentRow.getReviewId());
 
 							// Refresh contents of tables manually
 							questionObservableList.clear();
@@ -632,7 +669,7 @@ public class ReviewerHomePage {
 							qTable.setItems(questionObservableList);
 
 							// Set qTable to previous question
-							qTable.getSelectionModel().select(review.getRelatedId());
+							qTable.getSelectionModel().select(question);
 
 						});
 
@@ -1079,12 +1116,12 @@ public class ReviewerHomePage {
 
 						this.question = databaseHelper.qaHelper.getQuestion(newSelection.getRelatedId());
 
-					// Or its for an answer
+						// Or its for an answer
 					} else if (!newSelection.getForQuestion()) {
 						this.question = databaseHelper.qaHelper.getQuestionForAnswer(
 								databaseHelper.qaHelper.getAnswer(newSelection.getRelatedId()).getId());
 					}
-					
+
 					// Update results table
 					updateResultsTableForQuestion(question);
 				} catch (SQLException e) {
@@ -1263,7 +1300,7 @@ public class ReviewerHomePage {
 				// Show submitBox
 				rTableBox.setVisible(true);
 				rTableBox.setManaged(true);
-				
+
 				// Toggle the text
 				viewReviewsButton.setText("View Questions");
 
@@ -1271,7 +1308,7 @@ public class ReviewerHomePage {
 				// Hide submitBox
 				rTableBox.setVisible(false);
 				rTableBox.setManaged(false);
-				
+
 				// Toggle the text
 				viewReviewsButton.setText("View Reviews");
 			}
