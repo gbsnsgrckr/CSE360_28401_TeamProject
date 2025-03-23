@@ -587,7 +587,7 @@ public class StudentHomePage {
 						// Check if row is a question and the author matches current user
 					} else if (row.getType() == QATableRow.RowType.QUESTION && row.getAuthorId() != null
 							&& row.getAuthorId().equals(databaseHelper.currentUser.getUserId())) {
-						// Buttons to edit and delete the answer
+						// Buttons to edit and delete the question
 						Button editButton = new Button("Edit");
 						Button deleteButton = new Button("Delete");
 						Button setPreferredAnswerButton = new Button("Set Prefered Answer"); //joe
@@ -668,9 +668,7 @@ public class StudentHomePage {
 						    preferredAnswerBox.setScene(scene);
 						    preferredAnswerBox.setTitle("Set Preferred Answer");
 						    preferredAnswerBox.show();
-						}); // joe ends
-
-
+						});
 
 
 						editButton.setOnAction(a -> {

@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import application.Question;
 import application.Answer;
+import application.Review;
 import application.Message;
 import tests.*;
 
@@ -29,7 +30,7 @@ public class QAHelper1 {
 
 	// JDBC driver name and database URL
 	static final String JDBC_DRIVER = "org.h2.Driver";
-	static final String DB_URL = "jdbc:h2:~/QADatabase";
+	static final String DB_URL = "jdbc:h2:~/FoundationDatabase";
 
 	// Database credentials
 	static final String USER = "sa";
@@ -59,32 +60,56 @@ public class QAHelper1 {
 	public void createTables() throws SQLException {
 		// Create the question database
 		String questionTable = "CREATE TABLE IF NOT EXISTS cse360question ("
-				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "title VARCHAR(255), " + "text TEXT DEFAULT NULL, "
-				+ "author INT, " + "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
-				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "answer_id VARCHAR(MAX) DEFAULT NULL, "
+				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " 
+				+ "title VARCHAR(255), " 
+				+ "text TEXT DEFAULT NULL, "
+				+ "author INT, " 
+				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
+				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, " 
+				+ "answer_id VARCHAR(MAX) DEFAULT NULL, "
 				+ "preferred_answer INT DEFAULT NULL)";
 		statement.execute(questionTable);
 
 		// Create the answer database
 		String answerTable = "CREATE TABLE IF NOT EXISTS cse360answer ("
-				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " + "text TEXT DEFAULT NULL, " + "author INT, "
-				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " + "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
+				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " 
+				+ "text TEXT DEFAULT NULL, " 
+				+ "author INT, "
+				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, " 
+				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
 				+ "answer_id VARCHAR(MAX) DEFAULT NULL)";
 		statement.execute(answerTable);
 
 		String messageTable = "CREATE TABLE IF NOT EXISTS cse360message ("
 				+ "messageid INT AUTO_INCREMENT PRIMARY KEY, "
-//		        + "referenceid INT, "
-//		        + "referencetype VARCHAR(20), "
-				+ "senderid INT, " + "recipientid INT, " + "subject TEXT, " + "message TEXT, "
+		        + "referenceId INT, "
+		        + "referenceType VARCHAR(20), "
+				+ "senderid INT, " 
+				+ "recipientid INT, " 
+				+ "subject TEXT, " 
+				+ "message TEXT, "
 				+ "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
 				+ "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
 		statement.execute(messageTable);
 
-		String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews (" + "answer_id INT NOT NULL, "
-				+ "user_id INT NOT NULL, " + "is_read BOOLEAN DEFAULT FALSE, " + "PRIMARY KEY (answer_id, user_id))";
-
+		String answerViewsTable = "CREATE TABLE IF NOT EXISTS cse360answerviews (" 
+				+ "answer_id INT NOT NULL, "
+				+ "user_id INT NOT NULL, " 
+				+ "is_read BOOLEAN DEFAULT FALSE, " 
+				+ "PRIMARY KEY (answer_id, user_id))";
 		statement.execute(answerViewsTable);
+
+		// Create the review database
+		String reviewTable = "CREATE TABLE IF NOT EXISTS cse360review ("
+				+ "id INT AUTO_INCREMENT NOT NULL PRIMARY KEY, " 
+				+ "forQuestion BOOLEAN NOT NULL, " 
+				+ "relatedId INT NOT NULL, "
+				+ "text TEXT NOT NULL, "
+				+ "author INT, " 
+				+ "created_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
+				+ "updated_on DATETIME DEFAULT CURRENT_TIMESTAMP, "
+				+ "votes INT DEFAULT 0)";
+		statement.execute(reviewTable);
 
 	}
 
@@ -1153,7 +1178,7 @@ public class QAHelper1 {
 		}
 	}
 
-	// Update the contents of a question object with those of pass question object
+	// Update the contents of a question object with those of the passed question object
 	public void updateQuestion(Question question) {
 		String query = "UPDATE cse360question Set title = ?, text = ?, updated_on = CURRENT_TIMESTAMP WHERE id = ?";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -1316,4 +1341,423 @@ public class QAHelper1 {
 	    }
 	    return messages;
 	}
+	
+	public Question getQuestionForAnswer(int answerID) {
+		List<Question> questions;
+		try {
+			// Retrieve the question database
+			questions = getAllQuestions();
+		}  catch (SQLException e) {
+			System.err.println("Error trying to retrieve question database in getAllReviewedByMeQuestions() method.");
+			return null;
+		}
+		// Iterate through each question
+		for (Question question : questions) {
+			// Check if the current question object has the answerId we're looking for in getRelatedId()
+			if (question.getRelatedId().contains(String.valueOf(answerID))) {
+				return question;
+			}
+		}
+		System.out.println("Error: No question found relating to answerId in getQuestionForAnswer() method.");
+		return null;
+	}
+	
+	// Registers a new review in the database.
+		public void registerReview(Review review) throws SQLException {
+			String insertReview = "INSERT INTO cse360review (forQuestion, relatedId, text, author) VALUES (?, ?, ?, ?)";
+			try (PreparedStatement pstmt = connection.prepareStatement(insertReview)) {
+				pstmt.setBoolean(1, review.getForQuestion());
+				pstmt.setInt(2, review.getRelatedId());
+				pstmt.setString(3, review.getText());
+				pstmt.setInt(4, review.getAuthorId());
+				pstmt.executeUpdate();
+			}
+			System.out.println("Review registered successfully.");
+		}
+		
+		// Get a review object with a provided review id
+		public Review getReview(Integer reviewID) throws SQLException {
+			// Search the review database for a match to the review id
+			String query = "SELECT * FROM cse360review AS c WHERE c.id = ?	";
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, reviewID);
+				ResultSet rs = pstmt.executeQuery();
+
+				if (rs.next()) {
+					int id = rs.getInt("id");
+					Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+					Integer relatedId = rs.getInt("relatedId");
+					String text = rs.getString("text");
+					int authorId = rs.getInt("author");
+					Timestamp created = rs.getTimestamp("created_On");
+					// Convert to LocalDateTime format
+					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+					Timestamp updated = rs.getTimestamp("updated_On");
+					// Convert to LocalDateTime format
+					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+					User author = databaseHelper.getUser(authorId);
+					String authorName = "User";
+
+					if (author != null) {
+						authorName = author.getName();
+					}
+					
+					// Get the message count for the review
+					Integer messageCount = getMessageCount(id, 'r');
+
+					// Create a new review object with the pulled info
+					Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, messageCount);
+
+					// Return the review object
+					return review;
+				}
+			}
+			return null;
+		}
+
+		// Get a review object with a provided review text
+		public Review getReview(String reviewText) throws SQLException {
+			// Search the review database for a match to the review text
+			String query = "SELECT * FROM cse360review AS c WHERE c.text = ?	";
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setString(1, reviewText);
+				ResultSet rs = pstmt.executeQuery();
+
+				if (rs.next()) {
+					int id = rs.getInt("id");
+					Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+					Integer relatedId = rs.getInt("relatedId");
+					String text = rs.getString("text");
+					int authorId = rs.getInt("author");
+					Timestamp created = rs.getTimestamp("created_On");
+					// Convert to LocalDateTime format
+					LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+					Timestamp updated = rs.getTimestamp("updated_On");
+					// Convert to LocalDateTime format
+					LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+					User author = databaseHelper.getUser(authorId);
+					String authorName = "User";
+
+					if (author != null) {
+						authorName = author.getName();
+					}
+					
+					// Get the message count for the review
+					Integer messageCount = getMessageCount(id, 'r');
+
+					// Create a new review object with the pulled info
+					Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, messageCount);
+
+					// Return the review object
+					return review;
+				}
+			}
+			return null;
+		}
+		
+		// Update the contents of a review object with those of the passed review object
+		public void updateReview(Review review) {
+			String query = "UPDATE cse360review Set text = ?, updated_on = CURRENT_TIMESTAMP WHERE id = ?";
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setString(1, review.getText());
+				pstmt.setInt(2, review.getId());
+
+				int updated = pstmt.executeUpdate();
+				// Check if any changes were made
+				if (updated > 0) {
+					System.out.println("Review has been updated."); // Debug
+				} else {
+					System.out.println("No matching review was found."); // Debug
+				}
+			} catch (SQLException e) {
+				e.printStackTrace();
+				System.out.println("Error trying to update review in updateReview method.");
+			}
+		}
+		
+		// Deletes a review row from the SQL table
+		public boolean deleteReview(int id) {
+			String query = "DELETE FROM cse360review AS c WHERE c.id = ?";
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, id);
+
+				// Check if any matches were found and deleted
+				if (pstmt.executeUpdate() > 0) {
+					System.out.println("DELETE-REVIEW: Review successfully deleted");
+					return true;
+				}
+				System.out.println("DELETE-REVIEW: Review was not found");
+				return false;
+			} catch (SQLException e) {
+				System.err.println("DELETE-REVIEW: SQL Error - " + e.getMessage());
+				return false;
+			}
+		}
+
+		// Retrieves all questions that have been reviewed or that have answers that
+		// have been reviewed
+		public List<Question> getAllReviewedQuestions() throws SQLException {
+			// Retrieve all review rows from the database
+			String query = "SELECT * FROM cse360review ";
+			List<Review> reviews = new ArrayList<>();
+			List<Question> questions = new ArrayList<>();
+			List<Integer> containedIn = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				ResultSet rs = pstmt.executeQuery();
+
+				while (rs.next()) {
+					Boolean forQuestion = rs.getBoolean("forQuestion");
+					Integer relatedId = rs.getInt("relatedId");	
+					
+					// Check if review is for a question
+					if (forQuestion) {
+						// Check if its already contained in the list
+						if (containedIn == null || !containedIn.contains(relatedId)) {
+							questions.add(databaseHelper.qaHelper.getQuestion(relatedId));
+							containedIn.add(relatedId);
+						}
+					// Or if its an answer
+					} else {
+						// Check if its already contained in the list
+						if (containedIn == null || !containedIn.contains(databaseHelper.qaHelper.getQuestionForAnswer(relatedId).getId())) {
+							questions.add(databaseHelper.qaHelper.getQuestionForAnswer(relatedId));
+							containedIn.add(databaseHelper.qaHelper.getQuestionForAnswer(relatedId).getId());
+						}
+					}
+				}
+			}
+			// Return the assembled list of question objects
+			return questions;
+		}
+
+		// Retrieves all questions that have been reviewed by the currentUser or that
+		// have answers that have been reviewed by the currentUser
+		public List<Question> getAllReviewedByMeQuestions() throws SQLException {
+			// Retrieve all review rows from the database that match the currentUser id
+			String query = "SELECT * FROM cse360review WHERE author = ?";
+			List<Review> reviews = new ArrayList<>();
+			List<Question> questions = new ArrayList<>();
+			List<Integer> containedIn = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, databaseHelper.currentUser.getUserId());
+				ResultSet rs = pstmt.executeQuery();
+
+				while (rs.next()) {
+					Boolean forQuestion = rs.getBoolean("forQuestion");
+					Integer relatedId = rs.getInt("relatedId");	
+					
+					// Check if review is for a question
+					if (forQuestion) {
+						// Check if its already contained in the list
+						if (containedIn == null || !containedIn.contains(relatedId)) {
+							questions.add(databaseHelper.qaHelper.getQuestion(relatedId));
+							containedIn.add(relatedId);
+						}
+					// Or if its for an answer
+					} else {
+						// Check if its already contained in the list
+						if (containedIn == null || !containedIn.contains(databaseHelper.qaHelper.getQuestionForAnswer(relatedId).getId())) {
+							questions.add(databaseHelper.qaHelper.getQuestionForAnswer(relatedId));
+							containedIn.add(databaseHelper.qaHelper.getQuestionForAnswer(relatedId).getId());
+						}
+					}
+				}
+			}
+			// Return the assembled list of question objects
+			return questions;
+		}
+		
+		public List<Review> getReviewsForQuestion(int questionID) throws SQLException {
+			String query = "SELECT * FROM cse360review WHERE forQuestion = true AND relatedId = ?";
+			List<Review> reviews = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, questionID);
+				ResultSet rs = pstmt.executeQuery();
+				
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+						Integer relatedId = rs.getInt("relatedId");
+						String text = rs.getString("text");
+						int authorId = rs.getInt("author");
+						Timestamp created = rs.getTimestamp("created_On");
+						// Convert to LocalDateTime format
+						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+						Timestamp updated = rs.getTimestamp("updated_On");
+						// Convert to LocalDateTime format
+						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+						
+						// Get the message count for the review
+						Integer messageCount = getMessageCount(id, 'r');
+
+						// Create a new review object with the pulled info
+						Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, messageCount);
+
+						// Add the new answer object to the list of answer objects
+						reviews.add(review);
+					}
+			}
+			// Return the list of review objects
+			return reviews;
+		}
+		
+		public List<Review> getReviewsForAnswer(int answerID) throws SQLException {
+			String query = "SELECT * FROM cse360review WHERE forQuestion = false AND relatedId = ?";
+			List<Review> reviews = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, answerID);
+				ResultSet rs = pstmt.executeQuery();
+				
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+						Integer relatedId = rs.getInt("relatedId");
+						String text = rs.getString("text");
+						int authorId = rs.getInt("author");
+						Timestamp created = rs.getTimestamp("created_On");
+						// Convert to LocalDateTime format
+						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+						Timestamp updated = rs.getTimestamp("updated_On");
+						// Convert to LocalDateTime format
+						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+						
+						// Get the message count for the review
+						Integer count = getMessageCount(id, 'r');
+
+						// Create a new review object with the pulled info
+						Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, count);
+
+						// Add the new answer object to the list of answer objects
+						reviews.add(review);
+					}
+			}
+			// Return the list of review objects
+			return reviews;
+		}
+		
+		// Retrieve all reviews from the review database
+		public List<Review> getAllReviews() throws SQLException {
+			String query = "SELECT * FROM cse360review";
+			List<Review> reviews = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				ResultSet rs = pstmt.executeQuery();
+				
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+						Integer relatedId = rs.getInt("relatedId");
+						String text = rs.getString("text");
+						int authorId = rs.getInt("author");
+						Timestamp created = rs.getTimestamp("created_On");
+						// Convert to LocalDateTime format
+						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+						Timestamp updated = rs.getTimestamp("updated_On");
+						// Convert to LocalDateTime format
+						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+						
+						// Get the message count for the review
+						Integer count = getMessageCount(id, 'r');
+
+						// Create a new review object with the pulled info
+						Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, count);
+
+						// Add the new answer object to the list of answer objects
+						reviews.add(review);
+					}
+			}
+			// Return the list of review objects
+			return reviews;
+		}
+		
+		// Retrieve only reviews written by the current user from the review database
+		public List<Review> getMyReviews() throws SQLException {
+			String query = "SELECT * FROM cse360review WHERE author = ?";
+			List<Review> reviews = new ArrayList<>();
+
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, databaseHelper.currentUser.getUserId());
+				ResultSet rs = pstmt.executeQuery();
+				
+					while (rs.next()) {
+						int id = rs.getInt("id");
+						Boolean forQuestion = rs.getBoolean("forQuestion"); // for each row, get all of the review attributes
+						Integer relatedId = rs.getInt("relatedId");
+						String text = rs.getString("text");
+						int authorId = rs.getInt("author");
+						Timestamp created = rs.getTimestamp("created_On");
+						// Convert to LocalDateTime format
+						LocalDateTime createdOn = created != null ? created.toLocalDateTime() : null;
+						Timestamp updated = rs.getTimestamp("updated_On");
+						// Convert to LocalDateTime format
+						LocalDateTime updatedOn = updated != null ? updated.toLocalDateTime() : null;
+
+						User author = databaseHelper.getUser(authorId);
+						String authorName = "User";
+
+						if (author != null) {
+							authorName = author.getName();
+						}
+						
+						// Get the message count for the review
+						Integer count = getMessageCount(id, 'r');
+
+						// Create a new review object with the pulled info
+						Review review = new Review(id, forQuestion, relatedId, text, authorId, createdOn, updatedOn, author, authorName, count);
+
+						// Add the new answer object to the list of answer objects
+						reviews.add(review);
+					}
+			}
+			// Return the list of review objects
+			return reviews;
+		}
+		
+		// Searches the message table database and returns the number of message relating to that object
+		public Integer getMessageCount(Integer referenceId, char referenceType) throws SQLException {
+			String query = "SELECT COUNT(*) FROM cse360message WHERE referenceId = ? AND referenceType = ?";
+			try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+				pstmt.setInt(1, referenceId);
+				pstmt.setInt(2, Character.toLowerCase(referenceType));
+				ResultSet rs = pstmt.executeQuery();
+				// Variable to store the count of how many messages match the parameters
+				int count = 0;
+				// Retrieve the count
+				if (rs.next()) {
+					count = rs.getInt(1);
+				}
+				
+				// Return the count
+				return count;
+			}
+		}
 }

@@ -105,29 +105,30 @@ public class DatabaseHelper {
 
 	// Create the tables for the User Database
 	private void createTables() throws SQLException {
-		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" + "id INT AUTO_INCREMENT PRIMARY KEY, "
-				+ "userName VARCHAR(255) UNIQUE, " + "name VARCHAR(255), " + "password VARCHAR(255), " // added in
-																										// username,
-																										// name,
-																										// password,
-																										// email,
-																										// OTPFlag
-				+ "email VARCHAR(255), " + "roles VARCHAR(70), " + "reviewers VARCHAR(100), " + "otp BOOLEAN DEFAULT FALSE)"; // added in roles as a
-																									// comma separated
-																									// string
+		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" 
+	+ "id INT AUTO_INCREMENT PRIMARY KEY, "
+				+ "userName VARCHAR(255) UNIQUE, " 
+				+ "name VARCHAR(255), " 
+				+ "password VARCHAR(255), "
+				+ "email VARCHAR(255), "																					
+				+ "roles VARCHAR(70), " 
+				+ "reviewers VARCHAR(100), " 
+				+ "otp BOOLEAN DEFAULT FALSE)";
+
 		statement.execute(userTable);
 		
 		// Create the table for the reviewer request
-		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" + "request VARCHAR(500), " 
-				+ "userName VARCHAR(255) UNIQUE, " + "requestTOF BOOLEAN DEFAULT FALSE)";
+		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" 
+				+ "request VARCHAR(500), " 
+				+ "userName VARCHAR(255) UNIQUE, " 
+				+ "requestTOF BOOLEAN DEFAULT FALSE)";
 		statement.execute(requestReviewerTable);
 
 		// Create the invitation codes table
-		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" + "code VARCHAR(10) PRIMARY KEY, "
-				+ "isUsed BOOLEAN DEFAULT FALSE," + "generatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP)"; // new date
-																											// variable
-																											// for code
-																											// timeout
+		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" 
+				+ "code VARCHAR(10) PRIMARY KEY, "
+				+ "isUsed BOOLEAN DEFAULT FALSE," 
+				+ "generatedDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP)";
 		statement.execute(invitationCodesTable);
 
 	}

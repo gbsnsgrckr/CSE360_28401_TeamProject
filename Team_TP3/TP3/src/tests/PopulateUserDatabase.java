@@ -27,42 +27,49 @@ public class PopulateUserDatabase {
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
-			System.out.println("Error registering question 1");
+			System.out.println("Error registering user 1");
 			e.printStackTrace();
 		}
 
 		// Populate User 2
-		user = new User(404, "cespina3", "Chris", "Password123!", "Chris@gmail.com",
+		user = new User(2, "cespina3", "Chris", "Password123!", "Chris@gmail.com",
 				List.of("Student", "Reviewer", "Instructor"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
-			System.out.println("Error registering question 2");
+			System.out.println("Error registering user 2");
 			e.printStackTrace();
 		}
 
 		// Populate User 3
-		user = new User(8008, "xXAnthonyXx", "Anthony", "Password8*", "Tony777@gmail.com", List.of("Student"), false);
+		user = new User(3, "xXAnthonyXx", "Anthony", "Password8*", "Tony777@gmail.com", List.of("Student"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
-			System.out.println("Error registering question 3");
+			System.out.println("Error registering user 3");
 			e.printStackTrace();
 		}
 
 		// Populate User 4
-		user = new User(1337, "Yui59", "Yui", "Password8*", "Yui67@gmail.com", List.of("Student"), false);
+		user = new User(4, "Yui59", "Yui", "Password8*", "Yui67@gmail.com", List.of("Student"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
-			System.out.println("Error registering question 4");
+			System.out.println("Error registering user 4");
 			e.printStackTrace();
 		}
 
 		// Populate User 5
-
+		user = new User(5, "Someone78", "Some", "Password8*", "Someone78@gmail.com", List.of("Student"), false);
+		try {
+			databaseHelper.register(user);
+		} catch (SQLException e) {
+			System.out.println("Error registering user 5");
+			e.printStackTrace();
+		}
+		
 		// Populate User 6
-		user = new User(6721, "xXMarkusXx", "Markus", "StrongPass1!", "markus@yahoo.com",
+		user = new User(6, "xXMarkusXx", "Markus", "StrongPass1!", "markus@yahoo.com",
 				List.of("Student", "Reviewer"), false);
 		try {
 			databaseHelper.register(user);
@@ -72,7 +79,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 7
-		user = new User(2894, "LunaStar", "Luna", "LunaPass99", "luna@yahoo.com", List.of("Student", "Instructor"),
+		user = new User(7, "LunaStar", "Luna", "LunaPass99", "luna@yahoo.com", List.of("Student", "Instructor"),
 				false);
 		try {
 			databaseHelper.register(user);
@@ -82,7 +89,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 8
-		user = new User(5050, "ShadowX", "Alex", "ShadowPass#", "alex@yahoo.com", List.of("Reviewer", "Instructor"),
+		user = new User(8, "ShadowX", "Alex", "ShadowPass#", "alex@yahoo.com", List.of("Reviewer", "Instructor"),
 				false);
 		try {
 			databaseHelper.register(user);
@@ -92,7 +99,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 9
-		user = new User(9021, "x_Tiger_x", "Tiger", "Tiger99!", "tiger@yahoo.com",
+		user = new User(9, "x_Tiger_x", "Tiger", "Tiger99!", "tiger@yahoo.com",
 				List.of("Student", "Reviewer", "Instructor"), false);
 		try {
 			databaseHelper.register(user);
@@ -102,7 +109,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 10
-		user = new User(7142, "QueenBee", "Sarah", "QueenPass#", "sarah@yahoo.com", List.of("Student", "Admin"), false);
+		user = new User(10, "QueenBee", "Sarah", "QueenPass#", "sarah@yahoo.com", List.of("Student", "Admin"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
@@ -111,7 +118,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 11
-		user = new User(3958, "RavenX", "Raven", "RavenPass88", "raven@yahoo.com", List.of(), false);
+		user = new User(11, "RavenX", "Raven", "RavenPass88", "raven@yahoo.com", List.of(), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
@@ -120,7 +127,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 12
-		user = new User(8411, "x_Flame_x", "Mike", "FlamePass!", "mike@yahoo.com", List.of("Instructor"), false);
+		user = new User(12, "x_Flame_x", "Mike", "FlamePass!", "mike@yahoo.com", List.of("Instructor"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {
@@ -129,7 +136,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 13
-		user = new User(2673, "DragonKing", "Sam", "DragonPass99", "sam@yahoo.com", List.of("Reviewer", "Admin"),
+		user = new User(13, "DragonKing", "Sam", "DragonPass99", "sam@yahoo.com", List.of("Reviewer", "Admin"),
 				false);
 		try {
 			databaseHelper.register(user);
@@ -139,7 +146,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 14
-		user = new User(7329, "NightWolf", "Jack", "WolfPass#", "jack@yahoo.com",
+		user = new User(14, "NightWolf", "Jack", "WolfPass#", "jack@yahoo.com",
 				List.of("Student", "Reviewer", "Instructor", "Staff"), false);
 		try {
 			databaseHelper.register(user);
@@ -149,7 +156,7 @@ public class PopulateUserDatabase {
 		}
 
 		// Populate User 15
-		user = new User(1137, "FireBird", "Elena", "FirePass!", "elena@yahoo.com", List.of("Staff"), false);
+		user = new User(15, "FireBird", "Elena", "FirePass!", "elena@yahoo.com", List.of("Staff"), false);
 		try {
 			databaseHelper.register(user);
 		} catch (SQLException e) {

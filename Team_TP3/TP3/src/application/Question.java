@@ -216,7 +216,7 @@ public class Question {
 
 	public String toString() {
 		return String.format(
-				"\nQUESTION: \nID:\n\t%s\nTitle:\n\t%s\nText:\n\t%s\nRelatedIds:\n\t%s\n\t%s\nAuthorId:\n\t%s\nAuthor Name:\n\t%s  \nCreated On:\n\t%s\nUpdated On:\n\t%s\nPreferred Answer Id:\n\t%s",
+				"\nQUESTIONID:\n\t%s\nTitle:\n\t%s\nText:\n\t%s\nRelatedIds:\n\t%s\nAuthorId:\n\t%s\nAuthor Name:\n\t%s  \nCreated On:\n\t%s\nUpdated On:\n\t%s\nPreferred Answer Id:\n\t%s",
 				id, title, text, relatedId, authorId, authorName, createdOn, updatedOn, preferredAnswer);
 	}
 
@@ -237,7 +237,7 @@ public class Question {
 				displayAuthor = authorName;
 			}
 
-			return String.format("%s\n%s             	  %sd", title, displayAuthor, daysSinceCreated);
+			return String.format("%s\n%s             	         				      	  %sd", title, displayAuthor, daysSinceCreated);
 		}
 	}
 	
