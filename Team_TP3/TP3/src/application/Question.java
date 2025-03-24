@@ -237,7 +237,7 @@ public class Question {
 				displayAuthor = authorName;
 			}
 
-			return String.format("%s\n%s             	         				      	  %sd", title, displayAuthor, daysSinceCreated);
+			return String.format("%s\n%s             	         				      	%sd", title, displayAuthor, daysSinceCreated);
 		}
 	}
 	

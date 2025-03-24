@@ -639,7 +639,7 @@ public class ReviewerHomePage {
 							}
 
 							// Set inputField to existing answer text to update
-							inputField.setText(review.getText());
+							inputField.setText("**OLD\n" + review.getText() + "\n*EDIT:\n ");
 						});
 
 						deleteButton.setOnAction(a -> {
