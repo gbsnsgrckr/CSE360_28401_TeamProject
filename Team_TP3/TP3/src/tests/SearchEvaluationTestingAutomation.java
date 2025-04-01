@@ -26,14 +26,22 @@ import databasePart1.DatabaseHelper;
  * containing every word in that question in order to find and rank questions by
  * similarity to the input text.
  * </p>
- * <p>
- * Copyright: Kyle Pierce © 2024
  * </p>
  * @author Kyle Pierce
+ * <p>
+ * Zachary Chalmers
+ * <p>
+ * Chris Espinal
+ * <p>
+ * Darren Fernandes
+ * <p>
+ * Dara Gafoor
+ * <p>
+ * Joseph Morgan
  * 
  * @version 0.00 2025-02-28 - Initial baseline
  * <p>
- * 0.01 2025-03-20 - Added Junit formatting and Javadoc support
+ * 0.01 2025-03-20 - Added Junit support and Javadoc comments
  * </p>
  *
  */
