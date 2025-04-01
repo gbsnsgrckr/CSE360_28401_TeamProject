@@ -1,7 +1,5 @@
 package databasePart1;
 
-import java.sql.Connection;
-import java.sql.Statement;
 import java.sql.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -21,11 +19,19 @@ import application.Request;
 import application.User;
 import tests.*;
 
-/**
- * The DatabaseHelper class is responsible for managing the connection to the
- * database, performing operations such as user registration, login validation,
- * and handling invitation codes.
+/*******
+ * <p> Title: DatabaseHelper Class. </p>
+ * 
+ * <p> Description: A Database Helper class that holds all of our methods taking data in and out of the database. </p>
+ * 
+ * <p> Copyright: CSE360 Team 8 @ 2025 </p>
+ * 
+ * @author CSE360 Team 8
+ * 
+ * @version 1.00	2025-03-24 Implementing the database methods
+ * 
  */
+
 public class DatabaseHelper {
 
 	// JDBC driver name and database URL
@@ -48,7 +54,14 @@ public class DatabaseHelper {
 	public DatabaseHelper() {
 		qaHelper = new QAHelper1(this);
 	}
-
+	
+	/**
+	 * Sets up the main database and QA databases for testing.
+	 * Set to drop the tables and repopulate the database depending on the flags set. 
+	 * There are helper methods that will populate both databases reliably .
+	 *
+	 * @throws SQLException if anything fails while setting up the DB.
+	 */
 	public void connectToDatabase() throws SQLException {
 		try {
 			qaHelper.connectToDatabase();
@@ -103,6 +116,12 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * A setup function for when the tables have been reset.
+	 * Sets up the User, RequestReviewer and InvitationCodes tables. 
+	 * Will not create any tables if they already exist. 
+	 * @throws SQLException if there is an error when creating tables.
+	 */
 	// Create the tables for the User Database
 	private void createTables() throws SQLException {
 		String userTable = "CREATE TABLE IF NOT EXISTS cse360users (" 
@@ -133,6 +152,12 @@ public class DatabaseHelper {
 
 	}
 
+	
+	/**
+	 * This is a helper method that will check if the database is empty 
+	 * All it checks for is if there is any data in the User table. 
+	 * @throws SQLException if it can not find the User table.
+	 */
 	// Check if the database is empty
 	public boolean isDatabaseEmpty() throws SQLException {
 		String query = "SELECT COUNT(*) AS count FROM cse360users";
@@ -147,7 +172,13 @@ public class DatabaseHelper {
 	
 	////REVIEWER IDS
 
-	
+	/**
+	 * Gets all of the reviewers that have been associated with the user. The user
+	 * sets these in the GUI. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws 
+	 */
 	public Map<User, Integer> getAllReviewersForUser(int userId) throws SQLException {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
 		Map<User, Integer> reviewers = new HashMap<>();
@@ -163,6 +194,14 @@ public class DatabaseHelper {
 		return reviewers;
 	}
 	
+	/**
+	 * Function that will add a Reviewer ID to the User's list of Reviewers. 
+	 * @param userId the id for the user adding a reviewer
+	 * @param newReviewer The User object that represents the Reviewer to be added
+	 * @param weight The selected weight value the User has given to the Reviewer
+	 * @return boolean 
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean addReviewer(int userId, User newReviewer, int weight)  {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -184,6 +223,15 @@ public class DatabaseHelper {
 		return false;
 	}
 	
+	/**
+	 * Function that will allow the User to update their list of reviewers completely.
+	 * Will update the whole list of reviewers, you should get current list of 
+	 * Reviewers first.   
+	 * @param reviewers Map of the Reviewers to be updated and their weights
+	 * @param userId the id for the user updating their Reviewer list
+	 * @return boolean
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean updateReviewers(Map<User, Integer> reviewers, int userId) throws SQLException {
 		String query = "UPDATE cse360users SET reviewers = ? WHERE id = ?";            // selecting all of the rows in the database
 
@@ -195,6 +243,15 @@ public class DatabaseHelper {
 		}
 	}
 	
+	/**
+	 * Allows the User to update an individual Reviewer's weights in their
+	 * list of Reviewers.   
+	 * @param userId the id for the user updating their Reviewer list
+	 * @param reviewer The Reviewer object that will be updated. 
+	 * @param newWeight The new weight that will be assigned to the reviewer.
+	 * @return boolean
+	 * @throwsSQLException if there is an error in accessing the column. 
+	 */
 	public boolean updateReviewerWeight(int userId, User reviewer, int newWeight)  {
 		try {
 			Map<User, Integer> reviewers = getAllReviewersForUser(userId);
@@ -209,6 +266,13 @@ public class DatabaseHelper {
 		return false;
 	}
 	
+	/**
+	 * Allows the User to remove an individual Reviewer from their Reviewer's list. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @param reviewer the Reviewer that will be updated. 
+	 * @return boolean
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean removeReviewer(int userId, User reviewer) {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
 		
@@ -232,7 +296,12 @@ public class DatabaseHelper {
 		return false;
 	}
 	
-	
+	/**
+	 * Allows a new User to be registered to the database. This adds a new row 
+	 * to the User table.   
+	 * @param user the User object that will be added.
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Registers a new user in the database.
 	public void register(User user) throws SQLException {
 		String insertUser = "INSERT INTO cse360users (userName, name, password, email, roles, otp) VALUES (?, ?, ?, ?, ?, ?)";
@@ -248,6 +317,12 @@ public class DatabaseHelper {
 		}
 	}
 	
+	/**
+	 * A method for creating a request to become a Reviewer. This request will then 
+	 * show up to the Admin to be approved. 
+	 * @param request a message detailing why the user should be a reviewer. 
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public void register(String request) throws SQLException {
 		String insertRequest = "INSERT INTO cse360request (request, userName, requestTOF) VALUES (?, ?, ?)";
 		if (currentUser == null || currentUser.getUsername() == null) {
@@ -265,6 +340,13 @@ public class DatabaseHelper {
 	}
 
 
+	/**
+	 * This allows a User to have their roles updated. An Admin has to request 
+	 * new roles to be added or removed.   
+	 * @param username the username of the User to be updated
+	 * @param roles a comma separated string that contains the roles to be updated. 
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public void updateRoles(String username, String roles) throws SQLException {
 		String insertUser = "UPDATE cse360users SET roles = ? WHERE username = ?"; // updating the roles for a user, add
 																					// or remove
@@ -277,6 +359,13 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * Will update the password that is stored in the database for this 
+	 * user.  
+	 * @param username the username for the password to be updated. 
+	 * @param password the new password to be updated. 
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public void updatePassword(String username, String password) {
 		String insertUser = "UPDATE cse360users SET password = ? WHERE username = ?"; // able to update password for OTP
 
@@ -290,6 +379,13 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * Allows the persistence of a One Time Password flag to be stored in 
+	 * the database. Used when an admin has sent the user a One Time 
+	 * Password.  
+	 * @param username the username for the User that has requested the One Time Password. 
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public void updateOTPFlag(String username, boolean flag) {
 		String insertUser = "UPDATE cse360users SET otp = ? WHERE username = ?"; // able to update if the user is using
 																					// a OTP
@@ -304,6 +400,12 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * Returns the User object that is associated with the username. 
+	 * @param username the username for the User to be retrieved. 
+	 * @return User
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public User getUser(String username) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	"; // getting all of the fields of a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -326,6 +428,12 @@ public class DatabaseHelper {
 		return null;
 	}
 
+	/**
+	 * Returns the User object that is associated with the ID. 
+	 * @param userId the id for the User requested. 
+	 * @return User  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public User getUser(int id) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.id = ?	"; // getting all of the fields of a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -348,6 +456,13 @@ public class DatabaseHelper {
 		return null;
 	}
 
+	/**
+	 * Allows a role to be added to a User. Calls the updateRoles function above. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean addRoles(String username, String newRole) throws SQLException { // able to add roles based on
 																					// username
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
@@ -378,6 +493,15 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean removeRoles(String username, String newRole) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
 
@@ -415,7 +539,16 @@ public class DatabaseHelper {
 		System.out.println("REMOVEROLES: You cannot remove your own roles");
 		return false;
 	}
-	
+
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean deleteRequest(String username) {
 		String query = "DELETE FROM cse360request as c WHERE c.username = ?";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -434,6 +567,15 @@ public class DatabaseHelper {
 }
 
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public boolean deleteUser(String username) {
 		if (!username.equals(currentUser.getUsername())) { // make sure the the correct user is getting deleted
 
@@ -457,6 +599,15 @@ public class DatabaseHelper {
 		return false;
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public List<User> getAllUsers() throws SQLException {
 		String query = "SELECT * FROM cse360users"; // selecting all of the rows in the database
 		List<User> users = new ArrayList<>();
@@ -482,7 +633,16 @@ public class DatabaseHelper {
 		}
 		return users;
 	}
-	
+
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public List<Request> getAllRequests() throws SQLException {
 		String query = "SELECT userName, request, requestTOF FROM cse360request";
 		List<Request> requests = new ArrayList<>();
@@ -503,6 +663,15 @@ public class DatabaseHelper {
 	}
 
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Retrieves all users with a specified role
 	public List<User> getAllUsersWithRole(String role) throws SQLException {
 		String query = "SELECT * FROM cse360users WHERE roles LIKE ?";
@@ -535,6 +704,15 @@ public class DatabaseHelper {
 		return users;
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Validates a user's login credentials.
 	public User login(String username, String password) throws SQLException {
 		String query = "SELECT * FROM cse360users WHERE userName = ? AND password = ? AND password <> ''";
@@ -576,6 +754,15 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Checks if a user already exists in the database based on their userName.
 	public boolean doesUserExist(String userName) {
 		String query = "SELECT COUNT(*) FROM cse360users WHERE userName = ?"; // make sure that user exists
@@ -594,6 +781,15 @@ public class DatabaseHelper {
 		return false; // If an error occurs, assume user doesn't exist
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Retrieves the role of a user from the database using their UserName.
 	public List<String> getUserRole(String userName) {
 		String query = "SELECT roles FROM cse360users WHERE userName = ?"; // getting all of the roles for a user
@@ -611,6 +807,15 @@ public class DatabaseHelper {
 		return null; // If no user exists or an error occurs
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>   
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Generates a new invitation code and inserts it into the database.
 	public String generateInvitationCode() {
 		String code = UUID.randomUUID().toString().substring(0, 4); // Generate a random 4-character code
@@ -629,6 +834,15 @@ public class DatabaseHelper {
 		return code;
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	public String generateOneTimePassword() {
 		String special = "~`!@#$%^&*()_-+{}[]|:,.?/"; // same list of special characters in PasswordEvaluator
 		String lower = "abcdefghijklmnopqrstuvwxyz"; // alphabet in lowercase
@@ -654,6 +868,15 @@ public class DatabaseHelper {
 		return OTP;
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Validates an invitation code to check if it is unused.
 	public boolean validateInvitationCode(String code) {
 		String query = "SELECT * FROM InvitationCodes WHERE code = ? AND isUsed = FALSE AND generatedDate >= DATEADD('MINUTE', -15, CURRENT_TIMESTAMP)";
@@ -673,6 +896,15 @@ public class DatabaseHelper {
 		return false;
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>   
+	 * @throws SQLException if there is an error in accessing the column. 
+	 */
 	// Marks the invitation code as used in the database.
 	private void markInvitationCodeAsUsed(String code) {
 		String query = "UPDATE InvitationCodes SET isUsed = TRUE WHERE code = ?"; // update Invitation Code to true when
@@ -685,6 +917,14 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	private List<String> rolesDeserial(String roles) { // Deserializing from String to List<Roles> for easier logic
 		if (roles == null || roles == "") {
 			return new ArrayList<>(); // if roles is empty or null, return empty list, was returning 1 comma before
@@ -695,6 +935,14 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	private String rolesSerial(List<String> roles) { // serializing a List<Roles> into a string to be stored in database
 		if (roles == null || roles.isEmpty()) { // make sure that the list is not empty or null
 			return "";
@@ -702,7 +950,15 @@ public class DatabaseHelper {
 			return String.join(",", roles); // joining each Role in the list to be comma separated string
 		}
 	}
-	
+
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	private List<Integer> reviewerDeserial(String reviewers) {  // Deserializing from String to List<Roles> for easier logic
 		if (reviewers == null || reviewers == "") {
 			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
@@ -712,6 +968,14 @@ public class DatabaseHelper {
 		}
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	private String reviewerSerial(List<Integer> reviewers) {   // serializing a List<Roles> into a string to be stored in database
 		if (reviewers == null || reviewers.isEmpty()) {        // make sure that the list is not empty or null
 			return "";
@@ -723,7 +987,15 @@ public class DatabaseHelper {
 			return serial;
 		}
 	}
-	
+
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers. 
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>   
+	 */
 	private String putReviewerMapToString(Map<User, Integer> map) {
 		String mapToString = "";
 		if (map.isEmpty()) {
@@ -743,7 +1015,15 @@ public class DatabaseHelper {
 		return mapToString;
 	}
 	
-	
+
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	private Map<User, Integer> getReviewersMap(String json) {   /// what it will be stored as ! userId weight ! userId weight 
 		Map<User, Integer> ret = new HashMap<>();
 		if (json == null || json.isEmpty()) {        // make sure that the list is not empty or null
@@ -772,10 +1052,24 @@ public class DatabaseHelper {
 		}
 	
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers.  
+	 * @param userId the id for the user requesting their Reviewer list
+	 * @return Map<User, Integer>  
+	 */
 	public void setUserCurrentRole(String role) { // public setter for when user picks their role
 		currentUser.setCurrentRole(role);
 	}
 
+	/**
+	 * This setup function runs at the beginning of the test and sets up the 
+	 * database, and gets the first question and answer to start the tests on. 
+	 * Using the connectToDatabase(), we have it set to populate with test questions 
+	 * and answers. 
+	 */
 	// Closes the database connection and statement.
 	public void closeConnection() {
 		try {
@@ -792,7 +1086,18 @@ public class DatabaseHelper {
 		}
 	}
 
-	//
+	/*******
+	 * <p> Title: QAHelper Class. </p>
+	 * 
+	 * <p> Description: A Database Helper class that holds all of our methods taking data in and out of the database for questions and answers. </p>
+	 * 
+	 * <p> Copyright: CSE360 Team 8 @ 2025 </p>
+	 * 
+	 * @author CSE360 Team 8
+	 * 
+	 * @version 1.00	2025-03-24 Implementing the QAHelper methods
+	 * 
+	 */
 	public class QAHelper {
 
 		// Initialize connection to database

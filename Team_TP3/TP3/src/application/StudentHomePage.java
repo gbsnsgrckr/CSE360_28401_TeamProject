@@ -1406,7 +1406,6 @@ public class StudentHomePage {
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
 				// Add answer to the observable list
-				//if (answer.equals(preferredAnswer)) { continue; }
 				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
 						answer.getAuthorId(), answer.getRelatedId()));
 
