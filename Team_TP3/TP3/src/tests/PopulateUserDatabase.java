@@ -40,7 +40,7 @@ public class PopulateUserDatabase {
 			System.out.println("Error registering user 2");
 			e.printStackTrace();
 		}
-
+		
 		// Populate User 3
 		user = new User(3, "xXAnthonyXx", "Anthony", "Password8*", "Tony777@gmail.com", List.of("Student"), false);
 		try {
@@ -229,6 +229,25 @@ public class PopulateUserDatabase {
 				e.printStackTrace();
 			}
 		}
+		
+		try {
+			List<User> reviewers = databaseHelper.getAllUsers();
+			
+			for (int i = 2; i < 20; i++) {
+				if (i % 1 == 0) {
+					databaseHelper.addReviewer(1, reviewers.get(i), random.nextInt(0,5));
+					System.out.println("Added Reviewer to Kapierc8, id: " + reviewers.get(i));
+				}
+				}
+				
+			} catch (SQLException e) {
+				System.out.println("Error addingReviewer for user ");
+				e.printStackTrace();
+			}
+			
+	
+		
+		
 
 	}
 

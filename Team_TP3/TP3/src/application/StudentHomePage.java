@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import application.QATableRow;
@@ -28,6 +29,7 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -147,9 +149,8 @@ public class StudentHomePage {
 		Button newQuestionButton = new Button("New");
 		newQuestionButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
-		newQuestionButton.setMinWidth(20);
-		;
-
+		newQuestionButton.setMinWidth(60);
+		
 		// Button to open the ui to submit a new question
 		Button questionCloseButton = new Button("Close");
 		questionCloseButton.setStyle(
@@ -163,7 +164,7 @@ public class StudentHomePage {
 		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 
 		// Styling for the table
-		qTable.setMinWidth(300);
+		qTable.setMinWidth(500);
 		qTable.setFixedCellSize(-1);
 
 		qTable.setRowFactory(a -> new TableRow<Question>() {
@@ -735,7 +736,11 @@ public class StudentHomePage {
 		answeredButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
 		answeredButton.setToggleGroup(filter);
 
-		HBox filterBox = new HBox(10, allButton, unansweredButton, answeredButton);
+		RadioButton reviewersButton = new RadioButton("My Reviewers");
+		reviewersButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+		reviewersButton.setToggleGroup(filter);
+		
+		FlowPane filterBox = new FlowPane(30, 10, allButton, unansweredButton, answeredButton, reviewersButton);		
 		filterBox.setAlignment(Pos.CENTER);
 
 		filter.selectedToggleProperty().addListener((obs, oldSelection, newSelection) -> {
@@ -750,6 +755,13 @@ public class StudentHomePage {
 						questions = databaseHelper.qaHelper.getAllUnansweredQuestions();
 					} else if (selection.equalsIgnoreCase("Answered")) {
 						questions = databaseHelper.qaHelper.getAllAnsweredQuestions();
+					} else if (selection.equalsIgnoreCase("My Reviewers")) {
+						List<Question> allQuestions = databaseHelper.qaHelper.getAllAnsweredQuestions();
+						Map<User, Integer> myReviewers = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()); 
+						questions = allQuestions.stream()
+							    .filter(q -> myReviewers.containsKey(q.getAuthor()))
+							    .sorted((q1, q2) -> myReviewers.get(q2.getAuthor()) - myReviewers.get(q1.getAuthor()))
+							    .collect(Collectors.toList());
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -763,11 +775,14 @@ public class StudentHomePage {
 		});
 
 		// Hbox to position the filter button
-		HBox titleBox2 = new HBox(30, newQuestionButton, filterBox);
-		titleBox2.setAlignment(Pos.CENTER_RIGHT);
-
+		HBox titleBox2 = new HBox(20, newQuestionButton, filterBox);
+		HBox.setHgrow(filterBox, Priority.ALWAYS);
+		filterBox.setMaxWidth(Region.USE_COMPUTED_SIZE);
+		titleBox2.setAlignment(Pos.CENTER);
+		titleBox2.setMaxWidth(Double.MAX_VALUE);
+		HBox.setHgrow(titleBox2, Priority.ALWAYS);
 		// Container to hold the table
-		VBox questionDB = new VBox(5, titleBox2, qTable);
+		VBox questionDB = new VBox(10, titleBox2, qTable);
 
 		// Set height of table to adjust to container
 		qTable.prefHeightProperty().bind(questionDB.heightProperty());
@@ -1199,8 +1214,8 @@ public class StudentHomePage {
 		});
 
 		StackPane root3 = new StackPane(questionDB, submitBox);
-
-		HBox hbox1 = new HBox(5, root3, vbox1);
+		
+		HBox hbox1 = new HBox(10, root3, vbox1);
 
 		VBox layout = new VBox(topLabelBox, hbox1, errorLabel);
 
