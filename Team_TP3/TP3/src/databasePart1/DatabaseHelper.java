@@ -113,16 +113,21 @@ public class DatabaseHelper {
 				+ "email VARCHAR(255), "																					
 				+ "roles VARCHAR(70), " 
 				+ "reviewers VARCHAR(100), " 
-				+ "otp BOOLEAN DEFAULT FALSE)";
-
+				+ "otp BOOLEAN DEFAULT FALSE, "
+				+ "banned BOOLEAN DEFAULT FALSE)";
 		statement.execute(userTable);
 		
 		// Create the table for the reviewer request
 		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" 
-				+ "request VARCHAR(500), " 
-				+ "userName VARCHAR(255) UNIQUE, " 
-				+ "requestTOF BOOLEAN DEFAULT FALSE)";
-		statement.execute(requestReviewerTable);
+                + "id INT AUTO_INCREMENT PRIMARY KEY, "
+                + "request VARCHAR(500), "
+                + "userName VARCHAR(255), "
+                + "requestTOF BOOLEAN DEFAULT FALSE, "
+                + "notes VARCHAR(2000), "
+                + "status VARCHAR(50), "
+                + "originalId INT "
+                + ")";
+        statement.execute(requestReviewerTable);
 
 		// Create the invitation codes table
 		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" 
@@ -142,7 +147,160 @@ public class DatabaseHelper {
 		}
 		return true;
 	}
+	
+	// --------------------------------------------------------------
+    //                  Request table methods
+    // --------------------------------------------------------------
 
+    // Insert brand-new OPEN request with no notes, originalId = 0
+    public void createNewRequest(String requestText, String userName) throws SQLException {
+        String sql = "INSERT INTO cse360request (request, userName, requestTOF, notes, status, originalId) "
+                   + "VALUES (?, ?, false, '', 'OPEN', 0)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, requestText);
+            pstmt.setString(2, userName);
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Retrieve all requests from the table
+    public List<Request> getAllRequests() throws SQLException {
+        String sql = "SELECT * FROM cse360request";
+        List<Request> list = new ArrayList<>();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Request r = buildRequestFromResultSet(rs);
+                list.add(r);
+            }
+        }
+        return list;
+    }
+
+    // Retrieve only open requests
+    public List<Request> getAllOpenRequests() throws SQLException {
+        String sql = "SELECT * FROM cse360request WHERE status='OPEN' OR status='REOPENED'";
+        List<Request> list = new ArrayList<>();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Request r = buildRequestFromResultSet(rs);
+                list.add(r);
+            }
+        }
+        return list;
+    }
+
+    // Retrieve closed requests
+    public List<Request> getAllClosedRequests() throws SQLException {
+        String sql = "SELECT * FROM cse360request WHERE status='CLOSED'";
+        List<Request> list = new ArrayList<>();
+        try (PreparedStatement pstmt = connection.prepareStatement(sql);
+             ResultSet rs = pstmt.executeQuery()) {
+            while (rs.next()) {
+                Request r = buildRequestFromResultSet(rs);
+                list.add(r);
+            }
+        }
+        return list;
+    }
+
+    // Helper method to build a Request object from a row
+    private Request buildRequestFromResultSet(ResultSet rs) throws SQLException {
+        int id = rs.getInt("id");
+        String req = rs.getString("request");
+        String userName = rs.getString("userName");
+        boolean tof = rs.getBoolean("requestTOF");
+        String notes = rs.getString("notes");
+        String status = rs.getString("status");
+        int originalId = rs.getInt("originalId");
+
+        // Reuse your existing getUser(...) logic if you want a real User object
+        // Or just store userName in the Request object’s user property
+        User user = null;
+        try {
+            user = getUser(userName);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        Request r = new Request(id, req, user, tof, notes, status, originalId);
+        return r;
+    }
+
+    // Admin closes a request by setting status to CLOSED and optionally adding a note
+    public void closeRequest(int requestId, String noteToAppend) throws SQLException {
+        // 1) Retrieve existing notes
+        Request r = getRequestById(requestId);
+        String newNotes = r.getNotes() == null ? "" : r.getNotes();
+        if (!noteToAppend.isEmpty()) {
+            // Add semicolon delimiter
+            newNotes += (newNotes.isEmpty() ? "" : ";") + noteToAppend;
+        }
+
+        // 2) Update status, notes
+        String sql = "UPDATE cse360request SET status='CLOSED', notes=? WHERE id=?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, newNotes);
+            pstmt.setInt(2, requestId);
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Instructors can reopen a CLOSED request: we do so by creating a new row whose
+    // originalId references the old request’s id, and status='REOPENED'
+    // We copy over the old notes so that the new request sees all prior actions.
+    public void reopenRequest(int oldRequestId, String updatedDescription, String additionalNote, String reopenedBy) throws SQLException {
+        // Retrieve old request
+        Request oldReq = getRequestById(oldRequestId);
+        if (!"CLOSED".equalsIgnoreCase(oldReq.getStatus())) {
+            throw new SQLException("Cannot reopen because the original is not closed.");
+        }
+        // Merge old notes with the new note
+        String combinedNotes = oldReq.getNotes() == null ? "" : oldReq.getNotes();
+        if (!additionalNote.isEmpty()) {
+            combinedNotes += (combinedNotes.isEmpty() ? "" : ";") + additionalNote;
+        }
+
+        // Insert a fresh row with status='REOPENED', originalId=the old request’s id
+        // updated request text from the user
+        String sql = "INSERT INTO cse360request (request, userName, requestTOF, notes, status, originalId) "
+                   + "VALUES (?, ?, false, ?, 'REOPENED', ?)";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, updatedDescription);
+            pstmt.setString(2, reopenedBy);
+            pstmt.setString(3, combinedNotes);
+            pstmt.setInt(4, oldRequestId);
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Let admin or instructor just add more notes without closing
+    public void addNoteToRequest(int requestId, String note) throws SQLException {
+        Request existing = getRequestById(requestId);
+        String existingNotes = existing.getNotes() == null ? "" : existing.getNotes();
+        if (!note.isEmpty()) {
+            existingNotes += (existingNotes.isEmpty() ? "" : ";") + note;
+        }
+        String sql = "UPDATE cse360request SET notes=? WHERE id=?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setString(1, existingNotes);
+            pstmt.setInt(2, requestId);
+            pstmt.executeUpdate();
+        }
+    }
+
+    // Return a single request by ID
+    public Request getRequestById(int requestId) throws SQLException {
+        String sql = "SELECT * FROM cse360request WHERE id=?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, requestId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return buildRequestFromResultSet(rs);
+            }
+        }
+        return null;
+    }
 	
 	
 	////REVIEWER IDS
@@ -377,6 +535,49 @@ public class DatabaseHelper {
 			return false;
 		}
 	}
+	
+	// Ban a user by setting banned = TRUE
+	public boolean banUser(String username) {
+	    String sql = "UPDATE cse360users SET banned = TRUE WHERE userName = ?";
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+	        pstmt.setString(1, username);
+	        int affectedRows = pstmt.executeUpdate();
+	        return affectedRows > 0;  // Return true if at least one row was affected
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+
+	// Unban a user by setting banned = FALSE
+	public boolean unbanUser(String username) {
+	    String sql = "UPDATE cse360users SET banned = FALSE WHERE userName = ?";
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+	        pstmt.setString(1, username);
+	        int affectedRows = pstmt.executeUpdate();
+	        return affectedRows > 0;  // Return true if at least one row was affected
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
+
+	// Check if a user is banned
+	public boolean isUserBanned(String username) {
+	    String sql = "SELECT banned FROM cse360users WHERE userName = ?";
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+	        pstmt.setString(1, username);
+	        ResultSet rs = pstmt.executeQuery();
+	        if (rs.next()) {
+	            return rs.getBoolean("banned");  // Return true if banned, false otherwise
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return false;  // Default to not banned if an error occurs
+	}
+
+
 
 	public boolean removeRoles(String username, String newRole) throws SQLException {
 		String query = "SELECT * FROM cse360users AS c WHERE c.username = ?	";
@@ -431,9 +632,8 @@ public class DatabaseHelper {
 			System.err.println("DELETEREQUEST: SQL Error - " + e.getMessage());
 			return false;
 		}
-}
-
-
+	}
+	
 	public boolean deleteUser(String username) {
 		if (!username.equals(currentUser.getUsername())) { // make sure the the correct user is getting deleted
 
@@ -482,26 +682,6 @@ public class DatabaseHelper {
 		}
 		return users;
 	}
-	
-	public List<Request> getAllRequests() throws SQLException {
-		String query = "SELECT userName, request, requestTOF FROM cse360request";
-		List<Request> requests = new ArrayList<>();
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			ResultSet rs = pstmt.executeQuery();
-
-			while (rs.next()) {
-				String userName = rs.getString("userName");
-	            String requestText = rs.getString("request");
-	            boolean requestTOF = rs.getBoolean("requestTOF");
-	            
-	            User user = getUser(userName);
-	            
-	            requests.add(new Request(requestText, user, requestTOF));
-			}
-		}
-		return requests;
-	}
-
 
 	// Retrieves all users with a specified role
 	public List<User> getAllUsersWithRole(String role) throws SQLException {
@@ -537,44 +717,46 @@ public class DatabaseHelper {
 
 	// Validates a user's login credentials.
 	public User login(String username, String password) throws SQLException {
-		String query = "SELECT * FROM cse360users WHERE userName = ? AND password = ? AND password <> ''";
-		if (connection == null) { // connection has been becoming null for some reason
-			connectToDatabase();
-			System.out.println("CONNECTIONCONNECTIONCONNECTION: " + connection.toString()); // debug
-		}
+	    String query = "SELECT * FROM cse360users WHERE userName = ? AND password = ? AND password <> ''";
+	    if (connection == null) {
+	        connectToDatabase();
+	    }
 
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setString(1, username);
-			pstmt.setString(2, password);
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setString(1, username);
+	        pstmt.setString(2, password);
 
-			try (ResultSet rs = pstmt.executeQuery()) {
-				if (rs.next()) {
-					// Set currentUser since successful login at this point
-					currentUser = getUser(username);
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            if (rs.next()) {
+	                boolean isBanned = rs.getBoolean("banned");
 
-					boolean otp = rs.getBoolean("otp");
-					String storedPW = rs.getString("password");
+	                if (isBanned) {
+	                    System.out.println("User is banned and cannot log in.");
+	                    return null;  // Prevent login for banned users
+	                }
 
-					// If password is blank, login fails - password is set to blank after logging in
-					// with a one-time password
-					if (storedPW.isEmpty()) {
-						System.out.println("Password is empty."); // Debug
-						return null;
-					}
-					if (otp) {
-						// Reset password to "" or blank
-						String updateQuery = "UPDATE cse360users SET password = '' WHERE userName = ?";
-						try (PreparedStatement updatepstmt = connection.prepareStatement(updateQuery)) {
-							updatepstmt.setString(1, username);
-							updatepstmt.executeUpdate();
-						}
-					}
-					return currentUser;
-				}
-				return null;
-			}
-		}
+	                currentUser = getUser(username);
+	                boolean otp = rs.getBoolean("otp");
+	                String storedPW = rs.getString("password");
+
+	                if (storedPW.isEmpty()) {
+	                    return null;
+	                }
+	                if (otp) {
+	                    // Reset password after OTP login
+	                    String updateQuery = "UPDATE cse360users SET password = '' WHERE userName = ?";
+	                    try (PreparedStatement updatepstmt = connection.prepareStatement(updateQuery)) {
+	                        updatepstmt.setString(1, username);
+	                        updatepstmt.executeUpdate();
+	                    }
+	                }
+	                return currentUser;
+	            }
+	            return null;
+	        }
+	    }
 	}
+
 
 	// Checks if a user already exists in the database based on their userName.
 	public boolean doesUserExist(String userName) {
