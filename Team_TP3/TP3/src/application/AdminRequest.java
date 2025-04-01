@@ -9,166 +9,167 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
 import javafx.scene.text.Text;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-
 public class AdminRequest {
-	private final DatabaseHelper databaseHelper;
-	public AdminRequest(DatabaseHelper databaseHelper) {
-		this.databaseHelper = databaseHelper;
-	}
-		
-	
-	public void show(Stage primaryStage) {
-		TableView<Request> tableView = new TableView<>();
+    private final DatabaseHelper databaseHelper;
 
-		TableColumn<Request, String> usernames = new TableColumn<>("Username");
-	    usernames.setCellValueFactory(cellData -> 
-	        new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));		
+    public AdminRequest(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
+    }
 
-		TableColumn<Request, String> request = new TableColumn<>("Request");
-		request.setCellValueFactory(new PropertyValueFactory<>("request"));
-		request.setPrefWidth(350); // Set preferred width to 300 pixels
-		request.setMinWidth(200);  // Set a minimum width to prevent shrinking too much
-		request.setMaxWidth(350);  // Set a maximum width to prevent expansion
+    public void show(Stage primaryStage) {
+        TableView<Request> tableView = new TableView<>();
 
-		request.setCellFactory(tc -> new TableCell<Request, String>() {
-		    private final Text text = new Text();
+        // Existing columns for "Username" and "Request"
+        TableColumn<Request, String> usernames = new TableColumn<>("Username");
+        usernames.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getUserName()));
 
-		    {
-		        text.wrappingWidthProperty().bind(request.widthProperty()); // Wrap text to column width
-		        setGraphic(text);
-		    }
+        TableColumn<Request, String> request = new TableColumn<>("Request");
+        request.setCellValueFactory(new PropertyValueFactory<>("request"));
+        request.setPrefWidth(300);
 
-		    @Override
-		    protected void updateItem(String item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty || item == null) {
-		            text.setText(null);
-		            setGraphic(null);
-		        } else {
-		            text.setText(item);
-		            setGraphic(text);
-		        }
-		    }
-		});
+        // NEW: Show the status
+        TableColumn<Request, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
 
-		
-		TableColumn<Request, Void> accept = new TableColumn<>("Accept");
+        // NEW: Show the notes (semicolon-delimited)
+        TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
+        notesCol.setPrefWidth(200);
+        notesCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
 
-		accept.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button acceptButton = new Button("Accept");
+        // NEW: Close request
+        TableColumn<Request, Void> closeCol = new TableColumn<>("Close");
+        closeCol.setCellFactory(tc -> new TableCell<Request, Void>() {
+            private final Button closeButton = new Button("Close Request");
+            {
+                closeButton.setOnAction(e -> {
+                    Request req = getTableView().getItems().get(getIndex());
+                    TextInputDialog dialog = new TextInputDialog("Add final admin notes...");
+                    dialog.setTitle("Close Request");
+                    dialog.setHeaderText("Optionally add notes before closing");
+                    dialog.setContentText("Notes:");
+                    dialog.showAndWait().ifPresent(note -> {
+                        try {
+                            databaseHelper.closeRequest(req.getId(), note);
+                            refreshTableData(tableView);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                });
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Request r = getTableView().getItems().get(getIndex());
+                    // Show the button only if it's open or reopened
+                    if ("OPEN".equalsIgnoreCase(r.getStatus()) || "REOPENED".equalsIgnoreCase(r.getStatus())) {
+                        setGraphic(closeButton);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            }
+        });
 
-		    {
-		        acceptButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		        acceptButton.setOnAction(event -> {
-		           
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUserName());
-		            try {
-						databaseHelper.addRoles(request.getUserName(), "Reviewer");
-						databaseHelper.deleteRequest(request.getUserName());
-						ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-					} catch (SQLException e) {
-						
-						e.printStackTrace();
-					}
-					
-		        });
-		    }
+        tableView.getColumns().addAll(usernames, request, statusCol, notesCol, closeCol);
+        
+        ComboBox<String> typeComboBox = new ComboBox<>();
+        typeComboBox.getItems().addAll("Question", "Answer", "Review");
+        typeComboBox.setPromptText("Select Type");
 
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(acceptButton);
-		        }
-		    }
-		});
-		
-		TableColumn<Request, Void> decline = new TableColumn<>("Decline");
-		
-		decline.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button declineButton = new Button("Decline");
+        TextField idInputField = new TextField();
+        idInputField.setPromptText("Enter ID to delete");
 
-		    {
-		    	declineButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		    	declineButton.setOnAction(event -> {
-		           
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUserName());
-		            try {
-						databaseHelper.deleteRequest(request.getUserName());
-						ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-					
-		        });
-		    }
+        Button deleteButton = new Button("Delete");
+        deleteButton.setOnAction(e -> {
+            String type = typeComboBox.getValue();
+            String idText = idInputField.getText();
 
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(declineButton);
-		        }
-		    }
-		});
+            if (type == null || idText.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Input Error", "Please select a type and enter a valid ID.");
+                return;
+            }
 
+            int id;
+            try {
+                id = Integer.parseInt(idText);
+            } catch (NumberFormatException ex) {
+                showAlert(Alert.AlertType.ERROR, "Invalid ID", "ID must be an integer.");
+                return;
+            }
 
+            boolean result = false;
+            switch (type.toLowerCase()) {
+                case "question":
+                    result = databaseHelper.qaHelper.deleteQuestion(id);
+                    break;
+                case "answer":
+                    result = databaseHelper.qaHelper.deleteAnswer(id);
+                    break;
+                case "review":
+                    result = databaseHelper.qaHelper.deleteReview(id);
+                    break;
+                default:
+                    showAlert(Alert.AlertType.ERROR, "Invalid Type", "Unrecognized type selection.");
+                    return;
+            }
 
-		
-		tableView.getColumns().addAll(usernames, request, accept, decline);
+            if (result) {
+                showAlert(Alert.AlertType.INFORMATION, "Success", type + " with ID " + id + " was deleted successfully.");
+                refreshTableData(tableView);
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Failure", "Failed to delete the specified item.");
+            }
+        });
+        
+        HBox deleteBox = new HBox(10, typeComboBox, idInputField, deleteButton);
+        
 
-		ObservableList<Request> data = FXCollections.observableArrayList();
+        ObservableList<Request> data = FXCollections.observableArrayList();
+        refreshTableData(tableView);
 
-		try {
-            List<Request> userRequests = databaseHelper.getAllRequests();
-            data.addAll(userRequests);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }		
-		Button backButton = new Button("Back");
-		backButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
-						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		backButton.setOnAction(a -> {
-			primaryStage.close();
-			new AdminHomePage(databaseHelper).show(primaryStage, databaseHelper.currentUser);
-			
-		});
+        // “Back” button to return to AdminHomePage
+        Button backButton = new Button("Back");
+        backButton.setOnAction(a -> {
+            primaryStage.close();
+            new AdminHomePage(databaseHelper).show(primaryStage, databaseHelper.currentUser);
+        });
 
-		HBox hbox = new HBox(5, backButton);
-		tableView.setItems(data);
-		VBox root = new VBox(tableView);
-		root.getChildren().addAll(hbox);
-        Scene scene = new Scene(root, 600, 400);
-        primaryStage.setTitle("Admin Request Window");
+        HBox hbox = new HBox(5, backButton);
+        VBox root = new VBox(tableView, deleteBox, hbox);
+        Scene scene = new Scene(root, 900, 400);
+        primaryStage.setTitle("Admin Requests");
         primaryStage.setScene(scene);
         primaryStage.show();
+    }
 
-	}
-	}
+    private void refreshTableData(TableView<Request> tableView) {
+        try {
+            List<Request> userRequests = databaseHelper.getAllRequests();
+            tableView.setItems(FXCollections.observableArrayList(userRequests));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void showAlert(Alert.AlertType alertType, String title, String message) {
+        Alert alert = new Alert(alertType);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+}
