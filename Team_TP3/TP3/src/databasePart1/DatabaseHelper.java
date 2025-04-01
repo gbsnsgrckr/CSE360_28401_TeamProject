@@ -118,7 +118,7 @@ public class DatabaseHelper {
 		statement.execute(userTable);
 		
 		// Create the table for the reviewer request
-		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" 
+		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request ("
 				+ "request VARCHAR(500), " 
 				+ "userName VARCHAR(255) UNIQUE, " 
 				+ "requestTOF BOOLEAN DEFAULT FALSE)";
