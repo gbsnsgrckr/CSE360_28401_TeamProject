@@ -17,6 +17,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -27,6 +28,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
@@ -106,6 +108,18 @@ public class InstructorHomePage {
 		inputField.setMaxHeight(1000);
 		inputField.setPrefHeight(1000);
 		inputField.setWrapText(true);
+		
+		Button requestsButton = new Button("View/Manage Admin Requests");
+		requestsButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+        requestsButton.setOnAction(e -> showRequestsWindow());
+        
+     // Button to send a request to Admin
+        Button sendRequestButton = new Button("Send Request to Admin");
+        sendRequestButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+        sendRequestButton.setOnAction(e -> showRequestDialog());
+
 
 		// Button to submit question text in input fields to database
 		Button submitButton = new Button("Submit Review");
@@ -1154,7 +1168,7 @@ public class InstructorHomePage {
 
 		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn);
 
-		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2);
+		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2, requestsButton, sendRequestButton);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 
 		VBox vbox1 = new VBox(10, vbox, buttonBox1);
@@ -1730,4 +1744,119 @@ public class InstructorHomePage {
 		// Return list of answers that is left
 		return answers;
 	}
+	
+	private void showRequestsWindow() {
+        Stage stage = new Stage();
+        TableView<Request> tableView = new TableView<>();
+
+        TableColumn<Request, String> requestCol = new TableColumn<>("Request");
+        requestCol.setCellValueFactory(cellData -> cellData.getValue().requestProperty());
+
+        TableColumn<Request, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
+
+        TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
+        notesCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
+
+        // Let instructor reopen a closed request (only if instructor is the request’s owner):
+        TableColumn<Request, Void> reopenCol = new TableColumn<>("Reopen");
+        reopenCol.setCellFactory(tc -> new TableCell<Request, Void>() {
+            private final Button reopenButton = new Button("Reopen");
+            {
+                reopenButton.setOnAction(e -> {
+                    Request req = getTableView().getItems().get(getIndex());
+                    TextInputDialog dialog = new TextInputDialog("New description of the request...");
+                    dialog.setTitle("Reopen Request");
+                    dialog.setHeaderText("Update the request text and optional note");
+                    dialog.setContentText("Add note:");
+                    dialog.showAndWait().ifPresent(note -> {
+                        try {
+                            // Only reopen if you're the original requestor and it’s closed
+                            databaseHelper.reopenRequest(req.getId(),
+                                    /* new request text */ "Updated: " + dialog.getEditor().getText(),
+                                    /* additional note  */ "Reopened by instructor",
+                                    databaseHelper.currentUser.getUsername());
+                            refreshTable(tableView);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                });
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Request r = getTableView().getItems().get(getIndex());
+                    boolean isOwner = r.getUserName().equalsIgnoreCase(databaseHelper.currentUser.getUsername());
+                    boolean isClosed = "CLOSED".equalsIgnoreCase(r.getStatus());
+                    setGraphic( (isOwner && isClosed) ? reopenButton : null );
+                }
+            }
+        });
+
+        tableView.getColumns().addAll(requestCol, statusCol, notesCol, reopenCol);
+        refreshTable(tableView);
+
+        VBox layout = new VBox(tableView);
+        Scene scene = new Scene(layout, 800, 400);
+        stage.setTitle("Manage My Requests");
+        stage.setScene(scene);
+        stage.show();
+    }
+
+    private void refreshTable(TableView<Request> tableView) {
+        try {
+            List<Request> openAndClosed = databaseHelper.getAllRequests();
+            // If you only want to see requests belonging to the instructor, filter them:
+            String myUserName = databaseHelper.currentUser.getUsername();
+            openAndClosed.removeIf(r -> !r.getUserName().equalsIgnoreCase(myUserName));
+            tableView.setItems(FXCollections.observableArrayList(openAndClosed));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+ // Opens a dialog for the instructor to enter a request and submit to Admin
+    private void showRequestDialog() {
+        TextInputDialog dialog = new TextInputDialog();
+        dialog.setTitle("Send Request to Admin");
+        dialog.setHeaderText("Enter your request for Admin:");
+        dialog.setContentText("Request:");
+
+        // Show the dialog and capture the result
+        dialog.showAndWait().ifPresent(requestText -> {
+            if (!requestText.trim().isEmpty()) {
+                try {
+                    // Send request to Admin using databaseHelper
+                    databaseHelper.createNewRequest(requestText, databaseHelper.currentUser.getUsername());
+                    Alert successAlert = new Alert(Alert.AlertType.INFORMATION);
+                    successAlert.setTitle("Request Sent");
+                    successAlert.setHeaderText(null);
+                    successAlert.setContentText("Your request has been successfully sent to the Admin.");
+                    successAlert.showAndWait();
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+                    errorAlert.setTitle("Error Sending Request");
+                    errorAlert.setHeaderText(null);
+                    errorAlert.setContentText("There was an error sending your request. Please try again.");
+                    errorAlert.showAndWait();
+                }
+            } else {
+                Alert emptyAlert = new Alert(Alert.AlertType.WARNING);
+                emptyAlert.setTitle("Empty Request");
+                emptyAlert.setHeaderText(null);
+                emptyAlert.setContentText("Request cannot be empty. Please enter a valid request.");
+                emptyAlert.showAndWait();
+            }
+        });
+    }
+
 }
+
+
