@@ -19,156 +19,156 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
-
+/**
+ * AdminRequest class represents the user interface for handling admin requests.
+ * It displays a table view of requests with options to accept or decline each request.
+ */
 public class AdminRequest {
-	private final DatabaseHelper databaseHelper;
-	public AdminRequest(DatabaseHelper databaseHelper) {
-		this.databaseHelper = databaseHelper;
-	}
-		
-	
-	public void show(Stage primaryStage) {
-		TableView<Request> tableView = new TableView<>();
+    private final DatabaseHelper databaseHelper;
 
-		TableColumn<Request, String> usernames = new TableColumn<>("Username");
-	    usernames.setCellValueFactory(cellData -> 
-	        new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));		
+    /**
+     * Constructs an AdminRequest with the specified DatabaseHelper.
+     *
+     * @param databaseHelper The DatabaseHelper used to interact with the database.
+     */
+    public AdminRequest(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
+    }
+    
+    /**
+     * Displays the Admin Request window in the provided stage.
+     *
+     * @param primaryStage The stage where the scene will be displayed.
+     */
+    public void show(Stage primaryStage) {
+        TableView<Request> tableView = new TableView<>();
 
-		TableColumn<Request, String> request = new TableColumn<>("Request");
-		request.setCellValueFactory(new PropertyValueFactory<>("request"));
-		request.setPrefWidth(350); // Set preferred width to 300 pixels
-		request.setMinWidth(200);  // Set a minimum width to prevent shrinking too much
-		request.setMaxWidth(350);  // Set a maximum width to prevent expansion
+        TableColumn<Request, String> usernames = new TableColumn<>("Username");
+        usernames.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));
 
-		request.setCellFactory(tc -> new TableCell<Request, String>() {
-		    private final Text text = new Text();
+        TableColumn<Request, String> request = new TableColumn<>("Request");
+        request.setCellValueFactory(new PropertyValueFactory<>("request"));
+        request.setPrefWidth(350); // Set preferred width to 350 pixels
+        request.setMinWidth(200);  // Set a minimum width to prevent shrinking too much
+        request.setMaxWidth(350);  // Set a maximum width to prevent expansion
 
-		    {
-		        text.wrappingWidthProperty().bind(request.widthProperty()); // Wrap text to column width
-		        setGraphic(text);
-		    }
+        request.setCellFactory(tc -> new TableCell<Request, String>() {
+            private final Text text = new Text();
 
-		    @Override
-		    protected void updateItem(String item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty || item == null) {
-		            text.setText(null);
-		            setGraphic(null);
-		        } else {
-		            text.setText(item);
-		            setGraphic(text);
-		        }
-		    }
-		});
+            {
+                text.wrappingWidthProperty().bind(request.widthProperty()); // Wrap text to column width
+                setGraphic(text);
+            }
 
-		
-		TableColumn<Request, Void> accept = new TableColumn<>("Accept");
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    text.setText(null);
+                    setGraphic(null);
+                } else {
+                    text.setText(item);
+                    setGraphic(text);
+                }
+            }
+        });
 
-		accept.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button acceptButton = new Button("Accept");
+        TableColumn<Request, Void> accept = new TableColumn<>("Accept");
 
-		    {
-		        acceptButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		        acceptButton.setOnAction(event -> {
-		           
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUserName());
-		            try {
-						databaseHelper.addRoles(request.getUserName(), "Reviewer");
-						databaseHelper.deleteRequest(request.getUserName());
-						ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-					} catch (SQLException e) {
-						
-						e.printStackTrace();
-					}
-					
-		        });
-		    }
+        accept.setCellFactory(tc -> new TableCell<Request, Void>() {
+            private final Button acceptButton = new Button("Accept");
 
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(acceptButton);
-		        }
-		    }
-		});
-		
-		TableColumn<Request, Void> decline = new TableColumn<>("Decline");
-		
-		decline.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button declineButton = new Button("Decline");
+            {
+                acceptButton.setStyle(
+                        "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
+                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+                
+                acceptButton.setOnAction(event -> {
+                    Request request = getTableView().getItems().get(getIndex());
+                    System.out.println("Accepted: " + request.getUserName());
+                    try {
+                        databaseHelper.addRoles(request.getUserName(), "Reviewer");
+                        databaseHelper.deleteRequest(request.getUserName());
+                        ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
+                        tableView.setItems(updatedRequests); 
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
 
-		    {
-		    	declineButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		    	declineButton.setOnAction(event -> {
-		           
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUserName());
-		            try {
-						databaseHelper.deleteRequest(request.getUserName());
-						ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-					
-		        });
-		    }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(acceptButton);
+                }
+            }
+        });
 
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(declineButton);
-		        }
-		    }
-		});
+        TableColumn<Request, Void> decline = new TableColumn<>("Decline");
+        
+        decline.setCellFactory(tc -> new TableCell<Request, Void>() {
+            private final Button declineButton = new Button("Decline");
 
+            {
+                declineButton.setStyle(
+                        "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
+                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+                
+                declineButton.setOnAction(event -> {
+                    Request request = getTableView().getItems().get(getIndex());
+                    System.out.println("Accepted: " + request.getUserName());
+                    try {
+                        databaseHelper.deleteRequest(request.getUserName());
+                        ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
+                        tableView.setItems(updatedRequests); 
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                });
+            }
 
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    setGraphic(declineButton);
+                }
+            }
+        });
 
-		
-		tableView.getColumns().addAll(usernames, request, accept, decline);
+        tableView.getColumns().addAll(usernames, request, accept, decline);
 
-		ObservableList<Request> data = FXCollections.observableArrayList();
+        ObservableList<Request> data = FXCollections.observableArrayList();
 
-		try {
+        try {
             List<Request> userRequests = databaseHelper.getAllRequests();
             data.addAll(userRequests);
         } catch (SQLException e) {
             e.printStackTrace();
         }		
-		Button backButton = new Button("Back");
-		backButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
-						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		backButton.setOnAction(a -> {
-			primaryStage.close();
-			new AdminHomePage(databaseHelper).show(primaryStage, databaseHelper.currentUser);
-			
-		});
+        Button backButton = new Button("Back");
+        backButton.setStyle(
+                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
+                + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+        backButton.setOnAction(a -> {
+            primaryStage.close();
+            new AdminHomePage(databaseHelper).show(primaryStage, databaseHelper.currentUser);
+        });
 
-		HBox hbox = new HBox(5, backButton);
-		tableView.setItems(data);
-		VBox root = new VBox(tableView);
-		root.getChildren().addAll(hbox);
+        HBox hbox = new HBox(5, backButton);
+        tableView.setItems(data);
+        VBox root = new VBox(tableView);
+        root.getChildren().addAll(hbox);
         Scene scene = new Scene(root, 600, 400);
         primaryStage.setTitle("Admin Request Window");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-	}
-	}
+    }
+}

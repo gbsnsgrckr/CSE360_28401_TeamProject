@@ -28,19 +28,29 @@ import javafx.scene.input.ClipboardContent;
  * AdminPage class represents the user interface for the admin user. This page
  * displays a simple welcome message for the admin.
  */
-
 public class AdminHomePage {
 	/**
-	 * Displays the admin page in the provided primary stage.
+	 * Displays the AdminPage in the provided PrimaryStage.
 	 * 
 	 * @param primaryStage The primary stage where the scene will be displayed.
 	 */
 	private final DatabaseHelper databaseHelper;
-
+	
+	/**
+	 * Constructs an AdminHomePage with the specified DatabaseHelper.
+	 *
+	 * @param databaseHelper The DatabaseHelper used to interact with the database.
+	 */
 	public AdminHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
 
+	/**
+	 * Displays the admin page in the provided primary stage.
+	 *
+	 * @param primaryStage The primary stage where the scene will be displayed.
+	 * @param user The user for whom the admin page is being displayed.
+	 */
 	public void show(Stage primaryStage, User user) {
 		TableView<User> table = new TableView<>();
 		List<User> users = new ArrayList<>();
@@ -99,7 +109,6 @@ public class AdminHomePage {
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
 						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
 		backButton.setOnAction(a -> {
-
 			new UserLoginPage(databaseHelper).show(primaryStage);
 		});
 		
@@ -108,14 +117,12 @@ public class AdminHomePage {
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
 						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
 		viewRequests.setOnAction(a -> {
-
 			// Create new stage to get rid of transparency for following pages
 			Stage newStage = new Stage();
 			newStage.initStyle(StageStyle.TRANSPARENT);
 			primaryStage.close();
 			new AdminRequest(databaseHelper).show(newStage);
 		});
-
 
 		// Create inviteButton for admin to generate invitation codes
 		Button inviteButton = new Button("Invite");
@@ -221,7 +228,6 @@ public class AdminHomePage {
 				comboBox.setOnAction(a -> {
 					String check = comboBox.getValue();
 					addOrRemove.setDisable(check == null);
-
 				});
 
 				// addOrRemove button will remove role if user has it or add it if they don't
