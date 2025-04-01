@@ -3,6 +3,7 @@ package application;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Represents an answer in the system. An Answer object encapsulates
@@ -315,4 +316,25 @@ public class Answer {
                     id, text, relatedId, displayAuthor, daysSinceCreated);
         }
     }
+
+	@Override
+	public int hashCode() {
+		return Objects.hash(author, createdOn, id, text);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Answer other = (Answer) obj;
+		return Objects.equals(author, other.author) && Objects.equals(createdOn, other.createdOn)
+				&& Objects.equals(id, other.id) && Objects.equals(text, other.text);
+	}
+    
+    
+    
 }

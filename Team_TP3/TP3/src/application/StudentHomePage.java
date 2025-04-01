@@ -756,12 +756,7 @@ public class StudentHomePage {
 					} else if (selection.equalsIgnoreCase("Answered")) {
 						questions = databaseHelper.qaHelper.getAllAnsweredQuestions();
 					} else if (selection.equalsIgnoreCase("My Reviewers")) {
-						List<Question> allQuestions = databaseHelper.qaHelper.getAllAnsweredQuestions();
-						Map<User, Integer> myReviewers = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()); 
-						questions = allQuestions.stream()
-							    .filter(q -> myReviewers.containsKey(q.getAuthor()))
-							    .sorted((q1, q2) -> myReviewers.get(q2.getAuthor()) - myReviewers.get(q1.getAuthor()))
-							    .collect(Collectors.toList());
+						questions = getReviewersQuestions();
 					}
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -1370,7 +1365,22 @@ public class StudentHomePage {
 		try {
 			question = databaseHelper.qaHelper.getQuestion(question.getId());
 			answers = databaseHelper.qaHelper.getAllAnswersForQuestion(question.getId());
+			Map<User, Integer> myReviewers = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId());
 
+			answers.sort((a1, a2) -> {
+				Integer weight1 = myReviewers.get(a1.getAuthor());
+				Integer weight2 = myReviewers.get(a2.getAuthor());
+
+				if (weight1 != null && weight2 != null) {
+					return weight2 - weight1;
+				}
+
+				if (weight1 != null) return -1;
+				if (weight2 != null) return 1;
+
+				return 0;
+			});
+			Answer preferredAnswer = null;
 			// Put the selected question in the first row
 			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(),
 					question.getId(), question.getAuthorId(), question.getRelatedId()));
@@ -1379,21 +1389,24 @@ public class StudentHomePage {
 			// Check if question has a preferred answer
 			if (question.getPreferredAnswer() > 0) {
 				// Retrieve the preferred answer object
-				answer = databaseHelper.qaHelper.getAnswer(question.getPreferredAnswer());
+				preferredAnswer = databaseHelper.qaHelper.getAnswer(question.getPreferredAnswer());
 				// Remove the preferred answer from the answers list so it is not duplicated
-				answers.remove(answer);
+				
+				answers.remove(preferredAnswer);
+				
 				// Put the preferred answer in the second row
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
-						answer.getAuthorId(), answer.getRelatedId()));
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, preferredAnswer.toDisplay(), preferredAnswer.getId(),
+						preferredAnswer.getAuthorId(), preferredAnswer.getRelatedId()));
 
 				// Recursively call addRelatedAnswers and store the list thats left
-				answers = addRelatedAnswers(answer.getId(), answers);
+				answers = addRelatedAnswers(preferredAnswer.getId(), answers);
 
 			}
 
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
 				// Add answer to the observable list
+				//if (answer.equals(preferredAnswer)) { continue; }
 				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
 						answer.getAuthorId(), answer.getRelatedId()));
 
@@ -1703,4 +1716,38 @@ public class StudentHomePage {
 		// Return list of answers that is left
 		return answers;
 	}
+	
+	private List<Question> getReviewersQuestions() throws SQLException {
+		List<Question> allQuestions = databaseHelper.qaHelper.getAllAnsweredQuestions();
+		List<Answer> allAnswers  = new ArrayList<>();
+		for (Question q : allQuestions) {
+			List<Answer> a = databaseHelper.qaHelper.getAllAnswersForQuestion(q.getId());
+			allAnswers.addAll(a);
+		}
+		
+		Map<User, Integer> myReviewers = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId()); 
+		
+		Map<Question, Integer> questionToReviewerScore = new HashMap<>();
+		
+		for (Question q : allQuestions) {
+			List<Answer> answers = databaseHelper.qaHelper.getAllAnswersForQuestion(q.getId());
+
+			for (Answer answer : answers) {
+				User author = answer.getAuthor();
+				Integer weight = myReviewers.get(author);
+
+				if (weight != null) {
+					questionToReviewerScore.merge(q, weight, Math::max);
+				}
+			}
+		}
+		
+		
+		return questionToReviewerScore.entrySet()
+				.stream()
+				.sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // descending
+				.map(Map.Entry::getKey)
+				.collect(Collectors.toList());
+	}
+	
 }
