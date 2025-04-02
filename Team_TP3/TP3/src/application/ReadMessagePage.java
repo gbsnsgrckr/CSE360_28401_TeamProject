@@ -14,11 +14,22 @@ import javafx.stage.Stage;
 
 import java.sql.SQLException;
 
+/**
+ * Displays the details of a specific message, including sender, subject, reference,
+ * and message content. Also provides a button to reply to the message.
+ */
 public class ReadMessagePage {
     private final DatabaseHelper databaseHelper;
     private final Message message;
     private User sender;
 
+    /**
+     * Constructs a ReadMessagePage using the given database helper and message.
+     * It attempts to load the sender's user information from the database.
+     *
+     * @param databaseHelper The database helper used to fetch sender information.
+     * @param message The message to be displayed.
+     */
     public ReadMessagePage(DatabaseHelper databaseHelper, Message message) {
         this.databaseHelper = databaseHelper;
         this.message = message;
@@ -30,6 +41,11 @@ public class ReadMessagePage {
         }
     }
 
+    /**
+     * Displays the message information on the provided JavaFX stage.
+     *
+     * @param stage The JavaFX stage to render the message view on.
+     */
     public void show(Stage stage) {
         // Sender Label
         Label senderLabel = new Label("From: " + (sender != null ? sender.getUsername() : "Unknown"));
@@ -38,6 +54,16 @@ public class ReadMessagePage {
         // Subject Label
         Label subjectLabel = new Label("Subject: " + message.getSubject());
         subjectLabel.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: #555;");
+        
+        // Reference Info Label
+        String refType = message.getReferenceType();
+        String refDisplay = "Reference: None";
+        if (refType != null && message.getReferenceID() > 0) {
+        	refDisplay = "Reference: " + refType + " " + message.getReferenceID();
+        	}
+        Label referenceLabel = new Label(refDisplay);
+        referenceLabel.setStyle("-fx-font-size: 13px; -fx-font-style: italic; -fx-text-fill: #666;");
+
 
         // Message Content Area
         TextArea messageTextArea = new TextArea(message.getMessage());
@@ -58,7 +84,12 @@ public class ReadMessagePage {
         replyButton.setOnAction(event -> {
             if (sender != null) {
                 Stage replyStage = new Stage();
-                new CreateMessagePage(databaseHelper, sender.getUserId()).show(replyStage);
+                
+                int recipientId = sender.getUserId();
+                int referenceId = message.getMessageID();
+                String referenceType = "Message";
+                
+                new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(replyStage);
             }
         });
 
@@ -68,7 +99,7 @@ public class ReadMessagePage {
         buttonBox.setPadding(new Insets(10, 20, 10, 20));
 
         // Layout
-        VBox contentLayout = new VBox(10, senderLabel, subjectLabel, scrollPane, buttonBox);
+        VBox contentLayout = new VBox(10, senderLabel, subjectLabel, referenceLabel, scrollPane, buttonBox);
         contentLayout.setPadding(new Insets(20));
         contentLayout.setAlignment(Pos.TOP_LEFT);
         contentLayout.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: gray; -fx-border-width: 1px;");
