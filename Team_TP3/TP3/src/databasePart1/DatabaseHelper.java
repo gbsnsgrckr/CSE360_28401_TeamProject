@@ -938,10 +938,8 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
+	 * This method returns all of the Users in the database that 
+	 * have a specific role assigned to them. 
 	 * @param role the role that the query will return Users for. 
 	 * @return List<User> 
 	 * @throws SQLException if there is an error in accessing the column. 
@@ -979,12 +977,11 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This method allows a User to login if the username and password
+	 * match what is in the database.  
+	 * @param username the username that the user is logging in with
+	 * @param password the password that the user is logging in with
+	 * @return User  
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Validates a user's login credentials.
@@ -1030,12 +1027,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This method checks if the User with the given username 
+	 * is in the database.  
+	 * @param username the username being checked if it exists. 
+	 * @return boolean 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Checks if a user already exists in the database based on their userName.
@@ -1057,12 +1052,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This method returns all of the roles that the User with
+	 * the given username has. 
+	 * @param username the username to get the roles from. 
+	 * @return List<String>  
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Retrieves the role of a user from the database using their UserName.
@@ -1083,12 +1076,9 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers. 
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>   
+	 * Generates a Invitation Code that will be used to allow 
+	 * a new User to register their login. 
+	 * @return String 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Generates a new invitation code and inserts it into the database.
@@ -1110,12 +1100,9 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * Generates a random One Time Password that the user can user to login
+	 * and reset their password.  
+	 * @return String 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public String generateOneTimePassword() {
@@ -1144,12 +1131,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 *   Validates the previously generated Invitation code that 
+	 *   exists in the database. 
+	 * @param code the invitation code being used 
+	 * @return boolean
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Validates an invitation code to check if it is unused.
@@ -1172,12 +1157,9 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers. 
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>   
+	 * This marks the previously used Invitation code so that it 
+	 * will not be able to be used again. 
+	 * @param code The invitation code that has been used. 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Marks the invitation code as used in the database.
@@ -1193,12 +1175,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This helper method decodes the comma separated string in the 
+	 * database and turns it into a List of String for easier use.  
+	 * @param roles the comma separated string being decoded. 
+	 * @return List<String> 
 	 */
 	private List<String> rolesDeserial(String roles) { // Deserializing from String to List<Roles> for easier logic
 		if (roles == null || roles == "") {
@@ -1211,12 +1191,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 *  This helper method is used to encode a List of roles into a 
+	 *  comma separated string to be stored by the database.
+	 * @param roles the List of roles that will be encoded. 
+	 * @return String
 	 */
 	private String rolesSerial(List<String> roles) { // serializing a List<Roles> into a string to be stored in database
 		if (roles == null || roles.isEmpty()) { // make sure that the list is not empty or null
@@ -1227,49 +1205,10 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
-	 */
-	private List<Integer> reviewerDeserial(String reviewers) {  // Deserializing from String to List<Roles> for easier logic
-		if (reviewers == null || reviewers == "") {
-			return new ArrayList<>();                   // if roles is empty or null, return empty list, was returning 1 comma before this
-		} else {
-			List<Integer> reviewerIds = Arrays.asList(reviewers.split(",")).stream().map(r -> Integer.parseInt(r)).collect(Collectors.toList());
-			return new ArrayList<>(reviewerIds);
-		}
-	}
-
-	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
-	 */
-	private String reviewerSerial(List<Integer> reviewers) {   // serializing a List<Roles> into a string to be stored in database
-		if (reviewers == null || reviewers.isEmpty()) {        // make sure that the list is not empty or null
-			return "";
-		} else {  
-			String serial = "";
-			for (Integer i : reviewers) {
-				serial = serial + i.toString() + ",";
-			}
-			return serial;
-		}
-	}
-
-	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers. 
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>   
+	 * This helper method is used to encode a Map of User's and Integers
+	 * into a string with custom delimiters to be stored by the database.
+	 * @param map the map of User's and their Integer weights. 
+	 * @return String   
 	 */
 	private String putReviewerMapToString(Map<User, Integer> map) {
 		String mapToString = "";
@@ -1292,11 +1231,9 @@ public class DatabaseHelper {
 	
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
+	 * This helper method is used to decode a delimited String 
+	 * into a Map of Users and Integers. 
+	 * @param json the delimited string to be decoded. 
 	 * @return Map<User, Integer>  
 	 */
 	private Map<User, Integer> getReviewersMap(String json) {   /// what it will be stored as ! userId weight ! userId weight 
@@ -1328,22 +1265,16 @@ public class DatabaseHelper {
 	
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * Sets the user logged in to have the most current role 
+	 * for this class to stay updated. 
+	 * @param role the role to be set as the current role 
 	 */
 	public void setUserCurrentRole(String role) { // public setter for when user picks their role
 		currentUser.setCurrentRole(role);
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers. 
+	 * Closes the connection to the database. 
 	 */
 	// Closes the database connection and statement.
 	public void closeConnection() {
