@@ -77,8 +77,8 @@ public class DatabaseHelper {
 			boolean resetUserDatabase = true; // Set to true if you want to reset the User Database
 			boolean resetQADatabase = true; // Set to true if you want to reset the QA Database
 
-			int a = 1; // Set this to 1 if you wish to populate User Database(0 or 1)
-			int b = 1; // Set this to the number of times you want to populate the QA
+			int a = 0; // Set this to 1 if you wish to populate User Database(0 or 1)
+			int b = 0; // Set this to the number of times you want to populate the QA
 						// Database(0 or greater)
 
 			/*------------------------------------------------------------------------------------------------*/
@@ -137,12 +137,13 @@ public class DatabaseHelper {
 		statement.execute(userTable);
 		
 		// Create the table for the reviewer request
-		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request ("
+		String requestReviewerTable = "CREATE TABLE IF NOT EXISTS cse360request (" 
 				+ "request VARCHAR(500), " 
 				+ "userName VARCHAR(255) UNIQUE, " 
-				+ "requestTOF BOOLEAN DEFAULT FALSE)";
+				+ "requestTOF BOOLEAN DEFAULT FALSE, "
+				+ "requestATOF BOOLEAN DEFAULT  FALSE)";
 		statement.execute(requestReviewerTable);
-
+		
 		// Create the invitation codes table
 		String invitationCodesTable = "CREATE TABLE IF NOT EXISTS InvitationCodes (" 
 				+ "code VARCHAR(10) PRIMARY KEY, "
@@ -324,7 +325,7 @@ public class DatabaseHelper {
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public void register(String request) throws SQLException {
-		String insertRequest = "INSERT INTO cse360request (request, userName, requestTOF) VALUES (?, ?, ?)";
+		String insertRequest = "INSERT INTO cse360request (request, userName, requestTOF, requestATOF) VALUES (?, ?, ?, ?)";
 		if (currentUser == null || currentUser.getUsername() == null) {
 	        throw new IllegalStateException("Current user is not set.");
 	    }
@@ -332,6 +333,7 @@ public class DatabaseHelper {
 			pstmt.setString(1,  request);
 			pstmt.setString(2,  currentUser.getUsername());
 			pstmt.setBoolean(3, true);
+			pstmt.setBoolean(4,  false);
 			pstmt.executeUpdate();
 		}
 		catch (SQLIntegrityConstraintViolationException e) {
@@ -644,7 +646,7 @@ public class DatabaseHelper {
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<Request> getAllRequests() throws SQLException {
-		String query = "SELECT userName, request, requestTOF FROM cse360request";
+		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request WHERE requestTOF = TRUE";
 		List<Request> requests = new ArrayList<>();
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			ResultSet rs = pstmt.executeQuery();
@@ -653,15 +655,55 @@ public class DatabaseHelper {
 				String userName = rs.getString("userName");
 	            String requestText = rs.getString("request");
 	            boolean requestTOF = rs.getBoolean("requestTOF");
-	            
+	            boolean requestATOF = rs.getBoolean("requestATOF");
 	            User user = getUser(userName);
 	            
-	            requests.add(new Request(requestText, user, requestTOF));
+	            requests.add(new Request(requestText, user, requestTOF, requestATOF));
 			}
 		}
 		return requests;
 	}
+	/**
+	 * This method updates the request by the user, typically only for making it visible to the 
+	 * admin, and removing it from the Instructors view
+	 * @param userName
+	 * @param requestTOF
+	 * @param requestATOF
+	 * @throws SQLException
+	 */
+	public void updateRequestStatus(String userName, boolean requestTOF, boolean requestATOF) throws SQLException {
+	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE userName = ?";
 
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setBoolean(1, requestTOF);
+	        pstmt.setBoolean(2, requestATOF);
+	        pstmt.setString(3, userName);
+	        pstmt.executeUpdate();
+	    }
+	}
+	/**
+	 * This method gets all the requests that the admin should see.
+	 * @return
+	 * @throws SQLException
+	 */
+	public List<Request> getAllRequestsForAdmin() throws SQLException {
+		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request WHERE requestATOF = TRUE";
+		List<Request> requests = new ArrayList<>();
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				String userName = rs.getString("userName");
+	            String requestText = rs.getString("request");
+	            boolean requestTOF = rs.getBoolean("requestTOF");
+	            boolean requestATOF = rs.getBoolean("requestATOF");
+	            User user = getUser(userName);
+	            
+	            requests.add(new Request(requestText, user, requestTOF, requestATOF));
+			}
+		}
+		return requests;
+	}
 
 	/**
 	 * This setup function runs at the beginning of the test and sets up the 

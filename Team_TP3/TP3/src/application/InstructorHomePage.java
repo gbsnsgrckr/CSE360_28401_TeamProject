@@ -116,6 +116,7 @@ public class InstructorHomePage {
 		Button viewReviewsButton = new Button("View Reviews");
 		viewReviewsButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+		
 
 		// Button to return to the login screen
 		Button quitButton = new Button("Back to login");
@@ -1164,8 +1165,9 @@ public class InstructorHomePage {
 
 		Button viewUnresolvedBtn = createViewUnresolvedButton();
 		Button viewAllUnresolvedBtn = createViewAllUnresolvedButton();
+		Button viewRequestsBtn = viewRequests();
 
-		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn);
+		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn, viewRequestsBtn);
 
 		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
@@ -1716,6 +1718,22 @@ public class InstructorHomePage {
 		stage.show();
 		// Displays this stage to the user
 	}
+	
+	private Button viewRequests() {
+		Button viewRequests = new Button("See requests for reviewer");
+		
+		viewRequests.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
+						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+		viewRequests.setOnAction(a -> {
+
+			// Create new stage to get rid of transparency for following pages
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+			new InstructorRequest(databaseHelper).show(newStage);
+		});
+		return viewRequests;
+		}
 
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {

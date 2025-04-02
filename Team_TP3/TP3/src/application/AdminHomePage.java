@@ -117,11 +117,12 @@ public class AdminHomePage {
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
 						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
 		viewRequests.setOnAction(a -> {
+
 			// Create new stage to get rid of transparency for following pages
 			Stage newStage = new Stage();
 			newStage.initStyle(StageStyle.TRANSPARENT);
 			primaryStage.close();
-			new AdminRequest(databaseHelper).show(newStage);
+			new AdminRequests(databaseHelper).show(newStage);
 		});
 
 		// Create inviteButton for admin to generate invitation codes
