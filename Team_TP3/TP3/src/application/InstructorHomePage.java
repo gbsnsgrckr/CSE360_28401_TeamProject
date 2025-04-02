@@ -393,14 +393,23 @@ public class InstructorHomePage {
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 				MessageButton.setOnAction(a -> {
-					Stage newStage = new Stage();
-					QATableRow row = getTableView().getItems().get(getIndex());
-					new CreateMessagePage(databaseHelper, row.getAuthorId()).show(newStage);
-				});
+				    Stage newStage = new Stage();
+				    QATableRow row = getTableView().getItems().get(getIndex());
 
-				cellContent.getChildren().addAll(buttonBox);
-				cellContent.setAlignment(Pos.CENTER_LEFT);
-			}
+				    int recipientId = row.getAuthorId();
+				    int referenceId;
+				    String referenceType;
+
+				    if (row.getType() == QATableRow.RowType.QUESTION) {
+				        referenceId = row.getQuestionId();
+				        referenceType = "Question";
+				    } else {
+				        referenceId = row.getAnswerId();
+				        referenceType = "Answer";
+				    }
+
+				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+				});
 
 			@Override
 			protected void updateItem(String item, boolean flag) {
