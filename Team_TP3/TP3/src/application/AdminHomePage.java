@@ -280,6 +280,60 @@ public class AdminHomePage {
 			}
 		});
 
+		TableColumn<User, Void> banColumn = new TableColumn<>("Ban/Unban User");
+		banColumn.setCellFactory(tc -> new TableCell<>() {
+		    private final Button button = new Button("Ban");
+
+		    {
+		    	button.setOnAction(event -> {
+		    	    User user = getTableView().getItems().get(getIndex());
+		    	    boolean isBanned = databaseHelper.isUserBanned(user.getUsername());
+
+		    	    if (isBanned) {
+		    	        if (databaseHelper.unbanUser(user.getUsername())) {
+		    	            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		    	            alert.setTitle("User Unbanned");
+		    	            alert.setContentText(user.getUsername() + " has been unbanned.");
+		    	            alert.showAndWait();
+		    	        } else {
+		    	            // Inline alert for error
+		    	            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+		    	            errorAlert.setTitle("Error");
+		    	            errorAlert.setContentText("Failed to unban user.");
+		    	            errorAlert.showAndWait();
+		    	        }
+		    	    } else {
+		    	        if (databaseHelper.banUser(user.getUsername())) {
+		    	            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+		    	            alert.setTitle("User Banned");
+		    	            alert.setContentText(user.getUsername() + " has been banned.");
+		    	            alert.showAndWait();
+		    	        } else {
+		    	            // Inline alert for error
+		    	            Alert errorAlert = new Alert(Alert.AlertType.ERROR);
+		    	            errorAlert.setTitle("Error");
+		    	            errorAlert.setContentText("Failed to ban user.");
+		    	            errorAlert.showAndWait();
+		    	        }
+		    	    }
+		    	});
+
+		    }
+
+		    @Override
+		    protected void updateItem(Void item, boolean empty) {
+		        super.updateItem(item, empty);
+		        if (empty) {
+		            setGraphic(null);
+		        } else {
+		            User user = getTableView().getItems().get(getIndex());
+		            boolean isBanned = databaseHelper.isUserBanned(user.getUsername());
+		            button.setText(isBanned ? "Unban" : "Ban");
+		            setGraphic(button);
+		        }
+		    }
+		});
+
 		// Enable pushing to users clipboard for copy/paste functionality
 		Clipboard clipboard = Clipboard.getSystemClipboard();
 		ClipboardContent content = new ClipboardContent();
@@ -391,6 +445,7 @@ public class AdminHomePage {
 		table.getColumns().add(changeRole);
 		table.getColumns().add(deleteColumn);
 		table.getColumns().add(tempPassword);
+		table.getColumns().add(banColumn);
 
 		HBox hbox = new HBox(5, backButton, inviteButton, viewRequests);
 		HBox header = new HBox(5, prompt);
