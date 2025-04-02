@@ -379,9 +379,22 @@ public class StaffHomePage {
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 				MessageButton.setOnAction(a -> {
-					Stage newStage = new Stage();
-					QATableRow row = getTableView().getItems().get(getIndex());
-					new CreateMessagePage(databaseHelper, row.getAuthorId()).show(newStage);
+				    Stage newStage = new Stage();
+				    QATableRow row = getTableView().getItems().get(getIndex());
+
+				    int recipientId = row.getAuthorId();
+				    int referenceId;
+				    String referenceType;
+
+				    if (row.getType() == QATableRow.RowType.QUESTION) {
+				        referenceId = row.getQuestionId();
+				        referenceType = "Question";
+				    } else {
+				        referenceId = row.getAnswerId();
+				        referenceType = "Answer";
+				    }
+
+				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
 				});
 
 				cellContent.getChildren().addAll(buttonBox);
