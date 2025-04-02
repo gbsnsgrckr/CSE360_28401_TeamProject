@@ -1558,22 +1558,23 @@ public class QAHelper1 {
 	 * 
 	 */
 	public void createMessage(Message message) throws SQLException {
-		String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message) VALUES (?, ?, ?, ?)";
-		try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
-			pstmt.setInt(1, message.getSenderID());
-			pstmt.setInt(2, message.getRecipientID());
-			pstmt.setString(3, message.getSubject());
-			pstmt.setString(4, message.getMessage());
-			pstmt.executeUpdate();
+	    String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message, referenceId, referenceType) VALUES (?, ?, ?, ?, ?, ?)";
+	    try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
+	        pstmt.setInt(1, message.getSenderID());
+	        pstmt.setInt(2, message.getRecipientID());
+	        pstmt.setString(3, message.getSubject());
+	        pstmt.setString(4, message.getMessage());
+	        pstmt.setInt(5, message.getReferenceID());
+	        pstmt.setString(6, message.getReferenceType());
+	        pstmt.executeUpdate();
 
-			try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
-				if (generatedKeys.next()) {
-					int messageID = generatedKeys.getInt(1);
-					// Set the messageID in the Message object if necessary
-					message.setMessageID(messageID);
-				}
-			}
-		}
+	        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+	            if (generatedKeys.next()) {
+	                int messageID = generatedKeys.getInt(1);
+	                message.setMessageID(messageID);
+	            }
+	        }
+	    }
 	}
 
 	/**
@@ -1636,26 +1637,32 @@ public class QAHelper1 {
 	 * 
 	 */
 	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
-		String query = "SELECT * FROM cse360message WHERE recipientid = ?";
-		List<Message> messages = new ArrayList<>();
+	    String query = "SELECT * FROM cse360message WHERE recipientid = ?";
+	    List<Message> messages = new ArrayList<>();
 
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setInt(1, id);
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        pstmt.setInt(1, id);
 
-			try (ResultSet rs = pstmt.executeQuery()) {
-				while (rs.next()) {
-					int messageID = rs.getInt("messageid");
-					int senderID = rs.getInt("senderid");
-					int recipientID = rs.getInt("recipientid");
-					String subject = rs.getString("subject");
-					String content = rs.getString("message");
+	        try (ResultSet rs = pstmt.executeQuery()) {
+	            while (rs.next()) {
+	                int messageID = rs.getInt("messageid");
+	                int senderID = rs.getInt("senderid");
+	                int recipientID = rs.getInt("recipientid");
+	                String subject = rs.getString("subject");
+	                String content = rs.getString("message");
+	                int referenceID = rs.getInt("referenceid");
+	                String referenceType = rs.getString("referencetype");
 
-					Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
-					messages.add(message);
-				}
-			}
-		}
-		return messages;
+	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
+
+	                message.setReferenceID(referenceID);
+	                message.setReferenceType(referenceType);
+
+	                messages.add(message);
+	            }
+	        }
+	    }
+	    return messages;
 	}
 
 	/**
@@ -1683,8 +1690,10 @@ public class QAHelper1 {
 					int recipientID = rs.getInt("recipientid");
 					String subject = rs.getString("subject");
 					String content = rs.getString("message");
+					int referenceID = rs.getInt("referenceid");
+	                String referenceType = rs.getString("referencetype");
 
-					Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
+					Message message = new Message(databaseHelper, referenceID, referenceType, messageID, senderID, recipientID, subject, content);
 					messages.add(message);
 				}
 			}
