@@ -737,12 +737,11 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This function will remove a role form the user who's username is passed in. 
+	 * This will call the updateRoles function from above. 
+	 * @param username the username of the user that will have roles removed. 
+	 * @param newRole a string containing the role that will be removed.  
+	 * @return boolean
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean removeRoles(String username, String newRole) throws SQLException {
@@ -784,12 +783,11 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This function will delete a request to be a reviewer from the 
+	 * current user that is logged in. Can be used if the user no longer 
+	 * wants to be a reviewer after submitting their request.   
+	 * @param username the id for the user requesting their Reviewer list
+	 * @return boolean
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean deleteRequest(String username) {
@@ -811,12 +809,11 @@ public class DatabaseHelper {
 
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This function will allow a user to be deleted from the database and 
+	 * no longer be able to log in. You are not able to delete your own account 
+	 * if you are logged in.   
+	 * @param username the username of the user that will have their account deleted. 
+	 * @return boolean
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean deleteUser(String username) {
@@ -843,12 +840,9 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * This function will retrieve all of the users that are currently in 
+	 * the database. Will create User objects from the rows that are returned.  
+	 * @return List<User> 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<User> getAllUsers() throws SQLException {
@@ -878,12 +872,9 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * This setup function runs at the beginning of the test and sets up the 
-	 * database, and gets the first question and answer to start the tests on. 
-	 * Using the connectToDatabase(), we have it set to populate with test questions 
-	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * Gets all of the requests for reviewers that Users have submitted.
+	 * Used to display to an Admin in order for them to approve/deny the request. 
+	 * @return List<Request>  
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<Request> getAllRequests() throws SQLException {
@@ -951,8 +942,8 @@ public class DatabaseHelper {
 	 * database, and gets the first question and answer to start the tests on. 
 	 * Using the connectToDatabase(), we have it set to populate with test questions 
 	 * and answers.  
-	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * @param role the role that the query will return Users for. 
+	 * @return List<User> 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Retrieves all users with a specified role
