@@ -11,32 +11,65 @@ import javafx.stage.Stage;
 
 import java.sql.SQLException;
 
+/**
+ * Page where a user can create and send a new message.
+ * Includes references to questions, answers, or previous messages.
+ */
 public class CreateMessagePage {
     private final DatabaseHelper databaseHelper;
     private final int recipientID;
     private User recipient;
+	private int referenceID;
+	private String referenceType;
 
-    public CreateMessagePage(DatabaseHelper databaseHelper, int recipientID) {
-        this.databaseHelper = databaseHelper;
-        this.recipientID = recipientID;
-        try {
-            this.recipient = databaseHelper.getUser(recipientID);
-        } catch (SQLException e) {
-            e.printStackTrace();
-            this.recipient = null;
-        }
-    }
+	 /**
+     * Constructs a CreateMessagePage for a specific recipient with optional reference context.
+     *
+     * @param databaseHelper Helper object for database access
+     * @param recipientID ID of the recipient user
+     * @param referenceID Optional ID of the item being referenced
+     * @param referenceType Type of referenced item ("Question", "Answer", "Message", etc.)
+     */
+	public CreateMessagePage(DatabaseHelper databaseHelper, int recipientID, Integer referenceID, String referenceType) {
+	    this.databaseHelper = databaseHelper;
+	    this.recipientID = recipientID;
+	    this.referenceID = referenceID;
+	    this.referenceType = referenceType;
 
+	    try {
+	        this.recipient = databaseHelper.getUser(recipientID);
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        this.recipient = null;
+	    }
+	}
+	
+	/**
+     * Displays the message composition window.
+     *
+     * @param primaryStage The JavaFX stage to show the UI on
+     */
     public void show(Stage primaryStage) {
         // Label showing recipient username
         Label recipientLabel = new Label("To: " + (recipient != null ? recipient.getUsername() : "Unknown"));
         recipientLabel.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        
+     // Reference Info Label (if available)
+        Label referenceLabel;
+        if (referenceType != null && referenceID > 0) {
+            referenceLabel = new Label("Reference: " + referenceType + referenceID);
+            referenceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #555;");
+        } else {
+            referenceLabel = new Label("Reference: None");
+            referenceLabel.setStyle("-fx-font-size: 14px; -fx-text-fill: #999;");
+        }
+
 
         // Subject Input Field 
         TextField subjectField = new TextField();
         subjectField.setPromptText("Enter Subject");
         subjectField.setStyle("-fx-font-size: 14px; -fx-border-color: gray;");
-        subjectField.setPrefWidth(500); 
+        subjectField.setPrefWidth(500);
 
         // Message TextArea
         TextArea messageField = new TextArea();
@@ -82,7 +115,7 @@ public class CreateMessagePage {
             }
 
             try {
-                Message newMessage = new Message(senderID, recipientID, subject, messageText);
+                Message newMessage = new Message(referenceID, referenceType, senderID, recipientID, subject, messageText);
                 databaseHelper.qaHelper.createMessage(newMessage);
                 showAlert("Success", "Your message has been sent successfully.");
                 primaryStage.close();
@@ -95,7 +128,7 @@ public class CreateMessagePage {
         cancelButton.setOnAction(e -> primaryStage.close());
 
         // Layout
-        VBox contentLayout = new VBox(10, recipientLabel, subjectField, scrollPane, buttonBox);
+        VBox contentLayout = new VBox(10, recipientLabel, referenceLabel, subjectField, scrollPane, buttonBox);
         contentLayout.setPadding(new Insets(20));
         contentLayout.setAlignment(Pos.TOP_LEFT);
         contentLayout.setStyle("-fx-background-color: #f4f4f4; -fx-border-color: gray; -fx-border-width: 1px;");
@@ -107,6 +140,12 @@ public class CreateMessagePage {
         primaryStage.show();
     }
     
+    /**
+     * Shows an alert dialog to the user.
+     *
+     * @param title Title of the alert window
+     * @param message Message content of the alert
+     */
     // pop up alert showing message sent successfully
     private void showAlert(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
