@@ -42,15 +42,29 @@ public class DatabaseHelper {
 	static final String USER = "sa";
 	static final String PASS = "";
 
+	/**
+	 * The database connection
+	 */
 	private Connection connection = null;
+	/**
+	 * The Statement used to process SQL Queries
+	 */
 	private Statement statement = null;
-
+	/**
+	 * The User that is currently logged in. 
+	 */
 	public User currentUser;
 
 	// Create QAHelper object
+	/**
+	 * A QAHelper object to access the QA database methods. 
+	 */
 	public final QAHelper1 qaHelper;
 
 	// Initialize new QAHelper object2
+	/**
+	 * A default constructor to initialize the database. 
+	 */
 	public DatabaseHelper() {
 		qaHelper = new QAHelper1(this);
 	}
@@ -160,7 +174,8 @@ public class DatabaseHelper {
 	
 	/**
 	 * This is a helper method that will check if the database is empty 
-	 * All it checks for is if there is any data in the User table. 
+	 * All it checks for is if there is any data in the User table.
+	 * @return boolean for if the database is empty 
 	 * @throws SQLException if it can not find the User table.
 	 */
 	// Check if the database is empty
@@ -362,8 +377,8 @@ public class DatabaseHelper {
 	 * Gets all of the reviewers that have been associated with the user. The user
 	 * sets these in the GUI. 
 	 * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
-	 * @throws 
+	 * @return Map of Users and Integers for the reviewers and their weights  
+	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public Map<User, Integer> getAllReviewersForUser(int userId) throws SQLException {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
@@ -386,7 +401,6 @@ public class DatabaseHelper {
 	 * @param newReviewer The User object that represents the Reviewer to be added
 	 * @param weight The selected weight value the User has given to the Reviewer
 	 * @return boolean 
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean addReviewer(int userId, User newReviewer, int weight)  {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
@@ -436,7 +450,6 @@ public class DatabaseHelper {
 	 * @param reviewer The Reviewer object that will be updated. 
 	 * @param newWeight The new weight that will be assigned to the reviewer.
 	 * @return boolean
-	 * @throwsSQLException if there is an error in accessing the column. 
 	 */
 	public boolean updateReviewerWeight(int userId, User reviewer, int newWeight)  {
 		try {
@@ -457,7 +470,6 @@ public class DatabaseHelper {
 	 * @param userId the id for the user requesting their Reviewer list
 	 * @param reviewer the Reviewer that will be updated. 
 	 * @return boolean
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean removeReviewer(int userId, User reviewer) {
 		String query = "SELECT reviewers FROM cse360users WHERE id = ?";            // selecting all of the rows in the database
@@ -551,7 +563,6 @@ public class DatabaseHelper {
 	 * user.  
 	 * @param username the username for the password to be updated. 
 	 * @param password the new password to be updated. 
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public void updatePassword(String username, String password) {
 		String insertUser = "UPDATE cse360users SET password = ? WHERE username = ?"; // able to update password for OTP
@@ -570,8 +581,8 @@ public class DatabaseHelper {
 	 * Allows the persistence of a One Time Password flag to be stored in 
 	 * the database. Used when an admin has sent the user a One Time 
 	 * Password.  
-	 * @param username the username for the User that has requested the One Time Password. 
-	 * @throws SQLException if there is an error in accessing the column. 
+	 * @param username the username for the User that has requested the One Time Password.
+	 * @param flag a boolean for the new One Time password flag 
 	 */
 	public void updateOTPFlag(String username, boolean flag) {
 		String insertUser = "UPDATE cse360users SET otp = ? WHERE username = ?"; // able to update if the user is using
@@ -617,7 +628,7 @@ public class DatabaseHelper {
 
 	/**
 	 * Returns the User object that is associated with the ID. 
-	 * @param userId the id for the User requested. 
+	 * @param id the id for the User requested. 
 	 * @return User  
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
@@ -645,9 +656,9 @@ public class DatabaseHelper {
 
 	/**
 	 * Allows a role to be added to a User. Calls the updateRoles function above. 
-	 * @param userId the id for the user requesting their Reviewer list
-	 * * @param userId the id for the user requesting their Reviewer list
-	 * @return Map<User, Integer>  
+	 * @param username the username of the user adding a role to 
+	 * @param newRole the new role to be added 
+	 * @return boolean for if the role got added   
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean addRoles(String username, String newRole) throws SQLException { // able to add roles based on
@@ -788,7 +799,6 @@ public class DatabaseHelper {
 	 * wants to be a reviewer after submitting their request.   
 	 * @param username the id for the user requesting their Reviewer list
 	 * @return boolean
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean deleteRequest(String username) {
 		String query = "DELETE FROM cse360request as c WHERE c.username = ?";
@@ -814,7 +824,6 @@ public class DatabaseHelper {
 	 * if you are logged in.   
 	 * @param username the username of the user that will have their account deleted. 
 	 * @return boolean
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public boolean deleteUser(String username) {
 		if (!username.equals(currentUser.getUsername())) { // make sure the the correct user is getting deleted
@@ -842,7 +851,7 @@ public class DatabaseHelper {
 	/**
 	 * This function will retrieve all of the users that are currently in 
 	 * the database. Will create User objects from the rows that are returned.  
-	 * @return List<User> 
+	 * @return a List of Users that are in the database. 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<User> getAllUsers() throws SQLException {
@@ -874,7 +883,7 @@ public class DatabaseHelper {
 	/**
 	 * Gets all of the requests for reviewers that Users have submitted.
 	 * Used to display to an Admin in order for them to approve/deny the request. 
-	 * @return List<Request>  
+	 * @return a List of Requests that are in the database. 
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<Request> getAllRequests() throws SQLException {
@@ -898,10 +907,10 @@ public class DatabaseHelper {
 	/**
 	 * This method updates the request by the user, typically only for making it visible to the 
 	 * admin, and removing it from the Instructors view
-	 * @param userName
-	 * @param requestTOF
-	 * @param requestATOF
-	 * @throws SQLException
+	 * @param userName the username for the request being updated
+	 * @param requestTOF a boolean to tell if the request is still active. 
+	 * @param requestATOF a boolean to tell if the request has been accepted. 
+	 * @throws SQLException if there is an error in accessing the column.
 	 */
 	public void updateRequestStatus(String userName, boolean requestTOF, boolean requestATOF) throws SQLException {
 	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE userName = ?";
@@ -915,8 +924,8 @@ public class DatabaseHelper {
 	}
 	/**
 	 * This method gets all the requests that the admin should see.
-	 * @return
-	 * @throws SQLException
+	 * @return a List of Requests that are in the database. 
+	 * @throws SQLException if there is an error in accessing the column.
 	 */
 	public List<Request> getAllRequestsForAdmin() throws SQLException {
 		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request WHERE requestATOF = TRUE";
@@ -941,7 +950,7 @@ public class DatabaseHelper {
 	 * This method returns all of the Users in the database that 
 	 * have a specific role assigned to them. 
 	 * @param role the role that the query will return Users for. 
-	 * @return List<User> 
+	 * @return a List of Users in the database that have this role.  
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Retrieves all users with a specified role
@@ -1031,14 +1040,13 @@ public class DatabaseHelper {
 	 * is in the database.  
 	 * @param username the username being checked if it exists. 
 	 * @return boolean 
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Checks if a user already exists in the database based on their userName.
-	public boolean doesUserExist(String userName) {
+	public boolean doesUserExist(String username) {
 		String query = "SELECT COUNT(*) FROM cse360users WHERE userName = ?"; // make sure that user exists
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 
-			pstmt.setString(1, userName);
+			pstmt.setString(1, username);
 			ResultSet rs = pstmt.executeQuery();
 
 			if (rs.next()) {
@@ -1055,14 +1063,13 @@ public class DatabaseHelper {
 	 * This method returns all of the roles that the User with
 	 * the given username has. 
 	 * @param username the username to get the roles from. 
-	 * @return List<String>  
-	 * @throws SQLException if there is an error in accessing the column. 
+	 * @return a List of Strings that represent the roles the user has.   
 	 */
 	// Retrieves the role of a user from the database using their UserName.
-	public List<String> getUserRole(String userName) {
+	public List<String> getUserRole(String username) {
 		String query = "SELECT roles FROM cse360users WHERE userName = ?"; // getting all of the roles for a user
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			pstmt.setString(1, userName);
+			pstmt.setString(1, username);
 			ResultSet rs = pstmt.executeQuery();
 
 			if (rs.next()) {
@@ -1079,7 +1086,6 @@ public class DatabaseHelper {
 	 * Generates a Invitation Code that will be used to allow 
 	 * a new User to register their login. 
 	 * @return String 
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Generates a new invitation code and inserts it into the database.
 	public String generateInvitationCode() {
@@ -1103,7 +1109,6 @@ public class DatabaseHelper {
 	 * Generates a random One Time Password that the user can user to login
 	 * and reset their password.  
 	 * @return String 
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public String generateOneTimePassword() {
 		String special = "~`!@#$%^&*()_-+{}[]|:,.?/"; // same list of special characters in PasswordEvaluator
@@ -1135,7 +1140,6 @@ public class DatabaseHelper {
 	 *   exists in the database. 
 	 * @param code the invitation code being used 
 	 * @return boolean
-	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	// Validates an invitation code to check if it is unused.
 	public boolean validateInvitationCode(String code) {
@@ -1274,7 +1278,7 @@ public class DatabaseHelper {
 	}
 
 	/**
-	 * Closes the connection to the database. 
+	 * Closes the connection to the database. . 
 	 */
 	// Closes the database connection and statement.
 	public void closeConnection() {
@@ -1292,137 +1296,325 @@ public class DatabaseHelper {
 		}
 	}
 
-	/*******
-	 * <p> Title: QAHelper Class. </p>
-	 * 
-	 * <p> Description: A Database Helper class that holds all of our methods taking data in and out of the database for questions and answers. </p>
-	 * 
-	 * <p> Copyright: CSE360 Team 8 @ 2025 </p>
-	 * 
-	 * @author CSE360 Team 8
-	 * 
-	 * @version 1.00	2025-03-24 Implementing the QAHelper methods
-	 * 
-	 */
-	public class QAHelper {
-
-		// Initialize connection to database
-		public void connectToDatabase() throws SQLException {
-			qaHelper.connectToDatabase();
-		}
-
-		/*
-		 * // Create the tables that will be used to store the info // I don't believe
-		 * we need this part private void createTables() throws SQLException {
-		 * qaHelper.createTables(); }
-		 */
-
-		// Check if the database is empty
-		public boolean isDatabaseEmpty() throws SQLException {
-			return qaHelper.isDatabaseEmpty();
-		}
-
-		// Registers a new user in the database.
-		public void registerQuestion(Question question) throws SQLException {
-			qaHelper.registerQuestion(question);
-		}
-
-		// Registers a new question in the database.
-		public void registerAnswerWithQuestion(Answer answer, int questionID) throws SQLException {
-			qaHelper.registerAnswerWithQuestion(answer, questionID);
-		}
-
-		// Registers a new user in the database.
-		public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
-			qaHelper.registerAnswerWithAnswer(answer, relatedID);
-		}
-
-		// Deletes a question row from the SQL table
-		public boolean deleteQuestion(int id) {
-			return qaHelper.deleteQuestion(id);
-		}
-
-		// Deletes a question row from the SQL table
-		public boolean deleteAnswer(int id) {
-			return qaHelper.deleteAnswer(id);
-		}
-
-		// Add a relation to the question database
-		public void addRelationToQuestion(int questionID, int answerID) {
-			qaHelper.addRelationToQuestion(questionID, answerID);
-		}
-
-		// Add a relation to the answer database
-		public void addRelationToAnswer(int questionID, int answerID) {
-			qaHelper.addRelationToAnswer(questionID, answerID);
-		}
-
-		// Delete a relation from the relation database
-		public boolean deleteRelation(int questionID, int answerID) {
-			return qaHelper.deleteRelation(questionID, answerID);
-		}
-
-		// Get a question object with a provided question id
-		public Question getQuestion(Integer questionID) throws SQLException {
-			return qaHelper.getQuestion(questionID);
-		}
-
-		// Get a question object with a provided question title
-		public Question getQuestion(String questionTitle) throws SQLException {
-			return qaHelper.getQuestion(questionTitle);
-		}
-
-		// Get an answer object with a provided answer id
-		public Answer getAnswer(Integer answerID) throws SQLException {
-			return qaHelper.getAnswer(answerID);
-		}
-
-		// Retrieve all questions from the question database
-		public List<Question> getAllQuestions() throws SQLException {
-			return qaHelper.getAllQuestions();
-		}
-
-		// Retrieve all questions from question database that don't have answers
-		public List<Question> getAllUnansweredQuestions() throws SQLException {
-			return qaHelper.getAllUnansweredQuestions();
-		}
-
-		// Retrieve all questions from question database that have answers
-		public List<Question> getAllAnsweredQuestions() throws SQLException {
-			return qaHelper.getAllAnsweredQuestions();
-		}
-
-		// Retrieve all answers from the answer database
-		public List<Answer> getAllAnswers() throws SQLException {
-			return qaHelper.getAllAnswers();
-		}
-
-		// Retrieve all of the answers that are associated with a given question id from
-		// the answer database
-		public List<Answer> getAllAnswersForQuestion(int questionID) throws SQLException {
-			return qaHelper.getAllAnswersForQuestion(questionID);
-		}
-
-		// Retrieve all of the answers that are associated with a given answer id from
-		// the answer database
-		public List<Answer> getAllAnswersForAnswer(int answerID) throws SQLException {
-			return qaHelper.getAllAnswersForAnswer(answerID);
-		}
-
-		// Method used to convert the text of a question into a list of unique words
-		// without special characters for comparison to others
-		public List<String> textDeserial(String text) {
-			return qaHelper.textDeserial(text);
-		}
-
-		// Update the contents of a question object with those of pass question object
-		public void updateQuestion(Question question) {
-			qaHelper.updateQuestion(question);
-		}
-
-		// Update the contents of a answer object with those of pass answer object
-		public void updateAnswer(Answer answer) {
-			qaHelper.updateAnswer(answer);
-		}
-	}
+//	/*******
+//	 * <p> Title: QAHelper Class. </p>
+//	 * 
+//	 * <p> Description: A Database Helper class that holds all of our methods taking data in and out of the database for questions and answers. </p>
+//	 * 
+//	 * <p> Copyright: CSE360 Team 8 @ 2025 </p>
+//	 * 
+//	 * @author CSE360 Team 8
+//	 * 
+//	 * @version 1.00	2025-03-24 Implementing the QAHelper methods
+//	 * 
+//	 */
+//	public class QAHelper {
+//
+//		// Initialize connection to database
+//		/**
+//		 * 
+//		 * Initializes the connection to the database
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public void connectToDatabase() throws SQLException {
+//			qaHelper.connectToDatabase();
+//		}
+//
+//		/*
+//		 * // Create the tables that will be used to store the info // I don't believe
+//		 * we need this part private void createTables() throws SQLException {
+//		 * qaHelper.createTables(); }
+//		 */
+//		// Check if the database is empty
+//		/**
+//		 * Check if the database is empty - Only checks the question database at the
+//		 * moment.
+//		 * 
+//		 * @return 						A boolean indicating whether the function was successfully performed
+//		 * 
+//		 * @throws SQLException 		In case the database throws an error
+//		 * 
+//		 */
+//		public boolean isDatabaseEmpty() throws SQLException {
+//			return qaHelper.isDatabaseEmpty();
+//		}
+//
+//		// Registers a new user in the database.
+//		/**
+//		 * Registers a new question in the database.
+//		 * 
+//		 * @param question 			The question object you wish to register in the database
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public void registerQuestion(Question question) throws SQLException {
+//			qaHelper.registerQuestion(question);
+//		}
+//
+//		// Registers a new question in the database.
+//		/**
+//		 * Registers a new answer in the database.
+//		 * 
+//		 * @param answer		 The answer object you wish to relate to a question
+//		 * @param relatedID 	 The id of the question you wish to relate the passed answer object to
+//		 * 
+//		 * @throws SQLException  In case the database throws an error
+//		 * 
+//		 */
+//		public void registerAnswerWithQuestion(Answer answer, int questionID) throws SQLException {
+//			qaHelper.registerAnswerWithQuestion(answer, questionID);
+//		}
+//
+//		// Registers a new user in the database.
+//		/**
+//		 * Registers a new answer in the database.
+//		 * 
+//		 * @param answer 		The answer object you wish to register
+//		 * @param relatedID 	The answer id you wish to relate to the passed answer object
+//		 * 
+//		 * @throws SQLException In case the database throws an error
+//		 * 
+//		 */
+//		public void registerAnswerWithAnswer(Answer answer, int relatedID) throws SQLException {
+//			qaHelper.registerAnswerWithAnswer(answer, relatedID);
+//		}
+//
+//		// Deletes a question row from the SQL table
+//		/**
+//		 * Deletes a question row from the SQL table
+//		 * 
+//		 * @param id 	The id of the question you wish to delete
+//		 * 
+//		 * @return 		A boolean indicating whether the function was successfully performed
+//		 * 
+//		 */
+//		public boolean deleteQuestion(int id) {
+//			return qaHelper.deleteQuestion(id);
+//		}
+//
+//		// Deletes a question row from the SQL table
+//		/**
+//		 * Deletes a question row from the SQL table
+//		 * 
+//		 * @param id 		The id of the answer you wish to delete
+//		 * 
+//		 * @return 			A boolean indicating whether the function was successfully performed
+//		 * 
+//		 */
+//		public boolean deleteAnswer(int id) {
+//			return qaHelper.deleteAnswer(id);
+//		}
+//
+//		// Add a relation to the question database
+//		/**
+//		 * Add a relation to the question database
+//		 * 
+//		 * @param questionID 	The id of the question you want to relate to
+//		 * @param answerID 		The id of the answer you wish to relate to a question
+//		 * 
+//		 */
+//		public void addRelationToQuestion(int questionID, int answerID) {
+//			qaHelper.addRelationToQuestion(questionID, answerID);
+//		}
+//
+//		// Add a relation to the answer database
+//		/**
+//		 * Add a relation to the answer database
+//		 * 
+//		 * @param answerID 		The id of the answer you wish to relate to
+//		 * @param relatedID 	The id of the answer you wish to relate
+//		 * 
+//		 */
+//		public void addRelationToAnswer(int questionID, int answerID) {
+//			qaHelper.addRelationToAnswer(questionID, answerID);
+//		}
+//
+//		// Delete a relation from the relation database
+//		/**
+//		 * Delete a relation from the relation database
+//		 * 
+//		 * @param questionID 	The id of the question you wish to delete a relation from
+//		 * @param answerID 		The id of the answer you wish to remove the relation of
+//		 * 
+//		 * @return 				A boolean indicating whether the function was successfully performed
+//		 * 
+//		 */
+//		public boolean deleteRelation(int questionID, int answerID) {
+//			return qaHelper.deleteRelation(questionID, answerID);
+//		}
+//
+//		// Get a question object with a provided question id
+//		/**
+//		 * Get a question object with a provided question id
+//		 * 
+//		 * @param questionID 			The id of the question you wish to search for
+//		 * 
+//		 * @return 						A question object representing the question you were searching for
+//		 * 
+//		 * @throws SQLException 		In case the database throws an error
+//		 * 
+//		 */
+//		public Question getQuestion(Integer questionID) throws SQLException {
+//			return qaHelper.getQuestion(questionID);
+//		}
+//
+//		// Get a question object with a provided question title
+//		/**
+//		 * Get a question object with a provided question title
+//		 * 
+//		 * @param questionTitle 		The title of the question you are searching for
+//		 * 
+//		 * @return 						A question object representing the question you were searching for
+//		 * 
+//		 * @throws SQLException 		In case the database throws an error
+//		 * 
+//		 */
+//		public Question getQuestion(String questionTitle) throws SQLException {
+//			return qaHelper.getQuestion(questionTitle);
+//		}
+//
+//		// Get an answer object with a provided answer id
+//		/**
+//		 * Get an answer object with a provided answer id
+//		 * 
+//		 * @param answerID 			The id of the answer you are searching for
+//		 * 
+//		 * @return 					An answer object representing the answer you were searching for
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public Answer getAnswer(Integer answerID) throws SQLException {
+//			return qaHelper.getAnswer(answerID);
+//		}
+//
+//		// Retrieve all questions from the question database
+//		
+//		/**
+//		 * Retrieve all questions from the question database
+//		 * 
+//		 * @return 					A List of question objects representing the entire question database
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Question> getAllQuestions() throws SQLException {
+//			return qaHelper.getAllQuestions();
+//		}
+//
+//		// Retrieve all questions from question database that don't have answers
+//
+//		/**
+//		 * Returns a list of all questions that have no potential answers
+//		 * 
+//		 * @return 					A List of question objects representing all unanswered questions
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Question> getAllUnansweredQuestions() throws SQLException {
+//			return qaHelper.getAllUnansweredQuestions();
+//		}
+//
+//		// Retrieve all questions from question database that have answers
+//		/**
+//		 * Retrieve all questions that have potential answers
+//		 * 
+//		 * @return 					A List of question objects representing all answered questions
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Question> getAllAnsweredQuestions() throws SQLException {
+//			return qaHelper.getAllAnsweredQuestions();
+//		}
+//
+//		// Retrieve all answers from the answer database
+//		/**
+//		 * Retrieve all answers from the answer database
+//		 * 
+//		 * @return 					A List of answer objects representing all answers in the answer database
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Answer> getAllAnswers() throws SQLException {
+//			return qaHelper.getAllAnswers();
+//		}
+//
+//		// Retrieve all of the answers that are associated with a given question id from
+//		// the answer database
+//		/**
+//		 * Retrieve all of the answers that are associated with a given question id from
+//		 * the question database.
+//		 * 
+//		 * @param questionID 		The id of the question you are working with
+//		 * 
+//		 * @return 					A List of answer objects representing all answers for the passed question
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Answer> getAllAnswersForQuestion(int questionID) throws SQLException {
+//			return qaHelper.getAllAnswersForQuestion(questionID);
+//		}
+//
+//		// Retrieve all of the answers that are associated with a given answer id from
+//		// the answer database
+//		/**
+//		 * Retrieve all of the answers that are associated with a given answer id from
+//		 * the answer database
+//		 * 
+//		 * @param answerID 			The id of the answer you are working with
+//		 * 
+//		 * @return 					A List of answer objects representing all answers related to the passed answer
+//		 * 
+//		 * @throws SQLException 	In case the database throws an error
+//		 * 
+//		 */
+//		public List<Answer> getAllAnswersForAnswer(int answerID) throws SQLException {
+//			return qaHelper.getAllAnswersForAnswer(answerID);
+//		}
+//
+//		// Method used to convert the text of a question into a list of unique words
+//		// without special characters for comparison to others
+//		/**
+//		 * Method used to convert the text of a question into a list of unique words
+//		 * without special characters for comparison to others
+//		 * 
+//		 * @param text 				The text you wish to deserialize
+//		 * 
+//		 * @return 					The deserialized text
+//		 * 
+//		 */
+//		public List<String> textDeserial(String text) {
+//			return qaHelper.textDeserial(text);
+//		}
+//
+//		// Update the contents of a question object with those of pass question object
+//		/**
+//		 * Update the contents of a question object with those of the passed question
+//		 * object
+//		 * 
+//		 * @param question 			The question object you are working with
+//		 * 
+//		 */
+//		public void updateQuestion(Question question) {
+//			qaHelper.updateQuestion(question);
+//		}
+//
+//		// Update the contents of a answer object with those of pass answer object
+//		/**
+//		 * Update the contents of a answer object with those of pass answer object
+//		 * 
+//		 * @param answer 			The answer object you are working with
+//		 * 
+//		 */
+//		public void updateAnswer(Answer answer) {
+//			qaHelper.updateAnswer(answer);
+//		}
+//	}
 }
