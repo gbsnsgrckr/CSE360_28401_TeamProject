@@ -73,7 +73,7 @@ public class QAHelper1 {
 	/**
 	 * Constructor
 	 * 
-	 * @param databaseHelper Database helper for the user databse
+	 * @param databaseHelper Database helper for the user database
 	 * 
 	 */
 	public QAHelper1(DatabaseHelper databaseHelper) {

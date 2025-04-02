@@ -64,7 +64,7 @@ public class ReviewCRUDTestingAutomation {
 	}
 	
 	/**
-	 * Test 1 - This method performs test 1 which will simply test the database size
+	 * Test 26 - This method performs test 1 which will simply test the database size
 	 * to ensure the expected number of reviews exists in the database to ensure
 	 * that all reviews are accessible and able to be searched.
 	 * 
@@ -87,7 +87,7 @@ public class ReviewCRUDTestingAutomation {
 	}
 
 	/**
-	 * Test 2 - This method performs test 2 which will test the delete
+	 * Test 27 - This method performs test 2 which will test the delete
 	 * function. It will delete review id #2 and then search for it.
 	 * 
 	 */
@@ -95,7 +95,7 @@ public class ReviewCRUDTestingAutomation {
 	public void testDeleteReview() {
 		try {
 			// Delete review 2
-			databaseHelper.qaHelper.deleteReview(1);
+			databaseHelper.qaHelper.deleteReview(2);
 			// Retrieve review from the database
 			review = databaseHelper.qaHelper.getReview(2);
 		} catch (SQLException e) {
@@ -110,7 +110,7 @@ public class ReviewCRUDTestingAutomation {
 	}
 
 	/**
-	 * Test 3 - This method performs test 3 which will test the update
+	 * Test 28 - This method performs test 3 which will test the update
 	 * function. This will update the text and then check to see if
 	 * that text is reflected in the review database.
 	 * 
@@ -138,7 +138,7 @@ public class ReviewCRUDTestingAutomation {
 	}
 
 	/**
-	 * Test 4 - This method simply pulling another review from the database
+	 * Test 29 - This method simply pulling another review from the database
 	 * 
 	 */
 	@Test
@@ -158,7 +158,7 @@ public class ReviewCRUDTestingAutomation {
 	}
 
 	/**
-	 * Test 5 - This method simply pulling another review from the database
+	 * Test 30 - This method simply pulling another review from the database
 	 * 
 	 */
 	@Test
