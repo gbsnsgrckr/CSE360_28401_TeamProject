@@ -23,18 +23,30 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 
-/** 
- * The inbox class shows all user generated message that are related to the
- * target question.
+/**
+ * Displays the Inbox view for a user.
+ * Shows all messages related to the current user in a table, allowing actions
+ * such as reading, replying, and deleting messages.
  */
 
 public class Inbox {
     private final DatabaseHelper databaseHelper;
 
+    /**
+     * Constructs the Inbox view with a given database helper.
+     *
+     * @param databaseHelper The helper used to interact with the database.
+     */
     public Inbox(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
     }
 
+    /**
+     * Displays the Inbox window on the specified stage.
+     * Includes a message table, control buttons, and custom window styling.
+     *
+     * @param primaryStage The stage where the inbox should be shown.
+     */
     public void show(Stage primaryStage) {
     	double[] offsetX = { 0 };
 		double[] offsetY = { 0 };
@@ -68,6 +80,30 @@ public class Inbox {
             cellData.getValue().getRecipient() != null ? cellData.getValue().getRecipient().getUsername() : "Unknown"
         ));
         recipientColumn.setVisible(false); // Hide column
+        
+     // TableColumn for Reference with prefixed ID
+        TableColumn<Message, String> referenceColumn = new TableColumn<>("Reference");
+        referenceColumn.setCellValueFactory(cellData -> {
+            Message msg = cellData.getValue();
+
+            String prefix;
+
+            if ("Answer".equalsIgnoreCase(msg.getReferenceType())) {
+                prefix = "A";
+            } else if ("Question".equalsIgnoreCase(msg.getReferenceType())) {
+                prefix = "Q";
+            } else if ("Message".equalsIgnoreCase(msg.getReferenceType())) {
+                prefix = "M";
+            } else {
+                prefix = "-";
+            }
+
+            String refDisplay = (msg.getReferenceID() > 0 && !prefix.equals("-")) ? prefix + msg.getReferenceID() : "-";
+            return new SimpleStringProperty(refDisplay);
+        });
+
+        referenceColumn.setPrefWidth(80);
+
 
         // TableColumn for Subject
         TableColumn<Message, String> subjectColumn = new TableColumn<>("Subject");
@@ -83,7 +119,7 @@ public class Inbox {
         table.setFixedCellSize(70);  
 
         // Add columns to the table
-        table.getColumns().addAll(messageIdColumn, senderColumn, recipientColumn, subjectColumn, messageColumn);
+        table.getColumns().addAll(messageIdColumn, senderColumn, referenceColumn, recipientColumn, subjectColumn, messageColumn);
 
         ObservableList<Message> messageObservableList = FXCollections.observableArrayList(messageList);
         table.setItems(messageObservableList);
@@ -125,9 +161,15 @@ public class Inbox {
             Message selectedMessage = table.getSelectionModel().getSelectedItem();
             if (selectedMessage != null) {
                 Stage replyStage = new Stage();
-                new CreateMessagePage(databaseHelper, selectedMessage.getSenderID()).show(replyStage);
+                int recipientId = selectedMessage.getSenderID();
+                int referenceId = selectedMessage.getMessageID();
+                String referenceType = "Message";
+
+                new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(replyStage);
             }
         });
+
+
 
         // Delete Button Action
         deleteButton.setOnAction(event -> {
