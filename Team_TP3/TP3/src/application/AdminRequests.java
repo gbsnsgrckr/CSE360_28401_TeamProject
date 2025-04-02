@@ -23,7 +23,7 @@ import javafx.stage.StageStyle;
  * this class handles the view request's page on the admin home page
  * It handles everything including buttons that accept/decline the request, 
  * exit out of the window, and the table that displays the requests
- * @author Darren Fernandes
+ * @author CSE360 Team 8
  */
 public class AdminRequests {
 	private final DatabaseHelper databaseHelper;
@@ -69,6 +69,15 @@ public class AdminRequests {
 		        }
 		    }
 		});
+
+		TableColumn<Request, String> statusCol = new TableColumn<>("Status");
+        	statusCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
+
+       		 TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
+        	notesCol.setPrefWidth(200);
+        	notesCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
 
 		
 		TableColumn<Request, Void> accept = new TableColumn<>("Accept");
@@ -146,8 +155,44 @@ public class AdminRequests {
 		        }
 		    }
 		});
+
+		TableColumn<Request, Void> closeCol = new TableColumn<>("Close");
+        closeCol.setCellFactory(tc -> new TableCell<>() {
+            private final Button closeButton = new Button("Close Request");
+            {
+                closeButton.setOnAction(e -> {
+                    Request req = getTableView().getItems().get(getIndex());
+                    TextInputDialog dialog = new TextInputDialog("Add final admin notes...");
+                    dialog.setTitle("Close Request");
+                    dialog.setHeaderText("Optionally add notes before closing");
+                    dialog.setContentText("Notes:");
+                    dialog.showAndWait().ifPresent(note -> {
+                        try {
+                            databaseHelper.closeRequest(req.getId(), note);
+                            refreshTableData(tableView);
+                        } catch (SQLException ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                });
+            }
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) {
+                    setGraphic(null);
+                } else {
+                    Request r = getTableView().getItems().get(getIndex());
+                    if ("OPEN".equalsIgnoreCase(r.getStatus()) || "REOPENED".equalsIgnoreCase(r.getStatus())) {
+                        setGraphic(closeButton);
+                    } else {
+                        setGraphic(null);
+                    }
+                }
+            }
+        });
 		
-		tableView.getColumns().addAll(usernames, request, accept, decline);
+		tableView.getColumns().addAll(usernames, request, statusCol, notesCol, accept, decline, closeCol);
 
 		ObservableList<Request> data = FXCollections.observableArrayList();
 
