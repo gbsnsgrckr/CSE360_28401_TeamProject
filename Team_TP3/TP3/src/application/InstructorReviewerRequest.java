@@ -15,33 +15,68 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * Handles the display and management of reviewer requests submitted by instructors.
+ * This class creates a JavaFX interface to show pending reviewer requests and 
+ * allows the instructor to accept or decline each request.
+ */
 public class InstructorReviewerRequest {
 
+    /**
+     * Helper instance for performing database operations.
+     */
     private final DatabaseHelper databaseHelper;
-    // Track processed request IDs without modifying the Request class.
+    
+    /**
+     * Tracks processed request IDs without modifying the Request class.
+     */
     private final Set<Integer> processedRequestIds = new HashSet<>();
 
+    /**
+     * Constructs a new InstructorReviewerRequest with the specified DatabaseHelper.
+     *
+     * @param databaseHelper the helper for performing database operations.
+     */
     public InstructorReviewerRequest(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
     }
 
+    /**
+     * Displays the reviewer requests in a JavaFX TableView. Provides options to
+     * accept or decline each request. When a request is accepted, the corresponding 
+     * reviewer role is added, and the request is closed with an appropriate note. 
+     * When declined, the request is deleted from the database.
+     *
+     * @param primaryStage the primary stage for the JavaFX application.
+     */
     public void show(Stage primaryStage) {
         TableView<Request> tableView = new TableView<>();
 
+        // Username column showing the user's username.
         TableColumn<Request, String> usernames = new TableColumn<>("Username");
-        usernames.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));
+        usernames.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername())
+        );
 
+        // Request column showing the request details.
         TableColumn<Request, String> requestCol = new TableColumn<>("Request");
         requestCol.setCellValueFactory(new PropertyValueFactory<>("request"));
         requestCol.setPrefWidth(300);
 
+        // Status column showing the current status of the request.
         TableColumn<Request, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
+        statusCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus())
+        );
 
+        // Notes column showing any notes associated with the request.
         TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
-        notesCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
+        notesCol.setCellValueFactory(cellData -> 
+            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes())
+        );
         notesCol.setPrefWidth(200);
 
+        // Accept column with a button to accept the request.
         TableColumn<Request, Void> accept = new TableColumn<>("Accept");
         accept.setCellFactory(tc -> new TableCell<Request, Void>() {
             private final Button acceptButton = new Button("Accept");
@@ -90,8 +125,7 @@ public class InstructorReviewerRequest {
             }
         });
 
-
-
+        // Decline column with a button to decline the request.
         TableColumn<Request, Void> declineCol = new TableColumn<>("Decline");
         declineCol.setCellFactory(tc -> new TableCell<Request, Void>() {
             private final Button declineButton = new Button("Decline");
@@ -100,10 +134,10 @@ public class InstructorReviewerRequest {
                 declineButton.setOnAction(e -> {
                     Request req = getTableView().getItems().get(getIndex());
                     // Delete the request from the database (or update its status accordingly)
-					databaseHelper.deleteRequest(req.getUserName());
+                    databaseHelper.deleteRequest(req.getUserName());
 
-					// Refresh the table to show updated requests
-					refreshTable(getTableView());
+                    // Refresh the table to show updated requests
+                    refreshTable(getTableView());
                 });
             }
 
@@ -124,11 +158,11 @@ public class InstructorReviewerRequest {
             }
         });
 
-
-
+        // Add all columns to the table view.
         tableView.getColumns().addAll(usernames, requestCol, statusCol, notesCol, accept, declineCol);
         refreshTable(tableView);
 
+        // Back button to return to the instructor home page.
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> {
             primaryStage.close();
@@ -141,6 +175,12 @@ public class InstructorReviewerRequest {
         primaryStage.show();
     }
 
+    /**
+     * Refreshes the TableView with the latest reviewer requests from the database.
+     * Retrieves all reviewer requests and updates the table view's items.
+     *
+     * @param tableView the TableView to be refreshed.
+     */
     private void refreshTable(TableView<Request> tableView) {
         try {
             List<Request> reviewerRequests = databaseHelper.getAllReviewerRequests();
