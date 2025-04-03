@@ -165,10 +165,11 @@ public class InstructorReviewerRequest {
         // Back button to return to the instructor home page.
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> {
-            primaryStage.close();
-            new InstructorHomePage(databaseHelper).show(primaryStage);
+            // Get the current stage (the window that contains this back button)
+            Stage currentStage = (Stage) backButton.getScene().getWindow();
+            currentStage.close();
         });
-
+        
         VBox root = new VBox(10, tableView, new HBox(5, backButton));
         primaryStage.setTitle("Reviewer Requests");
         primaryStage.setScene(new Scene(root, 850, 450));
