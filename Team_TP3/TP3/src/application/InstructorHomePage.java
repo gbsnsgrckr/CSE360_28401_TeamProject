@@ -423,10 +423,23 @@ public class InstructorHomePage {
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 				MessageButton.setOnAction(a -> {
-					Stage newStage = new Stage();
-					QATableRow row = getTableView().getItems().get(getIndex());
-					new CreateMessagePage(databaseHelper, row.getAuthorId(), null, null).show(newStage);
-				});
+				    Stage newStage = new Stage();
+				    QATableRow row = getTableView().getItems().get(getIndex());
+
+				    int recipientId = row.getAuthorId();
+				    int referenceId = 0;
+				    String referenceType = "";
+
+				    if (row.getType() == QATableRow.RowType.QUESTION) {
+				        referenceId = row.getQuestionId();
+				        referenceType = "Question";
+				    } else if (row.getType() == QATableRow.RowType.ANSWER) {
+				        referenceId = row.getAnswerId();
+				        referenceType = "Answer";
+				    } else if (row.getType() == QATableRow.RowType.REVIEW) {
+				        referenceId = row.getReviewId();
+				        referenceType = "Review";
+				    }
 
 				cellContent.getChildren().addAll(buttonBox);
 				cellContent.setAlignment(Pos.CENTER_LEFT);
