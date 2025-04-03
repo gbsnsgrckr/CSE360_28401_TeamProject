@@ -27,6 +27,9 @@ import javafx.scene.input.ClipboardContent;
 /**
  * AdminPage class represents the user interface for the admin user. This page
  * displays a simple welcome message for the admin.
+ * 
+ * @author CSE 360 Team 8
+ * 
  */
 public class AdminHomePage {
 	/**
