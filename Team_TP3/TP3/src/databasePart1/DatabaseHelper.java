@@ -903,6 +903,9 @@ public class DatabaseHelper {
 	            requests.add(new Request(id, requestText, user, requestTOF, requestATOF, notes, status, originalId));
 	        }
 	    }
+
+	    return requests;
+	}
 	/**
  	* Retrieves all reviewer requests from the database.
  	* <p>
@@ -928,9 +931,6 @@ public class DatabaseHelper {
 	    }
 	    return reviewerRequests;
 	}
-
-	    return requests;
-	}
 	
 	/**
 	 * This method updates the request by the user, typically only for making it visible to the 
@@ -940,13 +940,13 @@ public class DatabaseHelper {
 	 * @param requestATOF a boolean to tell if the request has been accepted. 
 	 * @throws SQLException if there is an error in accessing the column.
 	 */
-	public void updateRequestStatus(int requestId, boolean requestTOF, boolean requestATOF) throws SQLException {
-	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE id = ?";
+	public void updateRequestStatus(String userName, boolean requestTOF, boolean requestATOF) throws SQLException {
+	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE userName = ?";
 
 	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 	        pstmt.setBoolean(1, requestTOF);
 	        pstmt.setBoolean(2, requestATOF);
-	        pstmt.setInt(3, requestId);
+	        pstmt.setString(3, userName);
 	        pstmt.executeUpdate();
 	    }
 	}
