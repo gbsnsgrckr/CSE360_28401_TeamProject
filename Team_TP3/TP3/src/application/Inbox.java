@@ -94,6 +94,8 @@ public class Inbox {
                 prefix = "Q";
             } else if ("Message".equalsIgnoreCase(msg.getReferenceType())) {
                 prefix = "M";
+            } else if ("Review".equalsIgnoreCase(msg.getReferenceType())) {
+                prefix = "R";
             } else {
                 prefix = "-";
             }
