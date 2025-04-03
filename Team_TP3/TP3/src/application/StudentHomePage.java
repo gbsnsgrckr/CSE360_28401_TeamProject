@@ -46,6 +46,7 @@ public class StudentHomePage {
 	private final DatabaseHelper databaseHelper;
 	private Question question;
 	private Answer answer;
+	private Review review;
 	private List<Question> questions;
 	private List<Answer> answers;
 	private ObservableList<QATableRow> resultsObservableList = FXCollections.observableArrayList();
@@ -447,6 +448,120 @@ public class StudentHomePage {
 							}
 
 						}
+					}
+					
+					if (row.getType() == QATableRow.RowType.REVIEW) {
+						// Label to identify review to the user
+						Label reviewLabel = new Label("REVIEW");
+						reviewLabel.setAlignment(Pos.CENTER);
+						reviewLabel.setRotate(-90);
+						reviewLabel.setMaxSize(200, 20);
+						reviewLabel.setPrefSize(200, 20);
+						reviewLabel.setStyle(
+								"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 16px;"
+										+ "-fx-font-weight: bold; -fx-padding: 1px; -fx-letter-spacing: 4px;");
+
+						cellBox.getChildren().add(0, reviewLabel);
+						cellBox.setAlignment(Pos.CENTER_LEFT);
+						
+						// Button to open the upvote a review
+						Button upVoteButton = new Button("\uD83D\uDC4D UpVote");
+						upVoteButton.setStyle(
+								"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+
+						// Button to open the downvote a review
+						Button downVoteButton = new Button("\uD83D\uDC4E DownVote");
+						downVoteButton.setStyle(
+								"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+
+						// Container for the vote buttons
+						HBox voteBox = new HBox(5, upVoteButton, downVoteButton);
+
+						// Event to handle upvote button - add 1 to vote for review
+						upVoteButton.setOnAction(a -> {
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+
+							// Register a positive vote for the selected review
+							databaseHelper.qaHelper.registerVoteForReview(currentRow.getReviewId(), 1);
+
+							try {
+								// Retrieve the review object in the cell
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
+
+								// Retrieve an updated list of questions from the database
+								questions = databaseHelper.qaHelper.getAllQuestions();
+
+								// Refresh contents of tables manually
+								questionObservableList.clear();
+								questionObservableList.addAll(questions);
+								qTable.setItems(questionObservableList);
+
+								if (review.getForQuestion()) {
+									// Set qTable to previous question
+									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
+											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+								} else {
+									// Set qTable to previous question
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper
+													.getQuestionForAnswer(
+															databaseHelper.qaHelper
+																	.getAnswer(databaseHelper.qaHelper
+																			.getReview(currentRow.getReviewId()).getRelatedId())
+																	.getId()));
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println(
+										"Error trying update questions object via getALLQuestions() in upVoteButton action");
+							}
+
+						});
+
+						// Event to handle downVote button - subtract 1 from vote for review
+						downVoteButton.setOnAction(a -> {
+							// Get current QATableRow
+							QATableRow currentRow = getTableView().getItems().get(getIndex());
+
+							// Register a negative vote for the selected review
+							databaseHelper.qaHelper.registerVoteForReview(currentRow.getReviewId(), -1);
+
+							try {
+								// Retrieve the review object in the cell
+								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
+
+								// Retrieve an updated list of questions from the database
+								questions = databaseHelper.qaHelper.getAllQuestions();
+
+								// Refresh contents of tables manually
+								questionObservableList.clear();
+								questionObservableList.addAll(questions);
+								qTable.setItems(questionObservableList);
+
+								if (review.getForQuestion()) {
+									// Set qTable to previous question
+									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
+											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+								} else {
+									// Set qTable to previous question
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper
+													.getQuestionForAnswer(
+															databaseHelper.qaHelper
+																	.getAnswer(databaseHelper.qaHelper
+																			.getReview(currentRow.getReviewId()).getRelatedId())
+																	.getId()));
+								}
+							} catch (SQLException e) {
+								e.printStackTrace();
+								System.err.println(
+										"Error trying update questions object via getALLQuestions() in downVoteButton action");
+							}
+
+						});
+
+						cellContent.getChildren().add(voteBox);
 					}
 
 					// Check if the currentUser matches the author of the answer in the cell
@@ -1373,6 +1488,8 @@ public class StudentHomePage {
 
 	// Helper class to update reultsTable contents
 	private void updateResultsTableForQuestion(Question question) {
+		Answer duplicate = null;
+		List<Review> reviews;
 		// Clear the observable list
 		resultsObservableList.clear();
 
@@ -1381,50 +1498,57 @@ public class StudentHomePage {
 		try {
 			question = databaseHelper.qaHelper.getQuestion(question.getId());
 			answers = databaseHelper.qaHelper.getAllAnswersForQuestion(question.getId());
-			Map<User, Integer> myReviewers = databaseHelper.getAllReviewersForUser(databaseHelper.currentUser.getUserId());
 
-			answers.sort((a1, a2) -> {
-				Integer weight1 = myReviewers.get(a1.getAuthor());
-				Integer weight2 = myReviewers.get(a2.getAuthor());
-
-				if (weight1 != null && weight2 != null) {
-					return weight2 - weight1;
-				}
-
-				if (weight1 != null) return -1;
-				if (weight2 != null) return 1;
-
-				return 0;
-			});
-			Answer preferredAnswer = null;
 			// Put the selected question in the first row
 			resultsObservableList.add(new QATableRow(QATableRow.RowType.QUESTION, question.toDisplayWithText(),
 					question.getId(), question.getAuthorId(), question.getRelatedId()));
+
+			// Store a list of reviews for the question
+			reviews = databaseHelper.qaHelper.getReviewsForQuestion(question.getId());
+			// Check if list is empty
+			if (!reviews.isEmpty()) {
+				for (Review review : reviews) {
+					// Put the selected review in the following rows
+					resultsObservableList.add(new QATableRow(QATableRow.RowType.REVIEW, review.toDisplayWithText(),
+							review.getId(), review.getAuthorId()));
+				}
+			}
 
 			// Check if selected question has a preferred answer and put that in row 2 if so
 			// Check if question has a preferred answer
 			if (question.getPreferredAnswer() > 0) {
 				// Retrieve the preferred answer object
-				preferredAnswer = databaseHelper.qaHelper.getAnswer(question.getPreferredAnswer());
+				answer = databaseHelper.qaHelper.getAnswer(question.getPreferredAnswer());
+				duplicate = answer;
 				// Remove the preferred answer from the answers list so it is not duplicated
-				
-				answers.remove(preferredAnswer);
-				
+				answers.remove(answer);
 				// Put the preferred answer in the second row
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, preferredAnswer.toDisplay(), preferredAnswer.getId(),
-						preferredAnswer.getAuthorId(), preferredAnswer.getRelatedId()));
+				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
+						answer.getAuthorId(), answer.getRelatedId()));
 
 				// Recursively call addRelatedAnswers and store the list thats left
-				answers = addRelatedAnswers(preferredAnswer.getId(), answers);
+				answers = addRelatedAnswers(answer.getId(), answers);
 
 			}
 
 			// After that, if there are any, add each answer as its own row
 			for (Answer answer : answers) {
-				// Add answer to the observable list
-				resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(), answer.getId(),
-						answer.getAuthorId(), answer.getRelatedId()));
+				if (duplicate != null && !answer.getId().equals(duplicate.getId())) {
+					// Add answer to the observable list
+					resultsObservableList.add(new QATableRow(QATableRow.RowType.ANSWER, answer.toDisplay(),
+							answer.getId(), answer.getAuthorId(), answer.getRelatedId()));
+				}
 
+				// Store a list of reviews for the question
+				reviews = databaseHelper.qaHelper.getReviewsForAnswer(answer.getId());
+				// Check if list is empty
+				if (!reviews.isEmpty()) {
+					for (Review review : reviews) {
+						// Put the selected review in the following rows
+						resultsObservableList.add(new QATableRow(QATableRow.RowType.REVIEW, review.toDisplayWithText(),
+								review.getId(), review.getAuthorId()));
+					}
+				}
 				// Recursively call addRelatedAnswers and store the list thats left
 				answers = addRelatedAnswers(answer.getId(), answers);
 			}

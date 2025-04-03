@@ -91,8 +91,8 @@ public class DatabaseHelper {
 			boolean resetUserDatabase = true; // Set to true if you want to reset the User Database
 			boolean resetQADatabase = true; // Set to true if you want to reset the QA Database
 
-			int a = 0; // Set this to 1 if you wish to populate User Database(0 or 1)
-			int b = 0; // Set this to the number of times you want to populate the QA
+			int a = 1; // Set this to 1 if you wish to populate User Database(0 or 1)
+			int b = 1; // Set this to the number of times you want to populate the QA
 						// Database(0 or greater)
 
 			/*------------------------------------------------------------------------------------------------*/
