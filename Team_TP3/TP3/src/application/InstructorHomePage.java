@@ -443,7 +443,7 @@ public class InstructorHomePage {
 
 				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
 				});
-
+			}
 			@Override
 			protected void updateItem(String item, boolean flag) {
 				super.updateItem(item, flag);
