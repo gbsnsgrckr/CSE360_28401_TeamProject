@@ -303,21 +303,21 @@ public class DatabaseHelper {
  	* @throws SQLException if the original request is not closed or if a database access error occurs
  	*/
     public void reopenRequest(int oldRequestId, String updatedDescription, String additionalNote, String reopenedBy) throws SQLException {
-        // Retrieve old request
+        // Retrieve the old request
         Request oldReq = getRequestById(oldRequestId);
         if (!"CLOSED".equalsIgnoreCase(oldReq.getStatus())) {
             throw new SQLException("Cannot reopen because the original is not closed.");
         }
+
         // Merge old notes with the new note
         String combinedNotes = oldReq.getNotes() == null ? "" : oldReq.getNotes();
         if (!additionalNote.isEmpty()) {
             combinedNotes += (combinedNotes.isEmpty() ? "" : ";") + additionalNote;
         }
 
-        // Insert a fresh row with status='REOPENED', originalId=the old request’s id
-        // updated request text from the user
-        String sql = "INSERT INTO cse360request (request, userName, requestTOF, notes, status, originalId) "
-                   + "VALUES (?, ?, false, ?, 'REOPENED', ?)";
+        // Update the existing row with new request text, notes, and status.
+        // Change 'REOPENED' to 'OPEN' if that's your intended status.
+        String sql = "UPDATE cse360request SET request = ?, userName = ?, notes = ?, status = 'REOPENED' WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, updatedDescription);
             pstmt.setString(2, reopenedBy);
