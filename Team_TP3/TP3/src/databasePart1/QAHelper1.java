@@ -2237,7 +2237,7 @@ public class QAHelper1 {
 		String query = "SELECT COUNT(*) FROM cse360message WHERE referenceId = ? AND referenceType = ?";
 		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 			pstmt.setInt(1, referenceId);
-			pstmt.setInt(2, Character.toLowerCase(referenceType));
+			pstmt.setString(2, String.valueOf(referenceType));
 			ResultSet rs = pstmt.executeQuery();
 			// Variable to store the count of how many messages match the parameters
 			int count = 0;
