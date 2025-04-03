@@ -7,7 +7,7 @@ import databasePart1.DatabaseHelper;
 
 /**
  * Represents a message exchanged between users in the system.
- * Each message can optionally reference a question, answer, or another message.
+ * Each message can reference a question, answer, or another message.
  */
 
 public class Message {
@@ -144,93 +144,163 @@ public class Message {
     }
 	
 	// Getters and Setters
-    /** @return The unique ID of the message. */
+    
+    /**
+     * Gets the unique message ID.
+     * @return The unique ID of the message.
+     */
     public int getMessageID() {
         return messageID;
     }
 
+    /**
+     * Sets the message ID.
+     * @param messageID The unique ID to set for the message.
+     */
     public void setMessageID(int messageID) {
         this.messageID = messageID;
     }
 
-    /** @return ID of the referenced item. */
+    /**
+     * Gets the referenced item's ID.
+     * @return ID of the referenced item.
+     */
     public int getReferenceID() {
         return referenceID;
     }
 
+    /**
+     * Sets the referenced item's ID.
+     * @param referenceID The ID of the referenced item.
+     */
     public void setReferenceID(int referenceID) {
         this.referenceID = referenceID;
     }
 
-    /** @return Type of reference ("Message", "Question", "Answer"). */
+    /**
+     * Gets the type of the referenced item.
+     * @return Type of reference ("Message", "Question", "Answer").
+     */
     public String getReferenceType() {
         return referenceType;
     }
 
+    /**
+     * Sets the type of the referenced item.
+     * @param referenceType Type of reference ("Message", "Question", "Answer").
+     */
     public void setReferenceType(String referenceType) {
         this.referenceType = referenceType;
     }
 
-    /** @return ID of the user who sent the message. */
+    /**
+     * Gets the sender's user ID.
+     * @return ID of the user who sent the message.
+     */
     public int getSenderID() {
         return senderID;
     }
 
+    /**
+     * Sets the sender's user ID.
+     * @param senderID ID of the user who sent the message.
+     */
     public void setSenderID(int senderID) {
         this.senderID = senderID;
     }
     
-    /** @return User object of the sender. */
+    /**
+     * Gets the sender's user object.
+     * @return User object of the sender.
+     */
     public User getSender() {
         return sender;
     }
 
-    /** @return ID of the message recipient. */
+    /**
+     * Gets the recipient's user ID.
+     * @return ID of the message recipient.
+     */
     public int getRecipientID() {
         return recipientID;
     }
 
+    /**
+     * Sets the recipient's user ID.
+     * @param recipientID ID of the user receiving the message.
+     */
     public void setRecipientID(int recipientID) {
         this.recipientID = recipientID;
     }
 
-    /** @return User object of the recipient. */
+    /**
+     * Gets the recipient's user object.
+     * @return User object of the recipient.
+     */
     public User getRecipient() {
         return recipient;
     }
 
-    /** @return Subject of the message. */
+    /**
+     * Gets the message subject.
+     * @return Subject of the message.
+     */
     public String getSubject() {
         return subject;
     }
 
+    /**
+     * Sets the message subject.
+     * @param subject Subject of the message.
+     */
     public void setSubject(String subject) {
         this.subject = subject;
     }
 
-    /** @return Content/body of the message. */
+    /**
+     * Gets the message body.
+     * @return Content/body of the message.
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Sets the message body.
+     * @param message Content/body of the message.
+     */
     public void setMessage(String message) {
         this.message = message;
     }
 
-    /** @return Timestamp of when the message was created. */
+    /**
+     * Gets the creation timestamp.
+     * @return Timestamp of when the message was created.
+     */
     public LocalDateTime getCreatedOn() {
         return createdOn;
     }
 
+    /**
+     * Sets the creation timestamp.
+     * @param createdOn The date and time the message was created.
+     */
     public void setCreatedOn(LocalDateTime createdOn) {
         this.createdOn = createdOn;
     }
 
-    /** @return Timestamp of when the message was last updated. */
+    /**
+     * Gets the last updated timestamp.
+     * @return Timestamp of when the message was last updated.
+     */
     public LocalDateTime getUpdatedOn() {
         return updatedOn;
     }
 
+    /**
+     * Sets the last updated timestamp.
+     * @param updatedOn The date and time the message was last updated.
+     */
     public void setUpdatedOn(LocalDateTime updatedOn) {
         this.updatedOn = updatedOn;
     }
