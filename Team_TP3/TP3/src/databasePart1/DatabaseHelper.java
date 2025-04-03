@@ -303,21 +303,21 @@ public class DatabaseHelper {
  	* @throws SQLException if the original request is not closed or if a database access error occurs
  	*/
     public void reopenRequest(int oldRequestId, String updatedDescription, String additionalNote, String reopenedBy) throws SQLException {
-        // Retrieve old request
+        // Retrieve the old request
         Request oldReq = getRequestById(oldRequestId);
         if (!"CLOSED".equalsIgnoreCase(oldReq.getStatus())) {
             throw new SQLException("Cannot reopen because the original is not closed.");
         }
+
         // Merge old notes with the new note
         String combinedNotes = oldReq.getNotes() == null ? "" : oldReq.getNotes();
         if (!additionalNote.isEmpty()) {
             combinedNotes += (combinedNotes.isEmpty() ? "" : ";") + additionalNote;
         }
 
-        // Insert a fresh row with status='REOPENED', originalId=the old request’s id
-        // updated request text from the user
-        String sql = "INSERT INTO cse360request (request, userName, requestTOF, notes, status, originalId) "
-                   + "VALUES (?, ?, false, ?, 'REOPENED', ?)";
+        // Update the existing row with new request text, notes, and status.
+        // Change 'REOPENED' to 'OPEN' if that's your intended status.
+        String sql = "UPDATE cse360request SET request = ?, userName = ?, notes = ?, status = 'REOPENED' WHERE id = ?";
         try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
             pstmt.setString(1, updatedDescription);
             pstmt.setString(2, reopenedBy);
@@ -527,8 +527,8 @@ public class DatabaseHelper {
 		try (PreparedStatement pstmt = connection.prepareStatement(insertRequest)){
 			pstmt.setString(1,  request);
 			pstmt.setString(2,  currentUser.getUsername());
-			pstmt.setBoolean(3, true);
-			pstmt.setBoolean(4,  false);
+			pstmt.setBoolean(3, false);
+			pstmt.setBoolean(4,  true);
 			pstmt.executeUpdate();
 		}
 		catch (SQLIntegrityConstraintViolationException e) {
@@ -903,9 +903,35 @@ public class DatabaseHelper {
 	            requests.add(new Request(id, requestText, user, requestTOF, requestATOF, notes, status, originalId));
 	        }
 	    }
+	/**
+ 	* Retrieves all reviewer requests from the database.
+ 	* <p>
+ 	* This method executes a SQL query to select all rows from the
+ 	* {@code cse360request} table where the column {@code requestATOF} is true,
+ 	* indicating that the request is intended for reviewer operations.
+ 	* Each retrieved row is converted into a {@code Request} object using the
+ 	* {@link #buildRequestFromResultSet(ResultSet)} method.
+ 	* </p>
+ 	*
+ 	* @return a list of {@code Request} objects representing all reviewer requests.
+ 	* @throws SQLException if a database access error occurs or the SQL query fails.
+ 	*/
+	public List<Request> getAllReviewerRequests() throws SQLException {
+	    String sql = "SELECT * FROM cse360request WHERE requestATOF = true";
+	    List<Request> reviewerRequests = new ArrayList<>();
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql);
+	         ResultSet rs = pstmt.executeQuery()) {
+	        while (rs.next()) {
+	            Request r = buildRequestFromResultSet(rs);
+	            reviewerRequests.add(r);
+	        }
+	    }
+	    return reviewerRequests;
+	}
 
 	    return requests;
 	}
+	
 	/**
 	 * This method updates the request by the user, typically only for making it visible to the 
 	 * admin, and removing it from the Instructors view
