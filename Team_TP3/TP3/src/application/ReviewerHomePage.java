@@ -383,15 +383,18 @@ public class ReviewerHomePage {
 				    QATableRow row = getTableView().getItems().get(getIndex());
 
 				    int recipientId = row.getAuthorId();
-				    int referenceId;
-				    String referenceType;
+				    int referenceId = 0;
+				    String referenceType = "";
 
 				    if (row.getType() == QATableRow.RowType.QUESTION) {
 				        referenceId = row.getQuestionId();
 				        referenceType = "Question";
-				    } else {
+				    } else if (row.getType() == QATableRow.RowType.ANSWER) {
 				        referenceId = row.getAnswerId();
 				        referenceType = "Answer";
+				    } else if (row.getType() == QATableRow.RowType.REVIEW) {
+				        referenceId = row.getReviewId();
+				        referenceType = "Review";
 				    }
 
 				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
