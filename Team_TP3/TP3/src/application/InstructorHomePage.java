@@ -441,9 +441,8 @@ public class InstructorHomePage {
 				        referenceType = "Review";
 				    }
 
-				cellContent.getChildren().addAll(buttonBox);
-				cellContent.setAlignment(Pos.CENTER_LEFT);
-			}
+				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+				});
 
 			@Override
 			protected void updateItem(String item, boolean flag) {
