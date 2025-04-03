@@ -527,8 +527,8 @@ public class DatabaseHelper {
 		try (PreparedStatement pstmt = connection.prepareStatement(insertRequest)){
 			pstmt.setString(1,  request);
 			pstmt.setString(2,  currentUser.getUsername());
-			pstmt.setBoolean(3, true);
-			pstmt.setBoolean(4,  false);
+			pstmt.setBoolean(3, false);
+			pstmt.setBoolean(4,  true);
 			pstmt.executeUpdate();
 		}
 		catch (SQLIntegrityConstraintViolationException e) {
@@ -903,9 +903,35 @@ public class DatabaseHelper {
 	            requests.add(new Request(id, requestText, user, requestTOF, requestATOF, notes, status, originalId));
 	        }
 	    }
+	/**
+ 	* Retrieves all reviewer requests from the database.
+ 	* <p>
+ 	* This method executes a SQL query to select all rows from the
+ 	* {@code cse360request} table where the column {@code requestATOF} is true,
+ 	* indicating that the request is intended for reviewer operations.
+ 	* Each retrieved row is converted into a {@code Request} object using the
+ 	* {@link #buildRequestFromResultSet(ResultSet)} method.
+ 	* </p>
+ 	*
+ 	* @return a list of {@code Request} objects representing all reviewer requests.
+ 	* @throws SQLException if a database access error occurs or the SQL query fails.
+ 	*/
+	public List<Request> getAllReviewerRequests() throws SQLException {
+	    String sql = "SELECT * FROM cse360request WHERE requestATOF = true";
+	    List<Request> reviewerRequests = new ArrayList<>();
+	    try (PreparedStatement pstmt = connection.prepareStatement(sql);
+	         ResultSet rs = pstmt.executeQuery()) {
+	        while (rs.next()) {
+	            Request r = buildRequestFromResultSet(rs);
+	            reviewerRequests.add(r);
+	        }
+	    }
+	    return reviewerRequests;
+	}
 
 	    return requests;
 	}
+	
 	/**
 	 * This method updates the request by the user, typically only for making it visible to the 
 	 * admin, and removing it from the Instructors view
