@@ -8,174 +8,93 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Scene;
-import javafx.scene.text.Text;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 
 /**
- * this class handles the view request's page on the instructor home page
- * It handles everything including buttons that accept/decline the request, 
- * exit out of the window, and the table that displays the requests
- * @Qauthor Darren Fernandes
+ * The {@code InstructorRequest} class is responsible for displaying all user-submitted
+ * requests to the instructor in a tabular format using JavaFX. This includes the username,
+ * request message, current status, and optional notes.
+ * <p>
+ * The instructor can view this information and navigate back to the instructor's home page.
+ *
+ * This class depends on {@code DatabaseHelper} to retrieve request data from the database.
+ * 
+ * @author CSE 360 Team 8 
  */
 public class InstructorRequest {
-	private final DatabaseHelper databaseHelper;
-	public InstructorRequest(DatabaseHelper databaseHelper) {
-		this.databaseHelper = databaseHelper;
-	}
-		
-	/**
-	 * this is what actually displays the page, and holds the stage view, the 
-	 * buttons, their associated actions, and their values and error messages
-	 * @param primaryStage - the stage from the previous method
-	 */
-	public void show(Stage primaryStage) {
-		TableView<Request> tableView = new TableView<>();
 
-		TableColumn<Request, String> usernames = new TableColumn<>("Username");
-	    usernames.setCellValueFactory(cellData -> 
-	        new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));		
+    private final DatabaseHelper databaseHelper;
 
-		TableColumn<Request, String> request = new TableColumn<>("Request");
-		request.setCellValueFactory(new PropertyValueFactory<>("request"));
-		request.setPrefWidth(350); // Set preferred width to 300 pixels
-		request.setMinWidth(200);  // Set a minimum width to prevent shrinking too much
-		request.setMaxWidth(350);  // Set a maximum width to prevent expansion
+    /**
+     * Constructs an InstructorRequest with a given {@code DatabaseHelper} instance.
+     *
+     * @param databaseHelper the database helper used to fetch requests
+     */
+    public InstructorRequest(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
+    }
 
-		request.setCellFactory(tc -> new TableCell<Request, String>() {
-		    private final Text text = new Text();
+    /**
+     * Displays the JavaFX window showing all requests in a {@code TableView}.
+     * Each row displays the user's name, request content, status, and notes.
+     * The instructor can click "Back" to return to the home page.
+     *
+     * @param primaryStage the primary JavaFX stage to show the request window
+     */
+    public void show(Stage primaryStage) {
+        TableView<Request> tableView = new TableView<>();
 
-		    {
-		        text.wrappingWidthProperty().bind(request.widthProperty()); // Wrap text to column width
-		        setGraphic(text);
-		    }
+        // Username column
+        TableColumn<Request, String> usernames = new TableColumn<>("Username");
+        usernames.setCellValueFactory(cellData ->
+                new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));
 
-		    @Override
-		    protected void updateItem(String item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty || item == null) {
-		            text.setText(null);
-		            setGraphic(null);
-		        } else {
-		            text.setText(item);
-		            setGraphic(text);
-		        }
-		    }
-		});
+        // Request column
+        TableColumn<Request, String> requestCol = new TableColumn<>("Request");
+        requestCol.setCellValueFactory(new PropertyValueFactory<>("request"));
+        requestCol.setPrefWidth(350);
 
-		
-		TableColumn<Request, Void> accept = new TableColumn<>("Accept");
+        // Status column
+        TableColumn<Request, String> statusCol = new TableColumn<>("Status");
+        statusCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
+        statusCol.setPrefWidth(100);
 
-		accept.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button acceptButton = new Button("Accept");
+        // Notes column
+        TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
+        notesCol.setCellValueFactory(cellData -> new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
+        notesCol.setPrefWidth(200);
 
-		    {
-		        acceptButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		        acceptButton.setOnAction(event -> {
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUser().getUsername());
+        tableView.getColumns().addAll(usernames, requestCol, statusCol, notesCol);
 
-		            try {
-		                // ✅ Update the database first
-		                databaseHelper.updateRequestStatus(request.getUser().getUsername(), false, true); 
+        ObservableList<Request> data = FXCollections.observableArrayList();
 
-		                // ✅ Fetch updated data
-		                ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-
-		            } catch (SQLException e) {
-		                e.printStackTrace();
-		            }
-		        });
-		    }
-
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(acceptButton);
-		        }
-		    }
-		});
-		
-		TableColumn<Request, Void> decline = new TableColumn<>("Decline");
-		
-		decline.setCellFactory(tc -> new TableCell<Request, Void>() {
-		    private final Button declineButton = new Button("Decline");
-
-		    {
-		    	declineButton.setStyle(
-		                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1; "
-		                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		        
-		        
-		    	declineButton.setOnAction(event -> {
-		           
-		            Request request = getTableView().getItems().get(getIndex());
-		            System.out.println("Accepted: " + request.getUserName());
-		            try {
-						databaseHelper.deleteRequest(request.getUserName());
-						ObservableList<Request> updatedRequests = FXCollections.observableArrayList(databaseHelper.getAllRequests());
-		                tableView.setItems(updatedRequests); 
-					} catch (SQLException e) {
-						e.printStackTrace();
-					}
-					
-		        });
-		    }
-
-		    @Override
-		    protected void updateItem(Void item, boolean empty) {
-		        super.updateItem(item, empty);
-		        if (empty) {
-		            setGraphic(null);
-		        } else {
-		            setGraphic(declineButton);
-		        }
-		    }
-		});
-		
-		tableView.getColumns().addAll(usernames, request, accept, decline);
-
-		ObservableList<Request> data = FXCollections.observableArrayList();
-
-		try {
+        try {
             List<Request> userRequests = databaseHelper.getAllRequests();
             data.addAll(userRequests);
         } catch (SQLException e) {
-            e.printStackTrace();
-        }		
-		Button backButton = new Button("Back");
-		backButton.setStyle(
-				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
-						+ "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
-		backButton.setOnAction(a -> {
-			primaryStage.close();
-			new InstructorHomePage(databaseHelper).show(primaryStage);
-			
-		});
+            e.printStackTrace(); // Consider logging in production
+        }
 
-		HBox hbox = new HBox(5, backButton);
-		tableView.setItems(data);
-		VBox root = new VBox(tableView);
-		root.getChildren().addAll(hbox);
-        Scene scene = new Scene(root, 600, 400);
-        primaryStage.setTitle("Admin Request Window");
+        tableView.setItems(data);
+
+        Button backButton = new Button("Back");
+        backButton.setStyle(
+                "-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black, gray; -fx-border-width: 2, 1;"
+                        + "-fx-border-radius: 6, 5; -fx-border-inset: 0, 4;");
+        backButton.setOnAction(a -> {
+            primaryStage.close();
+            new InstructorHomePage(databaseHelper).show(primaryStage);
+        });
+
+        HBox hbox = new HBox(5, backButton);
+        VBox root = new VBox(tableView, hbox);
+        Scene scene = new Scene(root, 700, 400);
+        primaryStage.setTitle("My Requests");
         primaryStage.setScene(scene);
         primaryStage.show();
-
-	}
-	}
+    }
+}

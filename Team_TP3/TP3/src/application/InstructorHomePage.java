@@ -40,8 +40,24 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * This page displays a simple welcome message for the user.
+ * InstructorHomePage is responsible for displaying the instructor's home page 
+ * interface. This page allows instructors to view and manage questions, reviews, 
+ * and send requests to the Admin. It makes use of JavaFX for the UI components 
+ * and interacts with the database via the provided DatabaseHelper instance.
+ * <p>
+ * The page supports functionalities such as:
+ * <ul>
+ *   <li>Viewing questions and reviews</li>
+ *   <li>Searching questions</li>
+ *   <li>Submitting and updating reviews</li>
+ *   <li>Viewing unresolved questions</li>
+ *   <li>Sending requests to the Admin</li>
+ * </ul>
+ * </p>
+ * 
+ * @author CSE 360 Team 8 
  */
+
 public class InstructorHomePage {
 
 	private final DatabaseHelper databaseHelper;
@@ -62,10 +78,24 @@ public class InstructorHomePage {
 	private TableView<QATableRow> resultsTable;
 
 	private int indent = 1;
+	
+	/**
+     * Constructs an InstructorHomePage instance with the specified DatabaseHelper.
+     *
+     * @param databaseHelper the DatabaseHelper instance used for all database operations
+     */
 
 	public InstructorHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
+	
+	/**
+     * Displays the Instructor Home Page on the provided primary stage.
+     * This method initializes and arranges all UI components, sets up event
+     * handlers, and manages the layout for the page.
+     *
+     * @param primaryStage the primary stage on which the UI will be displayed
+     */
 
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
@@ -393,23 +423,14 @@ public class InstructorHomePage {
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 				MessageButton.setOnAction(a -> {
-				    Stage newStage = new Stage();
-				    QATableRow row = getTableView().getItems().get(getIndex());
-
-				    int recipientId = row.getAuthorId();
-				    int referenceId;
-				    String referenceType;
-
-				    if (row.getType() == QATableRow.RowType.QUESTION) {
-				        referenceId = row.getQuestionId();
-				        referenceType = "Question";
-				    } else {
-				        referenceId = row.getAnswerId();
-				        referenceType = "Answer";
-				    }
-
-				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+					Stage newStage = new Stage();
+					QATableRow row = getTableView().getItems().get(getIndex());
+					new CreateMessagePage(databaseHelper, row.getAuthorId(), null, null).show(newStage);
 				});
+
+				cellContent.getChildren().addAll(buttonBox);
+				cellContent.setAlignment(Pos.CENTER_LEFT);
+			}
 
 			@Override
 			protected void updateItem(String item, boolean flag) {
@@ -863,6 +884,69 @@ public class InstructorHomePage {
 				}
 			}
 		});
+		
+		TableColumn<QATableRow, Void> actionCol = new TableColumn<>("Actions");
+		actionCol.setCellFactory(tc -> new TableCell<>() {
+		    private final ComboBox<String> actionCombo = new ComboBox<>();
+
+		    {
+		        // Initialize the combo box with a default and two actions
+		        actionCombo.getItems().addAll("Select Action", "Edit", "Delete");
+		        actionCombo.setValue("Select Action");
+		        actionCombo.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width: 1px;");
+		        actionCombo.setOnAction(e -> {
+		            QATableRow row = getTableView().getItems().get(getIndex());
+		            String action = actionCombo.getValue();
+		            if ("Edit".equals(action)) {
+		                // Call your edit functionality here
+		                // For example, populate the input field and change the submit button text:
+		                submitButton.setText("Update Review");
+		                updatingReview = true;
+		                submitBox.setVisible(true);
+		                submitBox.setManaged(true);
+		                try {
+		                    review = databaseHelper.qaHelper.getReview(row.getReviewId());
+		                    inputField.setText(review.getText());
+		                } catch (SQLException ex) {
+		                    ex.printStackTrace();
+		                }
+		            } else if ("Delete".equals(action)) {
+		                // Call your delete functionality here based on the type
+		                try {
+		                    if (row.getType() == QATableRow.RowType.REVIEW) {
+		                        databaseHelper.qaHelper.deleteReview(row.getReviewId());
+		                        // Refresh your reviews/QA table here
+		                        questions = databaseHelper.qaHelper.getAllQuestions();
+		                        questionObservableList.setAll(questions);
+		                        qTable.setItems(questionObservableList);
+		                    } else if (row.getType() == QATableRow.RowType.QUESTION) {
+		                        // Insert deletion logic for questions if required
+		                    } else if (row.getType() == QATableRow.RowType.ANSWER) {
+		                        // Insert deletion logic for answers if required
+		                    }
+		                } catch (SQLException ex) {
+		                    ex.printStackTrace();
+		                }
+		            }
+		            // Reset combo box selection after an action is taken
+		            actionCombo.setValue("Select Action");
+		        });
+		    }
+
+		    @Override
+		    protected void updateItem(Void item, boolean empty) {
+		        super.updateItem(item, empty);
+		        if (empty) {
+		            setGraphic(null);
+		        } else {
+		            // Optionally, you can conditionally show the comboBox only for rows that the current user is allowed to modify.
+		            setGraphic(actionCombo);
+		        }
+		    }
+		});
+		// Add this column to your results table along with your other columns.
+		resultsTable.getColumns().add(actionCol);
+
 
 		// Add cell factory to deal with text wrapping and styling
 		searchColumn.setCellFactory(a -> new TableCell<Question, String>() {
@@ -1385,7 +1469,14 @@ public class InstructorHomePage {
 		primaryStage.show();
 	}
 
-	// Helper class to update reultsTable contents
+	/**
+     * Updates the results table based on the specified question.
+     * This method retrieves all answers and reviews related to the question,
+     * then repopulates the results table accordingly.
+     *
+     * @param question the Question for which the results table should be updated
+     */
+	
 	private void updateResultsTableForQuestion(Question question) {
 		Answer duplicate = null;
 		List<Review> reviews;
@@ -1461,6 +1552,7 @@ public class InstructorHomePage {
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
 	}
+	
 
 	private void showUnresolvedQuestionsForCurrentUser() {
 		// Create a new stage (window) to display unresolved questions
@@ -1523,8 +1615,12 @@ public class InstructorHomePage {
 		stage.show();
 	}
 
-	// Displays a pop-up window listing potential (unread and read) answers for the
-	// specified question.
+	/**
+     * Displays a pop-up window showing both read and unread answers for the specified question.
+     *
+     * @param question the Question for which potential answers should be displayed
+     */
+	
 	private void showPotentialAnswersWindow(Question question) {
 		Stage stage = new Stage();
 		stage.setTitle("Answers for: " + question.getTitle());
@@ -1754,70 +1850,20 @@ public class InstructorHomePage {
 		return answers;
 	}
 	
+	
+	
 	private void showRequestsWindow() {
-        Stage stage = new Stage();
-        TableView<Request> tableView = new TableView<>();
-
-        TableColumn<Request, String> requestCol = new TableColumn<>("Request");
-        requestCol.setCellValueFactory(cellData -> cellData.getValue().requestProperty());
-
-        TableColumn<Request, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(cellData -> 
-            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
-
-        TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
-        notesCol.setCellValueFactory(cellData -> 
-            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
-
-        // Let instructor reopen a closed request (only if instructor is the request’s owner):
-        TableColumn<Request, Void> reopenCol = new TableColumn<>("Reopen");
-        reopenCol.setCellFactory(tc -> new TableCell<Request, Void>() {
-            private final Button reopenButton = new Button("Reopen");
-            {
-                reopenButton.setOnAction(e -> {
-                    Request req = getTableView().getItems().get(getIndex());
-                    TextInputDialog dialog = new TextInputDialog("New description of the request...");
-                    dialog.setTitle("Reopen Request");
-                    dialog.setHeaderText("Update the request text and optional note");
-                    dialog.setContentText("Add note:");
-                    dialog.showAndWait().ifPresent(note -> {
-                        try {
-                            // Only reopen if you're the original requestor and it’s closed
-                            databaseHelper.reopenRequest(req.getId(),
-                                    /* new request text */ "Updated: " + dialog.getEditor().getText(),
-                                    /* additional note  */ "Reopened by instructor",
-                                    databaseHelper.currentUser.getUsername());
-                            refreshTable(tableView);
-                        } catch (SQLException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
-                });
-            }
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    Request r = getTableView().getItems().get(getIndex());
-                    boolean isOwner = r.getUserName().equalsIgnoreCase(databaseHelper.currentUser.getUsername());
-                    boolean isClosed = "CLOSED".equalsIgnoreCase(r.getStatus());
-                    setGraphic( (isOwner && isClosed) ? reopenButton : null );
-                }
-            }
-        });
-
-        tableView.getColumns().addAll(requestCol, statusCol, notesCol, reopenCol);
-        refreshTable(tableView);
-
-        VBox layout = new VBox(tableView);
-        Scene scene = new Scene(layout, 800, 400);
-        stage.setTitle("Manage My Requests");
-        stage.setScene(scene);
-        stage.show();
+        Stage requestStage = new Stage();
+        requestStage.initStyle(StageStyle.DECORATED);
+        new InstructorRequest(databaseHelper).show(requestStage);
     }
-
+	
+	/**
+     * Refreshes the specified table view with the latest requests belonging to the current instructor.
+     *
+     * @param tableView the TableView to be refreshed with request data
+     */
+	
     private void refreshTable(TableView<Request> tableView) {
         try {
             List<Request> openAndClosed = databaseHelper.getAllRequests();
@@ -1865,6 +1911,8 @@ public class InstructorHomePage {
             }
         });
     }
+    
+    
 
 }
 

@@ -156,6 +156,7 @@ public class DatabaseHelper {
                 + "request VARCHAR(500), "
                 + "userName VARCHAR(255), "
                 + "requestTOF BOOLEAN DEFAULT FALSE, "
+		+ "requestATOF BOOLEAN DEFAULT FALSE, "
                 + "notes VARCHAR(2000), "
                 + "status VARCHAR(50), "
                 + "originalId INT "
@@ -251,21 +252,18 @@ public class DatabaseHelper {
  	* @throws SQLException if a database access error occurs
  	*/
     private Request buildRequestFromResultSet(ResultSet rs) throws SQLException {
-        int id = rs.getInt("id");
-        String req = rs.getString("request");
-        String userName = rs.getString("userName");
-        boolean tof = rs.getBoolean("requestTOF");
-        String notes = rs.getString("notes");
-        String status = rs.getString("status");
-        int originalId = rs.getInt("originalId");
-	    
-        User user = null;
-        try {
-            user = getUser(userName);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        Request r = new Request(id, req, user, tof, notes, status, originalId);
+    	int id = rs.getInt("id");
+    	String req = rs.getString("request");
+    	String userName = rs.getString("userName");
+    	boolean requestTOF = rs.getBoolean("requestTOF");
+    	boolean requestATOF = rs.getBoolean("requestATOF");  // Added
+    	String notes = rs.getString("notes");
+    	String status = rs.getString("status");
+    	int originalId = rs.getInt("originalId");
+
+    	User user = getUser(userName);
+    	Request r = new Request(id, req, user, requestTOF, requestATOF, notes, status, originalId);
+
         return r;
     }
 
@@ -537,7 +535,6 @@ public class DatabaseHelper {
 	        System.out.println("User already has a request registered.");
 	    }
 	}
-
 
 	/**
 	 * This allows a User to have their roles updated. An Admin has to request 
@@ -887,22 +884,27 @@ public class DatabaseHelper {
 	 * @throws SQLException if there is an error in accessing the column. 
 	 */
 	public List<Request> getAllRequests() throws SQLException {
-		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request WHERE requestTOF = TRUE";
-		List<Request> requests = new ArrayList<>();
-		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
-			ResultSet rs = pstmt.executeQuery();
+	    String query = "SELECT id, userName, request, requestTOF, requestATOF, notes, status, originalId FROM cse360request";
+	    List<Request> requests = new ArrayList<>();
 
-			while (rs.next()) {
-				String userName = rs.getString("userName");
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        ResultSet rs = pstmt.executeQuery();
+	        while (rs.next()) {
+	            int id = rs.getInt("id");
+	            String userName = rs.getString("userName");
 	            String requestText = rs.getString("request");
 	            boolean requestTOF = rs.getBoolean("requestTOF");
 	            boolean requestATOF = rs.getBoolean("requestATOF");
+	            String notes = rs.getString("notes");
+	            String status = rs.getString("status");
+	            int originalId = rs.getInt("originalId");
+
 	            User user = getUser(userName);
-	            
-	            requests.add(new Request(requestText, user, requestTOF, requestATOF));
-			}
-		}
-		return requests;
+	            requests.add(new Request(id, requestText, user, requestTOF, requestATOF, notes, status, originalId));
+	        }
+	    }
+
+	    return requests;
 	}
 	/**
 	 * This method updates the request by the user, typically only for making it visible to the 
@@ -912,16 +914,17 @@ public class DatabaseHelper {
 	 * @param requestATOF a boolean to tell if the request has been accepted. 
 	 * @throws SQLException if there is an error in accessing the column.
 	 */
-	public void updateRequestStatus(String userName, boolean requestTOF, boolean requestATOF) throws SQLException {
-	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE userName = ?";
+	public void updateRequestStatus(int requestId, boolean requestTOF, boolean requestATOF) throws SQLException {
+	    String query = "UPDATE cse360request SET requestTOF = ?, requestATOF = ? WHERE id = ?";
 
 	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
 	        pstmt.setBoolean(1, requestTOF);
 	        pstmt.setBoolean(2, requestATOF);
-	        pstmt.setString(3, userName);
+	        pstmt.setInt(3, requestId);
 	        pstmt.executeUpdate();
 	    }
 	}
+	
 	/**
 	 * This method gets all the requests that the admin should see.
 	 * @return a List of Requests that are in the database. 
