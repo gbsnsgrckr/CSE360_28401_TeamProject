@@ -138,6 +138,14 @@ public class InstructorHomePage {
 		inputField.setMaxHeight(1000);
 		inputField.setPrefHeight(1000);
 		inputField.setWrapText(true);
+
+
+		Button reviewerRequestButton = new Button("View Reviewer Requests");
+		reviewerRequestButton.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
+		reviewerRequestButton.setOnAction(e -> {
+		    Stage stage = new Stage();
+		    new InstructorReviewerRequest(databaseHelper).show(stage);
+		});
 		
 		Button requestsButton = new Button("View/Manage Admin Requests");
 		requestsButton.setStyle(
@@ -1273,7 +1281,7 @@ public class InstructorHomePage {
 
 		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn);
 
-		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2, requestsButton, sendRequestButton);
+		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2, requestsButton, sendRequestButton, reviewerRequestButton);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 
 		VBox vbox1 = new VBox(10, vbox, buttonBox1);
