@@ -165,7 +165,7 @@ public class StudentHomePage {
 		qTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
 
 		// Styling for the table
-		qTable.setMinWidth(500);
+		qTable.setMinWidth(300);
 		qTable.setFixedCellSize(-1);
 
 		qTable.setRowFactory(a -> new TableRow<Question>() {

@@ -379,25 +379,25 @@ public class ReviewerHomePage {
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
 
 				MessageButton.setOnAction(a -> {
-				    Stage newStage = new Stage();
-				    QATableRow row = getTableView().getItems().get(getIndex());
+					Stage newStage = new Stage();
+					QATableRow row = getTableView().getItems().get(getIndex());
 
-				    int recipientId = row.getAuthorId();
-				    int referenceId = 0;
-				    String referenceType = "";
+					int recipientId = row.getAuthorId();
+					int referenceId = 0;
+					String referenceType = "";
 
-				    if (row.getType() == QATableRow.RowType.QUESTION) {
-				        referenceId = row.getQuestionId();
-				        referenceType = "Question";
-				    } else if (row.getType() == QATableRow.RowType.ANSWER) {
-				        referenceId = row.getAnswerId();
-				        referenceType = "Answer";
-				    } else if (row.getType() == QATableRow.RowType.REVIEW) {
-				        referenceId = row.getReviewId();
-				        referenceType = "Review";
-				    }
+					if (row.getType() == QATableRow.RowType.QUESTION) {
+						referenceId = row.getQuestionId();
+						referenceType = "Question";
+					} else if (row.getType() == QATableRow.RowType.ANSWER) {
+						referenceId = row.getAnswerId();
+						referenceType = "Answer";
+					} else if (row.getType() == QATableRow.RowType.REVIEW) {
+						referenceId = row.getReviewId();
+						referenceType = "Review";
+					}
 
-				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+					new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
 				});
 
 				cellContent.getChildren().addAll(buttonBox);
@@ -516,7 +516,7 @@ public class ReviewerHomePage {
 
 						cellBox.getChildren().add(0, reviewLabel);
 						cellBox.setAlignment(Pos.CENTER_LEFT);
-						
+
 						// Button to open the upvote a review
 						Button upVoteButton = new Button("\uD83D\uDC4D UpVote");
 						upVoteButton.setStyle(
@@ -552,17 +552,16 @@ public class ReviewerHomePage {
 
 								if (review.getForQuestion()) {
 									// Set qTable to previous question
-									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
-											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper.getQuestion(databaseHelper.qaHelper
+													.getReview(currentRow.getReviewId()).getRelatedId()));
 								} else {
 									// Set qTable to previous question
 									qTable.getSelectionModel()
-											.select(databaseHelper.qaHelper
-													.getQuestionForAnswer(
-															databaseHelper.qaHelper
-																	.getAnswer(databaseHelper.qaHelper
-																			.getReview(currentRow.getReviewId()).getRelatedId())
-																	.getId()));
+											.select(databaseHelper.qaHelper.getQuestionForAnswer(databaseHelper.qaHelper
+													.getAnswer(databaseHelper.qaHelper
+															.getReview(currentRow.getReviewId()).getRelatedId())
+													.getId()));
 								}
 							} catch (SQLException e) {
 								e.printStackTrace();
@@ -594,17 +593,16 @@ public class ReviewerHomePage {
 
 								if (review.getForQuestion()) {
 									// Set qTable to previous question
-									qTable.getSelectionModel().select(databaseHelper.qaHelper.getQuestion(
-											databaseHelper.qaHelper.getReview(currentRow.getReviewId()).getRelatedId()));
+									qTable.getSelectionModel()
+											.select(databaseHelper.qaHelper.getQuestion(databaseHelper.qaHelper
+													.getReview(currentRow.getReviewId()).getRelatedId()));
 								} else {
 									// Set qTable to previous question
 									qTable.getSelectionModel()
-											.select(databaseHelper.qaHelper
-													.getQuestionForAnswer(
-															databaseHelper.qaHelper
-																	.getAnswer(databaseHelper.qaHelper
-																			.getReview(currentRow.getReviewId()).getRelatedId())
-																	.getId()));
+											.select(databaseHelper.qaHelper.getQuestionForAnswer(databaseHelper.qaHelper
+													.getAnswer(databaseHelper.qaHelper
+															.getReview(currentRow.getReviewId()).getRelatedId())
+													.getId()));
 								}
 							} catch (SQLException e) {
 								e.printStackTrace();
@@ -635,7 +633,7 @@ public class ReviewerHomePage {
 						editButton.setOnAction(a -> {
 							// Get current QATableRow
 							QATableRow currentRow = getTableView().getItems().get(getIndex());
-							
+
 							// Set submit button text
 							submitButton.setText("Update Review");
 
@@ -648,6 +646,7 @@ public class ReviewerHomePage {
 
 							try {
 								// Set review to current row object
+								// review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
 								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
 							} catch (SQLException e) {
 								e.printStackTrace();
@@ -661,7 +660,7 @@ public class ReviewerHomePage {
 						deleteButton.setOnAction(a -> {
 							// Get current QATableRow
 							QATableRow currentRow = getTableView().getItems().get(getIndex());
-							
+
 							try {
 								// Set review to current row object
 								review = databaseHelper.qaHelper.getReview(currentRow.getReviewId());
@@ -674,8 +673,7 @@ public class ReviewerHomePage {
 								System.err.println(
 										"Error trying update questions object via getALLQuestions() in resultsTable");
 							}
-							
-							
+
 							// Delete selected review
 							databaseHelper.qaHelper.deleteReview(currentRow.getReviewId());
 
@@ -970,7 +968,11 @@ public class ReviewerHomePage {
 		// Button to submit a review from the input fields
 		submitButton.setOnAction(a -> {
 			question = new Question();
-			review = new Review();
+
+			if (review == null) {
+				review = new Review();
+			}
+
 			String textInput = inputField.getText();
 
 			// Store the selections of the tables
