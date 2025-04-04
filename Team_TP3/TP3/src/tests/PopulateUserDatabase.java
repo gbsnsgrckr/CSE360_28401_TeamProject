@@ -31,6 +31,7 @@ public class PopulateUserDatabase {
 			e.printStackTrace();
 		}
 
+		
 		// Populate User 2
 		user = new User(2, "cespina3", "Chris", "Password123!", "Chris@gmail.com",
 				List.of("Student", "Reviewer", "Instructor"), false);
