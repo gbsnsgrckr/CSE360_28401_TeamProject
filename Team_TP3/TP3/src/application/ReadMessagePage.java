@@ -59,7 +59,7 @@ public class ReadMessagePage {
         String refType = message.getReferenceType();
         String refDisplay = "Reference: None";
         if (refType != null && message.getReferenceID() > 0) {
-        	refDisplay = "Reference: " + refType + " " + message.getReferenceID();
+        	refDisplay = "Reference: " + refType + message.getReferenceID();
         	}
         Label referenceLabel = new Label(refDisplay);
         referenceLabel.setStyle("-fx-font-size: 13px; -fx-font-style: italic; -fx-text-fill: #666;");
