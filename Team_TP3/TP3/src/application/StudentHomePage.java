@@ -39,8 +39,12 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * This page displays a simple welcome message for the user.
+ * StudentHomePage provides the user interface for students to submit questions,
+ * view answers, and interact with reviewers. It displays a list of questions,
+ * supports creating new questions, editing existing ones, and shows related answers
+ * and reviews.
  */
+
 public class StudentHomePage {
 
 	private final DatabaseHelper databaseHelper;
@@ -60,10 +64,26 @@ public class StudentHomePage {
 	private TableView<QATableRow> resultsTable;
 
 	private int indent = 0;
+	
+	/**
+	 * Constructs a StudentHomePage instance with the specified DatabaseHelper.
+	 *
+	 * @param databaseHelper the helper object for database operations.
+	 */
 
 	public StudentHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
+	
+	/**
+	 * Builds and displays the student home page.
+	 *
+	 * <p>This method initializes UI components including input fields for the question title and body,
+	 * tables to display questions and their related answers/reviews, and buttons for various actions.
+	 * It also sets up event handlers for submitting, editing, deleting, and filtering questions.</p>
+	 *
+	 * @param primaryStage the main stage on which to display the student home page.
+	 */
 
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
@@ -1492,7 +1512,15 @@ public class StudentHomePage {
 		primaryStage.show();
 	}
 
-	// Helper class to update reultsTable contents
+	/**
+	 * Updates the results table with the latest answers and reviews for the given question.
+	 *
+	 * <p>This method retrieves the updated question, its answers, and reviews from the database,
+	 * then repopulates the observable list that backs the results table.</p>
+	 *
+	 * @param question the question whose related answers and reviews should be displayed.
+	 */
+
 	private void updateResultsTableForQuestion(Question question) {
 		Answer duplicate = null;
 		List<Review> reviews;
@@ -1569,6 +1597,13 @@ public class StudentHomePage {
 		resultsTable.refresh();
 	}
 	
+	/**
+	 * Displays a pop-up window listing unresolved questions for the current student.
+	 *
+	 * <p>This method retrieves unresolved questions from the database specific to the current user
+	 * and presents them in a new stage. Double-clicking a question opens its potential answers.</p>
+	 */
+
 	private void showUnresolvedQuestionsForCurrentUser() {
 		// Create a new stage (window) to display unresolved questions
 		Stage stage = new Stage();
@@ -1633,7 +1668,15 @@ public class StudentHomePage {
 	}
 
 
-	// Displays a pop-up window listing potential (unread and read) answers for the specified question.
+	/**
+	 * Displays a pop-up window listing potential (both unread and read) answers for the specified question.
+	 *
+	 * <p>This method creates a new stage with two tables: one for unread answers and one for read answers.
+	 * It retrieves and shows the answers based on the current user's read status.</p>
+	 *
+	 * @param question the question for which to display potential answers.
+	 */
+
 	private void showPotentialAnswersWindow(Question question) {
 	    Stage stage = new Stage();
 	    stage.setTitle("Answers for: " + question.getTitle());
@@ -1697,7 +1740,12 @@ public class StudentHomePage {
 	    stage.show();
 	}
 
-	//As a student, I can see a list of all unresolved
+	/**
+	 * Creates and returns a button that, when clicked, displays the current user's unresolved questions.
+	 *
+	 * @return a Button configured to show the unresolved questions for the current user.
+	 */
+
 	private Button createViewUnresolvedButton() {
 	    Button viewUnresolvedBtn = new Button("View My Unresolved");
 	    // Button text instructs that we are viewing the current user's unresolved questions
@@ -1713,7 +1761,12 @@ public class StudentHomePage {
 	    // Returns the newly-created button for "View My Unresolved"
 	}
 
-	// Creates a button that shows all unresolved questions for any user (User Story #2).
+	/**
+	 * Creates and returns a button that, when clicked, displays all unresolved questions.
+	 *
+	 * @return a Button configured to show all unresolved questions.
+	 */
+
 	private Button createViewAllUnresolvedButton() {
 	    Button viewAllUnresolvedBtn = new Button("View All Unresolved");
 	    // Button text indicates that this lists all unresolved questions (not just the current user's)
@@ -1834,6 +1887,17 @@ public class StudentHomePage {
 	    stage.show();
 	    // Displays this stage to the user
 	}
+	
+	/**
+	 * Recursively processes and adds related answers to the results observable list.
+	 *
+	 * <p>This method retrieves answers that are related to the given parent answer and adds them
+	 * to the results list, while removing them from the provided list to avoid duplication.</p>
+	 *
+	 * @param parentId the ID of the parent answer.
+	 * @param answers  the list of answers to process.
+	 * @return the remaining list of answers after processing related ones.
+	 */
 
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
@@ -1862,6 +1926,17 @@ public class StudentHomePage {
 		return answers;
 	}
 	
+	/**
+	 * Retrieves and sorts questions based on the reviewer's association with the current student.
+	 *
+	 * <p>This method gathers all answered questions and computes a score based on whether the answers
+	 * were provided by reviewers associated with the current user. The questions are then sorted in
+	 * descending order of the reviewer score.</p>
+	 *
+	 * @return a list of questions sorted by the maximum reviewer weight.
+	 * @throws SQLException if a database access error occurs.
+	 */
+
 	private List<Question> getReviewersQuestions() throws SQLException {
 		List<Question> allQuestions = databaseHelper.qaHelper.getAllAnsweredQuestions();
 		List<Answer> allAnswers  = new ArrayList<>();

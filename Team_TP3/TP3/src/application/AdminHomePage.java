@@ -25,12 +25,16 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.input.ClipboardContent;
 
 /**
- * AdminPage class represents the user interface for the admin user. This page
- * displays a simple welcome message for the admin.
- * 
- * @author CSE 360 Team 8
- * 
+ * AdminHomePage provides the administrative user interface for managing users
+ * and performing tasks such as inviting new users, viewing reviewer requests,
+ * modifying user roles, banning/unbanning users, and generating one-time passwords.
+ *
+ * <p>This page displays a table of all users along with controls for performing
+ * administrative actions. It utilizes a DatabaseHelper for all database interactions.</p>
+ *
+ * @author CSE-Online-Team8
  */
+
 public class AdminHomePage {
 	/**
 	 * Displays the AdminPage in the provided PrimaryStage.
