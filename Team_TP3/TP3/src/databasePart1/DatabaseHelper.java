@@ -145,7 +145,7 @@ public class DatabaseHelper {
 				+ "password VARCHAR(255), "
 				+ "email VARCHAR(255), "																					
 				+ "roles VARCHAR(70), " 
-				+ "reviewers VARCHAR(100), " 
+				+ "reviewers VARCHAR(300), " 
 				+ "otp BOOLEAN DEFAULT FALSE, "
 				+ "banned BOOLEAN DEFAULT FALSE)";
 		statement.execute(userTable);

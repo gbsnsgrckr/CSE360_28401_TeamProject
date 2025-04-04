@@ -20,7 +20,7 @@ public class PreferredAnswerTest {
     public void setUp() {
         // Create a dummy question with id, title, text, authorId, and timestamps.
         question = new Question(1, "Test Question", "This is a test question", 100, 
-                                  LocalDateTime.now(), LocalDateTime.now());
+                                  LocalDateTime.now(), LocalDateTime.now(), null);
         // Set valid answer IDs that represent valid answers for this question.
         List<String> validIds = Arrays.asList("101", "102", "103");
         question.setRelatedId(validIds);

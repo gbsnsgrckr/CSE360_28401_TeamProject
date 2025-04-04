@@ -3,22 +3,33 @@ package application;
 import java.sql.SQLException;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Optional;
+
 import databasePart1.DatabaseHelper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Callback;
 
 /**
  * Handles the display and management of reviewer requests submitted by instructors.
+ * <p>
  * This class creates a JavaFX interface to show pending reviewer requests and 
  * allows the instructor to accept or decline each request.
+ * When a request is accepted, the corresponding reviewer role is added and the
+ * request is closed with an appropriate note. When declined, the request is deleted
+ * from the database.
+ * </p>
  */
 public class InstructorReviewerRequest {
 
@@ -30,10 +41,10 @@ public class InstructorReviewerRequest {
     /**
      * Tracks processed request IDs without modifying the Request class.
      */
-    private final Set<Integer> processedRequestIds = new HashSet<>();
+    private final HashSet<Integer> processedRequestIds = new HashSet<>();
 
     /**
-     * Constructs a new InstructorReviewerRequest with the specified DatabaseHelper.
+     * Constructs a new InstructorReviewerRequest with the specified {@code DatabaseHelper}.
      *
      * @param databaseHelper the helper for performing database operations.
      */
@@ -42,10 +53,10 @@ public class InstructorReviewerRequest {
     }
 
     /**
-     * Displays the reviewer requests in a JavaFX TableView. Provides options to
-     * accept or decline each request. When a request is accepted, the corresponding 
-     * reviewer role is added, and the request is closed with an appropriate note. 
-     * When declined, the request is deleted from the database.
+     * Displays the reviewer requests in a JavaFX {@code TableView}. Provides options to
+     * accept or decline each request. When a request is accepted, the corresponding reviewer
+     * role is added and the request is closed with an appropriate note. When declined, the
+     * request is removed from the database.
      *
      * @param primaryStage the primary stage for the JavaFX application.
      */
@@ -54,9 +65,8 @@ public class InstructorReviewerRequest {
 
         // Username column showing the user's username.
         TableColumn<Request, String> usernames = new TableColumn<>("Username");
-        usernames.setCellValueFactory(cellData -> 
-            new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername())
-        );
+        usernames.setCellValueFactory(cellData ->
+                new ReadOnlyObjectWrapper<>(cellData.getValue().getUser().getUsername()));
 
         // Request column showing the request details.
         TableColumn<Request, String> requestCol = new TableColumn<>("Request");
@@ -65,15 +75,13 @@ public class InstructorReviewerRequest {
 
         // Status column showing the current status of the request.
         TableColumn<Request, String> statusCol = new TableColumn<>("Status");
-        statusCol.setCellValueFactory(cellData -> 
-            new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus())
-        );
+        statusCol.setCellValueFactory(cellData ->
+                new ReadOnlyObjectWrapper<>(cellData.getValue().getStatus()));
 
         // Notes column showing any notes associated with the request.
         TableColumn<Request, String> notesCol = new TableColumn<>("Notes");
-        notesCol.setCellValueFactory(cellData -> 
-            new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes())
-        );
+        notesCol.setCellValueFactory(cellData ->
+                new ReadOnlyObjectWrapper<>(cellData.getValue().getNotes()));
         notesCol.setPrefWidth(200);
 
         // Accept column with a button to accept the request.
@@ -95,7 +103,7 @@ public class InstructorReviewerRequest {
                         boolean success = databaseHelper.addRoles(username, "Reviewer");
                         System.out.println("Reviewer role added? " + success);
 
-                        // Close the request with an appropriate note; assume this sets status to "CLOSED"
+                        // Close the request with an appropriate note (assumed to set status to "CLOSED")
                         databaseHelper.closeRequest(req.getId(), "Instructor accepted reviewer request.");
 
                         // Refresh the table to show updated requests
@@ -113,7 +121,7 @@ public class InstructorReviewerRequest {
                     setGraphic(null);
                 } else {
                     Request req = getTableView().getItems().get(getIndex());
-                    // Debug print to check what the status is coming in as:
+                    // Debug print to check the request's status
                     System.out.println("Request ID: " + req.getId() + ", Status: " + req.getStatus());
                     // Show the button only if status is null or equals "OPEN" (ignoring case)
                     if (req.getStatus() == null || req.getStatus().equalsIgnoreCase("OPEN")) {
@@ -165,7 +173,6 @@ public class InstructorReviewerRequest {
         // Back button to return to the instructor home page.
         Button backButton = new Button("Back");
         backButton.setOnAction(e -> {
-            // Get the current stage (the window that contains this back button)
             Stage currentStage = (Stage) backButton.getScene().getWindow();
             currentStage.close();
         });

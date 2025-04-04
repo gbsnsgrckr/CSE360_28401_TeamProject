@@ -9,21 +9,20 @@ import databasePart1.DatabaseHelper;
  * Represents a message exchanged between users in the system.
  * Each message can reference a question, answer, or another message.
  */
-
 public class Message {
-	private int messageID;
-	private int referenceID;
-	private String referenceType;
-	private int senderID;
-	private int recipientID;
-	private String subject;
-	private String message;
-	private LocalDateTime createdOn;
-	private LocalDateTime updatedOn;
-	private User sender;
-	private User recipient;
+    private int messageID;
+    private int referenceID;
+    private String referenceType;
+    private int senderID;
+    private int recipientID;
+    private String subject;
+    private String message;
+    private LocalDateTime createdOn;
+    private LocalDateTime updatedOn;
+    private User sender;
+    private User recipient;
 		
-	 /** Default constructor. */
+    /** Default constructor. */
     public Message() {
     }
     
@@ -84,7 +83,7 @@ public class Message {
         this.messageID = messageID;
         this.senderID = senderID;
         this.referenceID = referenceID;
-		this.referenceType = referenceType;
+        this.referenceType = referenceType;
         this.recipientID = recipientID;
         this.subject = subject;
         this.message = message;
@@ -99,7 +98,7 @@ public class Message {
     }
     
     /**
-     * Constructs a message with reference details but without user objects.
+     * Constructs a message with reference details but without retrieving User objects.
      *
      * @param referenceID Referenced item ID
      * @param referenceType Type of referenced item
@@ -109,16 +108,16 @@ public class Message {
      * @param message Message body
      */
     public Message(int referenceID, String referenceType, int senderID, int recipientID, String subject, String message) {
-		this.referenceID = referenceID;
-		this.referenceType = referenceType;
-		this.senderID = senderID;
-		this.recipientID = recipientID;
-		this.subject = subject;
-		this.message = message;
-	}
+        this.referenceID = referenceID;
+        this.referenceType = referenceType;
+        this.senderID = senderID;
+        this.recipientID = recipientID;
+        this.subject = subject;
+        this.message = message;
+    }
     
     /**
-     * Constructs a message with full timestamp info.
+     * Constructs a message with full timestamp information.
      *
      * @param messageID Message ID
      * @param referenceID Reference ID
@@ -143,7 +142,7 @@ public class Message {
         this.updatedOn = updatedOn;
     }
 	
-	// Getters and Setters
+    // Getters and Setters
     
     /**
      * Gets the unique message ID.
@@ -242,7 +241,7 @@ public class Message {
     }
 
     /**
-     * Gets the message subject.
+     * Gets the subject of the message.
      * @return Subject of the message.
      */
     public String getSubject() {
@@ -250,7 +249,7 @@ public class Message {
     }
 
     /**
-     * Sets the message subject.
+     * Sets the subject of the message.
      * @param subject Subject of the message.
      */
     public void setSubject(String subject) {
@@ -308,7 +307,7 @@ public class Message {
     /**
      * Returns a string representation of the message for debugging or display.
      *
-     * @return Formatted string representing key message attributes
+     * @return Formatted string representing key message attributes.
      */
     public String toString() {
         return String.format(
@@ -319,12 +318,8 @@ public class Message {
             "Sender ID: %d\n" +
             "Recipient ID: %d\n" +
             "Subject: %s\n" +
-            "Message: %s\n"
-//            + "Created On: %s\n" +
-//            "Updated On: %s"
-            ,
+            "Message: %s\n",
             messageID, referenceID, referenceType, senderID, recipientID, subject, message
-//            , createdOn, updatedOn
         );
-        }
+    }
 }

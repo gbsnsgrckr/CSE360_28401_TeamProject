@@ -1,138 +1,204 @@
 package application;
 
+/**
+ * The {@code PasswordEvaluator} class provides functionality to validate a password
+ * using a finite state machine (FSM) approach implemented as a directed graph.
+ * <p>
+ * The evaluator checks that the password contains at least one uppercase letter,
+ * one lowercase letter, one numeric digit, one special character, and is at least 8 characters long.
+ * If any requirement is not met, an error message is returned indicating which criteria were not satisfied.
+ * </p>
+ * <p>
+ * Copyright: Lynn Robert Carter © 2024
+ * </p>
+ * 
+ * @author Lynn Robert Carter
+ */
 public class PasswordEvaluator {
-	// Copyright: Lynn Robert Carter © 2024
-	// @author Lynn Robert Carter
+    
+    /**
+     * The error message generated during password validation.
+     */
+    public static String passwordErrorMessage = "";
+    
+    /**
+     * The input password string being processed.
+     */
+    public static String passwordInput = "";
+    
+    /**
+     * The index in the password where an error was detected (or -1 if no error).
+     */
+    public static int passwordIndexofError = -1;
+    
+    /**
+     * Flag indicating if an uppercase letter was found in the password.
+     */
+    public static boolean foundUpperCase = false;
+    
+    /**
+     * Flag indicating if a lowercase letter was found in the password.
+     */
+    public static boolean foundLowerCase = false;
+    
+    /**
+     * Flag indicating if a numeric digit was found in the password.
+     */
+    public static boolean foundNumericDigit = false;
+    
+    /**
+     * Flag indicating if a special character was found in the password.
+     */
+    public static boolean foundSpecialChar = false;
+    
+    /**
+     * Flag indicating if the password is long enough (at least 8 characters).
+     */
+    public static boolean foundLongEnough = false;
+    
+    /**
+     * The entire input password string.
+     */
+    private static String inputLine = "";
+    
+    /**
+     * The current character being processed.
+     */
+    private static char currentChar;
+    
+    /**
+     * The index of the current character in the input password.
+     */
+    private static int currentCharNdx;
+    
+    /**
+     * Flag indicating whether the FSM is still running.
+     */
+    private static boolean running;
+    
+    /**
+     * Counter for the length of the password processed so far.
+     */
+    private static int passwordSize; // Not used directly for validation, but can be useful for debugging.
 
-	public static String passwordErrorMessage = ""; // The error message text
-	public static String passwordInput = ""; // The input being processed
-	public static int passwordIndexofError = -1; // The index where the error was located
-	public static boolean foundUpperCase = false;
-	public static boolean foundLowerCase = false;
-	public static boolean foundNumericDigit = false;
-	public static boolean foundSpecialChar = false;
-	public static boolean foundLongEnough = false;
-	private static String inputLine = ""; // The input line
-	private static char currentChar; // The current character in the line
-	private static int currentCharNdx; // The index of the current character
-	private static boolean running; // The flag that specifies if the FSM is
-									// running
+    /**
+     * Displays the current input state to the console.
+     * <p>
+     * This method prints the entire input line, then prints a line with a marker ("?")
+     * at the position of the current character (indicating where an error may have been found).
+     * It also prints the total password size, the current index, and the current character.
+     * </p>
+     */
+    private static void displayInputState() {
+        // Display the entire input line.
+        System.out.println(inputLine);
+        // Display a marker at the current character position.
+        System.out.println(inputLine.substring(0, currentCharNdx) + "?");
+        // Print debugging information about the password.
+        System.out.println("The password size: " + inputLine.length() + "  |  The currentCharNdx: " + currentCharNdx
+                + "  |  The currentChar: \"" + currentChar + "\"");
+    }
 
-	/**********
-	 * This private method display the input line and then on a line under it
-	 * displays an up arrow at the point where an error should one be detected. This
-	 * method is designed to be used to display the error message on the console
-	 * terminal.
-	 * 
-	 * @param input          The input string
-	 * @param currentCharNdx The location where an error was found
-	 * @return Two lines, the entire input line followed by a line with an up arrow
-	 */
-	private static void displayInputState() {
-		// Display the entire input line
-		System.out.println(inputLine);
-		System.out.println(inputLine.substring(0, currentCharNdx) + "?");
-		System.out.println("The password size: " + inputLine.length() + "  |  The currentCharNdx: " + currentCharNdx
-				+ "  |  The currentChar: \"" + currentChar + "\"");
-	}
+    /**
+     * Evaluates the input password and returns an empty string if the password meets
+     * all the required criteria, or an error message detailing the missing criteria.
+     * <p>
+     * The method uses a directed graph (FSM) approach to process the password character by character.
+     * It checks for uppercase letters, lowercase letters, numeric digits, and special characters,
+     * and ensures that the password is at least 8 characters long.
+     * </p>
+     *
+     * @param input The input password string to evaluate.
+     * @return An empty string if the password is valid, or an error message describing the missing criteria.
+     */
+    public static String evaluatePassword(String input) {
+        // Reset error message and index.
+        passwordErrorMessage = "";
+        passwordIndexofError = 0;
+        // Store input for processing.
+        inputLine = input;
+        currentCharNdx = 0;
 
-	/**********
-	 * This method is a mechanical transformation of a Directed Graph diagram into a
-	 * Java method.
-	 * 
-	 * @param input The input string for directed graph processing
-	 * @return An output string that is empty if every things is okay or it will be
-	 *         a string with a help description of the error follow by two lines
-	 *         that shows the input line follow by a line with an up arrow at the
-	 *         point where the error was found.
-	 */
-	public static String evaluatePassword(String input) {
-		// The following are the local variable used to perform the Directed Graph
-		// simulation
-		passwordErrorMessage = "";
-		passwordIndexofError = 0; // Initialize the IndexofError
-		inputLine = input; // Save the reference to the input line as a global
-		currentCharNdx = 0; // The index of the current character
+        // Check for an empty password.
+        if (input.length() <= 0)
+            return "*** ERROR *** The password is empty!";
 
-		if (input.length() <= 0)
-			return "*** ERROR *** The password is empty!";
+        // Set up the first character for processing.
+        currentChar = input.charAt(0);
 
-		// The input is not empty, so we can access the first character
-		currentChar = input.charAt(0); // The current character from the above indexed position
+        // Initialize flags and store a copy of the input.
+        passwordInput = input;
+        foundUpperCase = false;
+        foundLowerCase = false;
+        foundNumericDigit = false;
+        foundSpecialChar = false;
+        foundLongEnough = false;
+        running = true;
 
-		// The Directed Graph simulation continues until the end of the input is reached
-		// or at some
-		// state the current character does not match any valid transition to a next
-		// state
+        // Process each character until the end of the input is reached.
+        while (running) {
+            displayInputState();
+            // Check for uppercase letters.
+            if (currentChar >= 'A' && currentChar <= 'Z') {
+                System.out.println("Upper case letter found");
+                foundUpperCase = true;
+            }
+            // Check for lowercase letters.
+            else if (currentChar >= 'a' && currentChar <= 'z') {
+                System.out.println("Lower case letter found");
+                foundLowerCase = true;
+            }
+            // Check for numeric digits.
+            else if (currentChar >= '0' && currentChar <= '9') {
+                System.out.println("Digit found");
+                foundNumericDigit = true;
+            }
+            // Check for special characters.
+            else if ("~`!@#$%^&*()_-+{}[]|:,.?/".indexOf(currentChar) >= 0) {
+                System.out.println("Special character found");
+                foundSpecialChar = true;
+            }
+            // If the character does not match any valid category, report an error.
+            else {
+                passwordIndexofError = currentCharNdx;
+                return "*** ERROR *** An invalid character has been found!";
+            }
+            // Check if at least 8 characters have been processed.
+            if (currentCharNdx >= 7) { // Index 7 corresponds to the 8th character.
+                System.out.println("At least 8 characters found");
+                foundLongEnough = true;
+            }
 
-		passwordInput = input; // Save a copy of the input
-		foundUpperCase = false; // Reset the Boolean flag
-		foundLowerCase = false; // Reset the Boolean flag
-		foundNumericDigit = false; // Reset the Boolean flag
-		foundSpecialChar = false; // Reset the Boolean flag
-		foundNumericDigit = false; // Reset the Boolean flag
-		foundLongEnough = false; // Reset the Boolean flag
-		running = true; // Start the loop
+            // Move to the next character.
+            currentCharNdx++;
+            if (currentCharNdx >= inputLine.length())
+                running = false;
+            else
+                currentChar = input.charAt(currentCharNdx);
 
-		// The Directed Graph simulation continues until the end of the input is reached
-		// or at some
-		// state the current character does not match any valid transition
-		while (running) {
-			displayInputState();
-			// The cascading if statement sequentially tries the current character against
-			// all of the
-			// valid transitions
-			if (currentChar >= 'A' && currentChar <= 'Z') { // Check for A-Z
-				System.out.println("Upper case letter found");
-				foundUpperCase = true;
-			} else if (currentChar >= 'a' && currentChar <= 'z') { // Check for a-z
-				System.out.println("Lower case letter found");
-				foundLowerCase = true;
-			} else if (currentChar >= '0' && currentChar <= '9') { // Check for 0-9
-				System.out.println("Digit found");
-				foundNumericDigit = true;
-			} else if ("~`!@#$%^&*()_-+{}[]|:,.?/".indexOf(currentChar) >= 0) { // Check for
-				System.out.println("Special character found"); // special char
-				foundSpecialChar = true;
-			} else {
-				passwordIndexofError = currentCharNdx; // Check for other char
-				return "*** Error *** An invalid character has been found!";
-			}
-			if (currentCharNdx >= 7) { // Check minimum length
-				System.out.println("At least 8 characters found");
-				foundLongEnough = true;
-			}
+            System.out.println();
+        }
+        // Build error message if criteria are missing.
+        String errMessage = "";
+        if (!foundUpperCase)
+            errMessage += "Password must have one UPPERCASE letter; ";
 
-			// Go to the next character if there is one
-			currentCharNdx++;
-			if (currentCharNdx >= inputLine.length())
-				running = false;
-			else
-				currentChar = input.charAt(currentCharNdx);
+        if (!foundLowerCase)
+            errMessage += "Password must have one LOWERCASE letter; ";
 
-			System.out.println();
-		}
-		// Add appropriate error message to errMessage
-		String errMessage = "";
-		if (!foundUpperCase)
-			errMessage += "Password must have one UPPERCASE letter; ";
+        if (!foundNumericDigit)
+            errMessage += "Password must include a NUMBER; ";
 
-		if (!foundLowerCase)
-			errMessage += "Password must have one LOWERCASE letter; ";
+        if (!foundSpecialChar)
+            errMessage += "Password must include a SPECIAL CHARACTER; ";
 
-		if (!foundNumericDigit)
-			errMessage += "Password must include a NUMBER; ";
+        if (!foundLongEnough)
+            errMessage += "Password must be AT LEAST 8 CHARACTERS; ";
 
-		if (!foundSpecialChar)
-			errMessage += "Password must include a SPECIAL CHARACTER; ";
+        if (errMessage.equals(""))
+            return "";
 
-		if (!foundLongEnough)
-			errMessage += "Password must be AT LEAST 8 CHARACTERS; ";
-
-		if (errMessage == "")
-			return "";
-
-		passwordIndexofError = currentCharNdx;
-		return "*** ERROR *** " + errMessage;
-	}
+        passwordIndexofError = currentCharNdx;
+        return "*** ERROR *** " + errMessage;
+    }
 }

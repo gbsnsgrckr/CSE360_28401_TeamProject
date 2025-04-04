@@ -23,13 +23,13 @@ import javafx.util.Callback;
  * request message, current status, and optional notes.
  * <p>
  * The instructor can view this information and navigate back to the instructor's home page.
- *
- * This class depends on {@code DatabaseHelper} to retrieve request data from the database.
+ * Additionally, the instructor can reopen a CLOSED request, providing additional notes.
+ * </p>
  * 
  * Updated to update an existing request (rather than creating a new one) when a CLOSED request is reopened,
  * and to allow the instructor to input additional notes during the reopen process.
  * 
- * @author CSE 360 Team 8 
+ * @author CSE 360 Team 8
  */
 public class InstructorRequest {
 
@@ -77,6 +77,11 @@ public class InstructorRequest {
         // Reopen button column
         TableColumn<Request, Void> reopenCol = new TableColumn<>("Reopen");
         reopenCol.setPrefWidth(100);  // Ensure the column is visible.
+
+        /**
+         * Creates a TableCell that displays a "Reopen" button if the request status is CLOSED.
+         * When clicked, it prompts the instructor for additional notes and then reopens the request.
+         */
         Callback<TableColumn<Request, Void>, TableCell<Request, Void>> cellFactory =
                 new Callback<TableColumn<Request, Void>, TableCell<Request, Void>>() {
                     @Override
@@ -89,7 +94,7 @@ public class InstructorRequest {
                                 btn.setOnAction((ActionEvent event) -> {
                                     Request req = getTableView().getItems().get(getIndex());
                                     if ("CLOSED".equalsIgnoreCase(req.getStatus())) {
-                                        // Prompt the instructor for additional notes
+                                        // Prompt the instructor for additional notes when reopening a request.
                                         TextInputDialog dialog = new TextInputDialog();
                                         dialog.setTitle("Reopen Request");
                                         dialog.setHeaderText("Reopen Request");

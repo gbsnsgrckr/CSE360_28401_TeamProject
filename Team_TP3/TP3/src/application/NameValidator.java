@@ -1,212 +1,216 @@
 package application;
 
+/**
+ * The {@code NameValidator} class provides functionality to validate names using a
+ * Finite State Machine (FSM) approach. The FSM checks that a name starts with an uppercase letter (A-Z),
+ * an apostrophe ('), or a minus (-), and that subsequent characters are lowercase letters (a-z),
+ * apostrophes, or minuses. The validation ensures the name is non-empty, does not exceed 50 characters,
+ * and contains only allowed characters.
+ * <p>
+ * Copyright: Lynn Robert Carter © 2024
+ * </p>
+ * 
+ * @author Lynn Robert Carter
+ */
 public class NameValidator {
-	// Copyright: Lynn Robert Carter © 2024
-	// @author Lynn Robert Carter
+    /**
+     * The error message text generated during validation, if any error occurs.
+     */
+    public static String nameRecognizerErrorMessage = "";
+    
+    /**
+     * The input string being processed by the validator.
+     */
+    public static String nameRecognizerInput = "";
+    
+    /**
+     * The index of the character where an error was detected (or -1 if no error).
+     */
+    public static int nameRecognizerIndexofError = -1;
+    
+    /**
+     * The current state value of the FSM.
+     */
+    private static int state = 0;
+    
+    /**
+     * The next state value for the FSM transition.
+     */
+    private static int nextState = 0;
+    
+    /**
+     * Flag indicating whether the current state is a final (accepting) state.
+     */
+    private static boolean finalState = false;
+    
+    /**
+     * The entire input string being processed by the FSM.
+     */
+    private static String inputLine = "";
+    
+    /**
+     * The current character in the input string.
+     */
+    private static char currentChar;
+    
+    /**
+     * The index of the current character in the input string.
+     */
+    private static int currentCharNdx;
+    
+    /**
+     * Flag that specifies if the FSM is currently running.
+     */
+    private static boolean running;
+    
+    /**
+     * Counter for the number of valid characters processed in the name.
+     * The maximum allowed number is 50.
+     */
+    private static int nameSize = 0;
 
-	public static String nameRecognizerErrorMessage = ""; // The error message text
-	public static String nameRecognizerInput = ""; // The input being processed
-	public static int nameRecognizerIndexofError = -1; // The index of error location
-	private static int state = 0; // The current state value
-	private static int nextState = 0; // The next state value
-	private static boolean finalState = false; // Is this state a final state?
-	private static String inputLine = ""; // The input line
-	private static char currentChar; // The current character in the line
-	private static int currentCharNdx; // The index of the current character
-	private static boolean running; // The flag that specifies if the FSM is
-									// running
-	private static int nameSize = 0; // A numeric value may not exceed 16 characters
+    /**
+     * Displays debugging information for the current state of the FSM.
+     * <p>
+     * The method prints details including the current state, whether it is a final state,
+     * the current character (if any), the next state, and the number of characters processed.
+     * </p>
+     */
+    private static void displayDebuggingInfo() {
+        if (currentCharNdx >= inputLine.length())
+            // Display state with no current character information
+            System.out.println(((state > 99) ? " " : (state > 9) ? "  " : "   ") + state
+                    + ((finalState) ? "       F   " : "           ") + "None");
+        else
+            System.out.println(((state > 99) ? " " : (state > 9) ? "  " : "   ") + state
+                    + ((finalState) ? "       F   " : "           ") + "  " + currentChar + " "
+                    + ((nextState > 99) ? "" : (nextState > 9) || (nextState == -1) ? "   " : "    ") + nextState
+                    + "     " + nameSize);
+    }
 
-	// Private method to display debugging data
-	private static void displayDebuggingInfo() {
-		// Display the current state of the FSM as part of an execution trace
-		if (currentCharNdx >= inputLine.length())
-			// display the line with the current state numbers aligned
-			System.out.println(((state > 99) ? " " : (state > 9) ? "  " : "   ") + state
-					+ ((finalState) ? "       F   " : "           ") + "None");
-		else
-			System.out.println(((state > 99) ? " " : (state > 9) ? "  " : "   ") + state
-					+ ((finalState) ? "       F   " : "           ") + "  " + currentChar + " "
-					+ ((nextState > 99) ? "" : (nextState > 9) || (nextState == -1) ? "   " : "    ") + nextState
-					+ "     " + nameSize);
-	}
+    /**
+     * Advances the FSM to the next character in the input string.
+     * <p>
+     * Increments the character index and updates the current character.
+     * If the end of the input is reached, the current character is set to a blank and the FSM stops.
+     * </p>
+     */
+    private static void moveToNextCharacter() {
+        currentCharNdx++;
+        if (currentCharNdx < inputLine.length())
+            currentChar = inputLine.charAt(currentCharNdx);
+        else {
+            currentChar = ' ';
+            running = false;
+        }
+    }
 
-	// Private method to move to the next character within the limits of the input
-	// line
-	private static void moveToNextCharacter() {
-		currentCharNdx++;
-		if (currentCharNdx < inputLine.length())
-			currentChar = inputLine.charAt(currentCharNdx);
-		else {
-			currentChar = ' ';
-			running = false;
-		}
-	}
+    /**
+     * Validates the given name using a Finite State Machine (FSM) approach.
+     * <p>
+     * The FSM starts in an initial state and processes the input character by character,
+     * transitioning between states based on allowed characters. If the entire string is
+     * successfully processed and meets the size requirements, an empty string is returned.
+     * Otherwise, a detailed error message is returned indicating the reason for failure.
+     * </p>
+     *
+     * @param input the input string representing the name to validate
+     * @return an empty string if the name is valid; otherwise, a string with an error description
+     */
+    public static String checkForValidName(String input) {
+        // Check that input is not empty.
+        if (input.length() <= 0) {
+            nameRecognizerIndexofError = 0; // Error at the first character.
+            return "*** ERROR *** The name field is empty!!";
+        }
 
-	/**********
-	 * This method is a mechanical transformation of a Finite State Machine diagram
-	 * into a Java method.
-	 * 
-	 * @param input The input string for the Finite State Machine
-	 * @return An output string that is empty if every things is okay or it is a
-	 *         String with a helpful description of the error
-	 */
-	public static String checkForValidName(String input) {
-		// Check to ensure that there is input to process
-		if (input.length() <= 0) {
-			nameRecognizerIndexofError = 0; // Error at first character;
-			return "*** ERROR *** The name field is empty!!";
-		}
+        // Initialize FSM variables.
+        state = 0; // Set initial state.
+        inputLine = input; // Store input.
+        currentCharNdx = 0; // Reset character index.
+        currentChar = input.charAt(0); // Get the first character.
 
-		// The local variables used to perform the Finite State Machine simulation
-		state = 0; // This is the FSM state number
-		inputLine = input; // Save the reference to the input line as a global
-		currentCharNdx = 0; // The index of the current character
-		currentChar = input.charAt(0); // The current character from above indexed position
+        nameRecognizerInput = input; // Store a copy of the input.
+        running = true; // Begin FSM execution.
+        nextState = -1; // No next state yet.
+        System.out.println("\nCurrent Final Input  Next  Date\nState   State Char  State  Size");
 
-		// The Finite State Machines continues until the end of the input is reached or
-		// at some
-		// state the current character does not match any valid transition to a next
-		// state
+        // Initialize the count for the name size.
+        nameSize = 0;
 
-		nameRecognizerInput = input; // Save a copy of the input
-		running = true; // Start the loop
-		nextState = -1; // There is no next state
-		System.out.println("\nCurrent Final Input  Next  Date\nState   State Char  State  Size");
+        // Process input through FSM until halted.
+        while (running) {
+            switch (state) {
+                case 0:
+                    // In state 0, check if the first character is allowed (A-Z, apostrophe, or minus).
+                    if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar == '\'') || (currentChar == '-')) {
+                        nextState = 1;
+                        nameSize++;
+                    } else {
+                        running = false;
+                    }
+                    break;
 
-		// This is the place where semantic actions for a transition to the initial
-		// state occur
+                case 1:
+                    // In state 1, allow a-z, apostrophe, or minus.
+                    if ((currentChar >= 'a' && currentChar <= 'z') || (currentChar == '\'') || (currentChar == '-')) {
+                        nextState = 1;
+                        nameSize++;
+                    } else {
+                        running = false;
+                    }
+                    // Stop if the name length exceeds 50 characters.
+                    if (nameSize > 50)
+                        running = false;
+                    break;
+            }
 
-		nameSize = 0; // Initialize the Name size
+            if (running) {
+                displayDebuggingInfo();
+                moveToNextCharacter();
+                state = nextState;
+                // Mark state as final if it is state 1.
+                if (state == 1)
+                    finalState = true;
+                nextState = -1;
+            }
+        }
+        displayDebuggingInfo();
 
-		// The Finite State Machines continues until the end of the input is reached or
-		// at some
-		// state the current character does not match any valid transition to a next
-		// state
-		while (running) {
-			// The switch statement takes the execution to the code for the current state,
-			// where
-			// that code sees whether or not the current character is valid to transition to
-			// a
-			// next state
-			switch (state) {
-			case 0:
-				// State 0 has 1 valid transition that is addressed by an if statement.
+        System.out.println("The loop has ended.");
 
-				// The current character is checked against A-Z, ', -. If any are matched
-				// the FSM goes to state 1
+        // Determine the error message based on the final state and input consumption.
+        nameRecognizerIndexofError = currentCharNdx;
+        nameRecognizerErrorMessage = "*** ERROR *** ";
 
-				// A-Z, ', - -> State 1 Check for A-Z, ', -
-				if ((currentChar >= 'A' && currentChar <= 'Z') || (currentChar == '\'') || (currentChar == '-')) {
-					nextState = 1;
+        switch (state) {
+            case 0:
+                // Error: invalid starting character.
+                nameRecognizerErrorMessage += "A Name must start with A-Z, an apostrophe or a minus.\n";
+                return nameRecognizerErrorMessage;
 
-					// Count the character
-					nameSize++;
+            case 1:
+                // Final state: verify the overall length and that no extra characters remain.
+                if (nameSize < 1) {
+                    nameRecognizerErrorMessage += "A Name must have at least 1 character.\n";
+                    return nameRecognizerErrorMessage;
+                } else if (nameSize > 50) {
+                    nameRecognizerErrorMessage += "A Name must have no more than 50 characters.\n";
+                    return nameRecognizerErrorMessage;
+                } else if (currentCharNdx < input.length()) {
+                    nameRecognizerErrorMessage += "After the first character, a Name may only contain the characters a-z, an apostrophe or a minus.\n";
+                    return nameRecognizerErrorMessage;
+                } else {
+                    // Valid name.
+                    nameRecognizerIndexofError = -1;
+                    nameRecognizerErrorMessage = "";
+                    return nameRecognizerErrorMessage;
+                }
 
-					// This only occurs once, so there is no need to check for the size getting
-					// too large.
-				}
-				// If it is none of those characters, the FSM halts
-				else
-					running = false;
-
-				// The execution of this state is finished
-				break;
-
-			case 1:
-				// State 1 has one valid transitions,
-				// 1: a-z, ', - that transitions back to state 1
-				if ((currentChar >= 'a' && currentChar <= 'z') || // Check for a-z
-						(currentChar == '\'') || (currentChar == '-')) { // Check for ' or minus
-					nextState = 1;
-
-					// Count the character
-					nameSize++;
-				}
-				// If it is none of those characters, the FSM halts
-				else
-					running = false;
-
-				// The execution of this state is finished
-				// If the size is larger than 50, the loop must stop
-				if (nameSize > 50)
-					running = false;
-				break;
-			}
-
-			if (running) {
-				displayDebuggingInfo();
-				// When the processing of a state has finished, the FSM proceeds to the next
-				// character in the input and if there is one, it fetches that character and
-				// updates the currentChar. If there is no next character the currentChar is
-				// set to a blank.
-				moveToNextCharacter();
-
-				// Move to the next state
-				state = nextState;
-
-				// Is the new state a final state? If so, signal this fact.
-				if (state == 1)
-					finalState = true;
-
-				// Ensure that one of the cases sets this to a valid value
-				nextState = -1;
-			}
-			// Should the FSM get here, the loop starts again
-
-		}
-		displayDebuggingInfo();
-
-		System.out.println("The loop has ended.");
-
-		// When the FSM halts, we must determine if the situation is an error or not.
-		// That depends
-		// of the current state of the FSM and whether or not the whole string has been
-		// consumed.
-		// This switch directs the execution to separate code for each of the FSM states
-		// and that
-		// makes it possible for this code to display a very specific error message to
-		// improve the
-		// user experience.
-		nameRecognizerIndexofError = currentCharNdx; // Set index of a possible error;
-		nameRecognizerErrorMessage = "*** ERROR *** ";
-
-		// The following code is a slight variation to support just console output.
-		switch (state) {
-		case 0:
-			// State 0 is not a final state, so we can return a very specific error message
-			nameRecognizerErrorMessage += "A Name must start with A-Z, an apostrophe or a minus.\n";
-			return nameRecognizerErrorMessage;
-
-		case 1:
-			// State 1 is a final state. Check to see if the Name length is valid. If so
-			// we
-			// we must ensure the whole string has been consumed.
-			if (nameSize < 1) {
-				// Name is too small
-				nameRecognizerErrorMessage += "A Name must have at least 1 character.\n";
-				return nameRecognizerErrorMessage;
-			} else if (nameSize > 50) {
-				// Name is too long
-				nameRecognizerErrorMessage += "A Name must have no more than 50 characters.\n";
-				return nameRecognizerErrorMessage;
-			} else if (currentCharNdx < input.length()) {
-				// There are characters remaining in the input, so the input is not valid
-				nameRecognizerErrorMessage += "After the first character, a Name may only contain the characters a-z, an apostrophe or a minus.\n";
-				return nameRecognizerErrorMessage;
-			} else {
-				// Name is valid
-				nameRecognizerIndexofError = -1;
-				nameRecognizerErrorMessage = "";
-				return nameRecognizerErrorMessage;
-			}
-
-		default:
-			// This is for the case where we have a state that is outside of the valid
-			// range.
-			// This should not happen
-			nameRecognizerErrorMessage += "State outside of valid range.";
-			return nameRecognizerErrorMessage;
-		}
-	}
+            default:
+                // Fallback for any undefined state.
+                nameRecognizerErrorMessage += "State outside of valid range.";
+                return nameRecognizerErrorMessage;
+        }
+    }
 }
