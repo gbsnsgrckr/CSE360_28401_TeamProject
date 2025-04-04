@@ -174,8 +174,14 @@ public class InstructorHomePage {
 		quitButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
-		// Button to check inbox for private messages
-		Button inboxButton = new Button("Inbox (#)"); // TODO: NEED TO GET NUMBER OF UNREAD PRIVATE MESSAGES
+		// Button to open inbox for private messages, also displays the number of messages a user has in their inbox
+		int totalMessages = 0;
+		try {
+		    totalMessages = databaseHelper.qaHelper.getTotalMessageCountForUser(databaseHelper.currentUser.getUserId());
+		} catch (SQLException e) {
+		    e.printStackTrace();
+		}
+		Button inboxButton = new Button("Inbox (" + totalMessages + ")");
 		inboxButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
