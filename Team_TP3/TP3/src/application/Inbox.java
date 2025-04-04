@@ -81,30 +81,21 @@ public class Inbox {
         ));
         recipientColumn.setVisible(false); // Hide column
         
-     // TableColumn for Reference with prefixed ID
         TableColumn<Message, String> referenceColumn = new TableColumn<>("Reference");
         referenceColumn.setCellValueFactory(cellData -> {
             Message msg = cellData.getValue();
 
-            String prefix;
-
-            if ("Answer".equalsIgnoreCase(msg.getReferenceType())) {
-                prefix = "A";
-            } else if ("Question".equalsIgnoreCase(msg.getReferenceType())) {
-                prefix = "Q";
-            } else if ("Message".equalsIgnoreCase(msg.getReferenceType())) {
-                prefix = "M";
-            } else if ("Review".equalsIgnoreCase(msg.getReferenceType())) {
-                prefix = "R";
-            } else {
-                prefix = "-";
+            String refDisplay = msg.getReferenceType() + msg.getReferenceID();
+            if (msg.getReferenceType() == null || msg.getReferenceType().isBlank() || msg.getReferenceID() <= 0) {
+                refDisplay = "-";
             }
 
-            String refDisplay = (msg.getReferenceID() > 0 && !prefix.equals("-")) ? prefix + msg.getReferenceID() : "-";
             return new SimpleStringProperty(refDisplay);
         });
 
         referenceColumn.setPrefWidth(80);
+
+
 
 
         // TableColumn for Subject
