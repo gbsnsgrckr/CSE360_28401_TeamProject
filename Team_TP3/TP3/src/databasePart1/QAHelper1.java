@@ -2252,6 +2252,30 @@ public class QAHelper1 {
 	}
 
 	/**
+	 * Returns the total number of messages in the system for a given user.
+	 * This includes all messages where the user is either the sender or the recipient.
+	 *
+	 * @param userId The user ID to search messages for.
+	 * @return The total number of messages related to the user.
+	 * @throws SQLException If a database access error occurs.
+	 */
+	public int getTotalMessageCountForUser(int userId) throws SQLException {
+	    String sql = "SELECT COUNT(*) FROM cse360message WHERE senderid = ? OR recipientid = ?";
+
+	    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+	        stmt.setInt(1, userId);
+	        stmt.setInt(2, userId);
+
+	        try (ResultSet rs = stmt.executeQuery()) {
+	            if (rs.next()) {
+	                return rs.getInt(1);
+	            }
+	        }
+	    }
+	    return 0;
+	}
+
+	/**
 	 * Registers a new vote for a review object in the SQL table
 	 * 
 	 * @param reviewId 		The id of the review you are working with
