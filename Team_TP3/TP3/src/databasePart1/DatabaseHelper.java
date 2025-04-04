@@ -636,6 +636,25 @@ public class DatabaseHelper {
 		return users;
 	}
 
+	public List<Request> getAllRequestsA() throws SQLException {
+		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request";
+		List<Request> requests = new ArrayList<>();
+		try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+			ResultSet rs = pstmt.executeQuery();
+
+			while (rs.next()) {
+				String userName = rs.getString("userName");
+	            String requestText = rs.getString("request");
+	            boolean requestTOF = rs.getBoolean("requestTOF");
+	            boolean requestATOF = rs.getBoolean("requestATOF");
+	            User user = getUser(userName);
+	            
+	            requests.add(new Request(requestText, user, requestTOF, requestATOF));
+			}
+		}
+		return requests;
+	}
+
 	/**
 	 * This setup function runs at the beginning of the test and sets up the 
 	 * database, and gets the first question and answer to start the tests on. 
