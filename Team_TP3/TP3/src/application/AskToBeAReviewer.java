@@ -30,7 +30,7 @@ public class AskToBeAReviewer {
 	 * This is the actual display and button handling of the page, including displaying things like the
 	 * box to enter your requests, submitting your request, entering your request in the database, and 
 	 * taking you back to the student page
-	 * @param primaryStage
+	 * @param primaryStage 	The currently active stage
 	 */
 	public void show(Stage primaryStage) {
 			// Label to display the welcome message for the student

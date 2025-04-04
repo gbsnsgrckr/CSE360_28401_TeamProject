@@ -81,7 +81,6 @@ public class FindReviewerForQuestionPage {
      * </ul>
      * The method retrieves questions and reviewers from the database, binds them to the respective tables,
      * and configures event listeners to handle user actions.
-     * </p>
      *
      * @param primaryStage The primary JavaFX stage on which the page will be displayed.
      */

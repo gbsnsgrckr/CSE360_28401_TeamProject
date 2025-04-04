@@ -46,7 +46,6 @@ import javafx.stage.StageStyle;
  * </ul>
  * It also provides pop-up dialogs to add a reviewer (assign a weight) or to manage an existing reviewer
  * (reassign weight or remove the reviewer).
- * </p>
  */
 public class ReviewerListPage {
     
@@ -92,7 +91,6 @@ public class ReviewerListPage {
      *   <li>The "Reviewers Available" table showing users available to become reviewers.</li>
      * </ul>
      * It also includes a back button to return to the home page.
-     * </p>
      *
      * @param user the user for whom reviewer information is displayed.
      */

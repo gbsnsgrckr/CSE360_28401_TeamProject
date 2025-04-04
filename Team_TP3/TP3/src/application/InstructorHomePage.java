@@ -53,7 +53,6 @@ import javafx.stage.StageStyle;
  *   <li>Viewing unresolved questions</li>
  *   <li>Sending requests to the Admin</li>
  * </ul>
- * </p>
  * 
  * @author CSE 360 Team 8
  */

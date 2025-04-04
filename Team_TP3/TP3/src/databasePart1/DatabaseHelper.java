@@ -877,6 +877,12 @@ public class DatabaseHelper {
 		return users;
 	}
 
+	/**
+	 * Method to retrieve all requests from the database
+	 * 
+	 * @return					A List of Request objects representing all requests in the database
+	 * @throws SQLException		SQL exception throw
+	 */
 	public List<Request> getAllRequestsA() throws SQLException {
 		String query = "SELECT userName, request, requestTOF, requestATOF FROM cse360request";
 		List<Request> requests = new ArrayList<>();

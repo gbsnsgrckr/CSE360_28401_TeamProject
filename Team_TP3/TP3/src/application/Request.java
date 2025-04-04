@@ -18,7 +18,6 @@ import javafx.beans.property.StringProperty;
  *   <li>Flags to track instructor and admin approval</li>
  *   <li>An original request ID to support reopened requests</li>
  * </ul>
- * </p>
  * <p>
  * Use this class when retrieving, displaying, or modifying user-submitted requests
  * in instructor/admin interfaces.

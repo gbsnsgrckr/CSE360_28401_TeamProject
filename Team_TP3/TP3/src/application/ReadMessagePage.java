@@ -62,7 +62,6 @@ public class ReadMessagePage {
      *   <li>A non-editable, scrollable text area for the message content.</li>
      *   <li>A "Reply" button which opens a new window to reply to the message.</li>
      * </ul>
-     * </p>
      *
      * @param stage the JavaFX stage to render the message view on
      */

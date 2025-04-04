@@ -26,7 +26,6 @@ import databasePart1.DatabaseHelper;
  * containing every word in that question in order to find and rank questions by
  * similarity to the input text.
  * </p>
- * </p>
  * @author Kyle Pierce
  * <p>
  * Zachary Chalmers
