@@ -38,8 +38,10 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * This page displays a simple welcome message for the user.
+ * StaffHomePage represents the main UI for staff members to interact with the application.
+ * It provides functionality to display, review, and manage questions, answers, and reviews.
  */
+
 public class StaffHomePage {
 
 	private final DatabaseHelper databaseHelper;
@@ -60,10 +62,25 @@ public class StaffHomePage {
 	private TableView<QATableRow> resultsTable;
 
 	private int indent = 1;
-
+	
+	/**
+	 * Constructs a StaffHomePage instance with the provided DatabaseHelper.
+	 *
+	 * @param databaseHelper the helper object for database operations.
+	 */
+	
 	public StaffHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
+	
+	/**
+	 * Displays the staff home page UI.
+	 *
+	 * <p>This method initializes the UI components, retrieves questions, answers, and reviews
+	 * from the database, and sets up event handlers for user interactions.</p>
+	 *
+	 * @param primaryStage the main stage to display the UI.
+	 */
 
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
@@ -1141,7 +1158,15 @@ public class StaffHomePage {
 								databaseHelper.qaHelper.getAnswer(newSelection.getRelatedId()).getId());
 					}
 
-					// Update results table
+					/**
+					 * Updates the results table based on the selected question.
+					 *
+					 * <p>This method retrieves updated answers and reviews for the provided question,
+					 * and refreshes the observable list used in the results table.</p>
+					 *
+					 * @param question the selected question to update the results for.
+					 */
+
 					updateResultsTableForQuestion(question);
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -1457,6 +1482,13 @@ public class StaffHomePage {
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
 	}
+	
+	/**
+	 * Displays a pop-up window with unresolved questions for the current user.
+	 *
+	 * <p>This method retrieves unresolved questions from the database and shows them in a new stage.</p>
+	 */
+
 
 	private void showUnresolvedQuestionsForCurrentUser() {
 		// Create a new stage (window) to display unresolved questions
@@ -1519,8 +1551,12 @@ public class StaffHomePage {
 		stage.show();
 	}
 
-	// Displays a pop-up window listing potential (unread and read) answers for the
-	// specified question.
+	/**
+	 * Displays a pop-up window listing potential answers (both read and unread) for the specified question.
+	 *
+	 * @param question the question for which to display potential answers.
+	 */
+
 	private void showPotentialAnswersWindow(Question question) {
 		Stage stage = new Stage();
 		stage.setTitle("Answers for: " + question.getTitle());
@@ -1579,7 +1615,12 @@ public class StaffHomePage {
 		stage.show();
 	}
 
-	// As a student, I can see a list of all unresolved
+	/**
+	 * Creates and returns a button that, when clicked, displays unresolved questions for the current user.
+	 *
+	 * @return a Button configured to show the current user's unresolved questions.
+	 */
+
 	private Button createViewUnresolvedButton() {
 		Button viewUnresolvedBtn = new Button("View My Unresolved");
 		// Button text instructs that we are viewing the current user's unresolved
@@ -1597,8 +1638,12 @@ public class StaffHomePage {
 		// Returns the newly-created button for "View My Unresolved"
 	}
 
-	// Creates a button that shows all unresolved questions for any user (User Story
-	// #2).
+	/**
+	 * Displays a pop-up window listing all unresolved questions from all users.
+	 *
+	 * <p>This method retrieves all unresolved questions from the database and presents them in a TableView.</p>
+	 */
+
 	private Button createViewAllUnresolvedButton() {
 		Button viewAllUnresolvedBtn = new Button("View All Unresolved");
 		// Button text indicates that this lists all unresolved questions (not just the
@@ -1722,6 +1767,17 @@ public class StaffHomePage {
 		stage.show();
 		// Displays this stage to the user
 	}
+	
+	/**
+	 * Recursively adds related answers to the results observable list and removes them from the provided answers list.
+	 *
+	 * <p>This method retrieves and processes nested related answers for a given answer (parentId) and
+	 * adds each to the results table.</p>
+	 *
+	 * @param parentId the ID of the parent answer.
+	 * @param answers  the list of answers to process.
+	 * @return the modified list of answers after related answers have been processed.
+	 */
 
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
