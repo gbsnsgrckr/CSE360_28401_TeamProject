@@ -17,7 +17,7 @@ import java.util.Arrays;
 
 /**
  * This class tests the functionality of the request system, including
- * creating, closing, reopening requests, and adding notes to requests.
+ * creating, closing, reopening requests, adding notes, and approval flags.
  */
 public class RequestSystemTest {
 
@@ -25,21 +25,17 @@ public class RequestSystemTest {
     private User instructor;
     private User admin;
 
-    /**
-     * Sets up the test environment before each test.
-     * Initializes the database connection and registers an instructor and an admin user.
-     */
     @Before
     public void setUp() throws Exception {
         db = new DatabaseHelper();
         db.connectToDatabase();
 
-        // Set up instructor
+        // Register instructor
         instructor = new User(9991, "instructorUser", "Instructor", "pass", "inst@example.com",
                 Arrays.asList("Instructor"), false);
         db.register(instructor);
 
-        // Set up admin
+        // Register admin
         admin = new User(9992, "adminUser", "Admin", "adminpass", "admin@example.com",
                 Arrays.asList("Admin"), false);
         db.register(admin);
@@ -48,10 +44,7 @@ public class RequestSystemTest {
     }
 
     /**
-     * Tests the creation of a new request and verifies the default status, 
-     * message, and associated user.
-     * 
-     * @throws SQLException if a database error occurs
+     * Test 1: Create a new request and verify default values.
      */
     @Test
     public void testCreateRequest() throws SQLException {
@@ -69,10 +62,7 @@ public class RequestSystemTest {
     }
 
     /**
-     * Tests closing a request with a note by an admin user and verifies that the request
-     * status and note are updated properly.
-     * 
-     * @throws SQLException if a database error occurs
+     * Test 2: Close a request with a note and ensure note/status are set.
      */
     @Test
     public void testCloseRequestWithNote() throws SQLException {
@@ -88,10 +78,7 @@ public class RequestSystemTest {
     }
 
     /**
-     * Tests reopening a previously closed request and verifies that a new request
-     * is created with a status of REOPENED and carries over the previous notes.
-     * 
-     * @throws SQLException if a database error occurs
+     * Test 3: Reopen a closed request, check merged notes and updated status.
      */
     @Test
     public void testReopenClosedRequest() throws SQLException {
@@ -104,20 +91,16 @@ public class RequestSystemTest {
         db.currentUser = instructor;
         db.reopenRequest(original.getId(), "Still not working", "Seems like power issue", instructor.getUsername());
 
-        List<Request> all = db.getAllRequests();
-        assertEquals(2, all.size());
-
-        Request reopened = all.get(1);
+        Request reopened = db.getRequestById(original.getId());
         assertEquals("REOPENED", reopened.getStatus());
-        assertEquals(original.getId(), reopened.getOriginalId());
+        assertEquals(original.getId(), reopened.getId()); // same row updated
         assertTrue(reopened.getNotes().contains("Replaced projector bulb."));
         assertTrue(reopened.getNotes().contains("Seems like power issue"));
+        assertEquals("Still not working", reopened.getRequest());
     }
 
     /**
-     * Tests adding a note to an existing request without changing its status.
-     * 
-     * @throws SQLException if a database error occurs
+     * Test 4: Add a note without changing status.
      */
     @Test
     public void testAddNoteOnly() throws SQLException {
@@ -129,5 +112,26 @@ public class RequestSystemTest {
         Request updated = db.getRequestById(req.getId());
         assertEquals("OPEN", updated.getStatus());
         assertTrue(updated.getNotes().contains("Supplies ordered."));
+    }
+
+    /**
+     * Test 5: Manually modify approval flags and verify getter/setter behavior.
+     */
+    @Test
+    public void testInstructorAndAdminApprovalFlags() throws SQLException {
+        db.createNewRequest("Software update needed", instructor.getUsername());
+        Request req = db.getAllRequests().get(0);
+
+        req.setRequestTOF(true);
+        req.setRequestATOF(true);
+
+        assertTrue(req.getRequestTOF());
+        assertTrue(req.getRequestATOF());
+
+        req.setRequestTOF(false);
+        req.setRequestATOF(false);
+
+        assertFalse(req.getRequestTOF());
+        assertFalse(req.getRequestATOF());
     }
 }
