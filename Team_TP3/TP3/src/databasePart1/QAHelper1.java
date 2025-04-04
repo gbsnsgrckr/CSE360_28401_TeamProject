@@ -1565,7 +1565,7 @@ public class QAHelper1 {
 	        pstmt.setString(3, message.getSubject());
 	        pstmt.setString(4, message.getMessage());
 	        pstmt.setInt(5, message.getReferenceID());
-	        pstmt.setString(6, message.getReferenceType());
+	        pstmt.setString(6, message.getReferenceType().substring(0,1).toLowerCase());
 	        pstmt.executeUpdate();
 
 	        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {

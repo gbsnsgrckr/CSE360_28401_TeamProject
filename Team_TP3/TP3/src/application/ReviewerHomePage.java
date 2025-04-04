@@ -54,11 +54,11 @@ public class ReviewerHomePage {
 	private List<Question> sortedList;
 	private boolean updatingReview = false;
 	private boolean reviewToggle = false;
-
+	private String reviewFilterString = "";
 	private Answer tempAnswer;
-
+	ObservableList<Review> reviewObservableList;
 	private TableView<QATableRow> resultsTable;
-
+	TableView<Review> rTable;
 	private int indent = 1;
 
 	public ReviewerHomePage(DatabaseHelper databaseHelper) {
@@ -68,7 +68,6 @@ public class ReviewerHomePage {
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
 		double[] offsetY = { 0 };
-
 		try {
 			questions = databaseHelper.qaHelper.getAllReviewedByMeQuestions();
 		} catch (SQLException e) {
@@ -163,6 +162,8 @@ public class ReviewerHomePage {
 			}
 		});
 
+
+		
 		// Create an observable list of questions and assign to the table
 		ObservableList<Question> questionObservableList = FXCollections.observableArrayList(questions);
 		qTable.setItems(questionObservableList);
@@ -230,7 +231,7 @@ public class ReviewerHomePage {
 
 		// Table display of the question database
 		// Create table to display the question database within
-		TableView<Review> rTable = new TableView<>();
+		rTable = new TableView<>();
 
 		// Give rTable a bold outline
 		rTable.setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black;");
@@ -259,7 +260,7 @@ public class ReviewerHomePage {
 		}
 
 		// Create an observable list of reviews and assign to the table
-		ObservableList<Review> reviewObservableList = FXCollections.observableArrayList(reviews);
+		reviewObservableList = FXCollections.observableArrayList(reviews);
 		rTable.setItems(reviewObservableList);
 
 		TableColumn<Review, String> reviewDetailsColumn = new TableColumn<>("Review Details");
@@ -299,6 +300,7 @@ public class ReviewerHomePage {
 				titleBar.setStyle("-fx-pref-height: 0; -fx-min-height: 0; -fx-max-height: 0;");
 			}
 		});
+		
 
 		// Create filter comboBox to adjust review table database view
 		ComboBox<String> reviewFilter = new ComboBox<>();
@@ -318,9 +320,11 @@ public class ReviewerHomePage {
 					switch (newSelection) {
 					case "All Reviews":
 						reviews = databaseHelper.qaHelper.getAllReviews();
+						reviewFilterString = "All Reviews";
 						break;
 					case "My Reviews":
 						reviews = databaseHelper.qaHelper.getMyReviews();
+						reviewFilterString = "My Reviews";
 						break;
 					}
 				} catch (SQLException e) {
@@ -334,6 +338,31 @@ public class ReviewerHomePage {
 			}
 		});
 
+		primaryStage.focusedProperty().addListener((obs, wasFocused, isNowFocused) -> {
+			if (isNowFocused) {
+				try {		    	
+					if (reviewFilterString == "All Reviews") {
+						reviews = databaseHelper.qaHelper.getAllReviews();
+					}
+					else if (reviewFilterString == "My Reviews") {
+						reviews = databaseHelper.qaHelper.getMyReviews();
+					}
+					else {
+						return;
+					}
+					reviewObservableList.setAll(reviews);
+					rTable.setItems(reviewObservableList);
+					rTable.refresh();
+					System.out.println("Stage is now topmost / regained focus");
+				} catch (SQLException e) {
+					System.out.println("FOCUSED LISTENER FAIL");
+				}
+			} else {
+				System.out.println("Stage lost focus");
+			}
+		});
+		
+		
 		// Hbox to hold and position the title
 		HBox reviewTitleBox = new HBox(reviewFilterBox);
 		reviewTitleBox.setStyle("-fx-background-color: derive(gray, 60%)");
@@ -397,7 +426,12 @@ public class ReviewerHomePage {
 						referenceType = "Review";
 					}
 
-					new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+				    new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(newStage);
+				    
+				    newStage.setOnHidden(e -> {
+				        refreshReviewTable(); // This is a method you'll define to reload your data
+				    
+				    });
 				});
 
 				cellContent.getChildren().addAll(buttonBox);
@@ -1321,7 +1355,7 @@ public class ReviewerHomePage {
 
 				// Toggle the text
 				viewReviewsButton.setText("View Questions");
-
+				reviewFilterString = "My Reviews";
 			} else {
 				// Hide submitBox
 				rTableBox.setVisible(false);
@@ -1721,7 +1755,25 @@ public class ReviewerHomePage {
 		stage.show();
 		// Displays this stage to the user
 	}
-
+	
+	private void refreshReviewTable() {
+	    try {
+	        if ("All Reviews".equals(reviewFilterString)) {
+	            reviews = databaseHelper.qaHelper.getAllReviews();
+	        } else if ("My Reviews".equals(reviewFilterString)) {
+	            reviews = databaseHelper.qaHelper.getMyReviews();
+	        } else {
+	            return;
+	        }
+	        reviewObservableList.setAll(reviews);
+	        rTable.setItems(reviewObservableList);
+	        rTable.refresh();
+	    } catch (SQLException e) {
+	        System.out.println("Failed to refresh review table");
+	        e.printStackTrace();
+	    }
+	}
+	
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
 			// Retrieve related answers
