@@ -83,7 +83,7 @@ public class ReviewCRUDTestingAutomation {
 		}
 
 		// Assertion statement to check
-		assertEquals(5, reviews.size());
+		assertEquals(10, reviews.size());
 	}
 
 	/**
