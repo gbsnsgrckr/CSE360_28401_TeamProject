@@ -1406,7 +1406,16 @@ public class StaffHomePage {
 		primaryStage.show();
 	}
 
-	// Helper class to update reultsTable contents
+	/**
+	 * Updates the results table based on the selected question.
+	 *
+	 * <p>This method retrieves the current question, its associated answers, and reviews
+	 * from the database, repopulating the observable list used by the results table and
+	 * refreshing the display.</p>
+	 *
+	 * @param question the question for which the results are to be updated.
+	 */
+
 	private void updateResultsTableForQuestion(Question question) {
 		Answer duplicate = null;
 		List<Review> reviews;

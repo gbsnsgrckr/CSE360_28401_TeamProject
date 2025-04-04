@@ -38,8 +38,14 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * This page displays a simple welcome message for the user.
+ * ReviewerHomePage provides the user interface for reviewers.
+ *
+ * <p>This page allows reviewers to view questions that have been reviewed by them,
+ * submit new reviews, update or delete existing reviews, and interact with questions
+ * by marking answers as read or messaging users. It also supports filtering and searching
+ * through questions and reviews.</p>
  */
+
 public class ReviewerHomePage {
 
 	private final DatabaseHelper databaseHelper;
@@ -60,10 +66,26 @@ public class ReviewerHomePage {
 	private TableView<QATableRow> resultsTable;
 	TableView<Review> rTable;
 	private int indent = 1;
+	
+	/**
+	 * Constructs a ReviewerHomePage instance using the provided DatabaseHelper.
+	 *
+	 * @param databaseHelper the helper object used for database operations.
+	 */
 
 	public ReviewerHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
+
+	/**
+	 * Displays the reviewer home page on the specified stage.
+	 *
+	 * <p>This method initializes the UI components, retrieves questions, answers,
+	 * and reviews from the database, and sets up event handlers for user interactions
+	 * including review submission, filtering, and navigation.</p>
+	 *
+	 * @param primaryStage the stage on which the reviewer home page is displayed.
+	 */
 
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
@@ -1421,7 +1443,16 @@ public class ReviewerHomePage {
 		primaryStage.show();
 	}
 
-	// Helper class to update reultsTable contents
+	/**
+	 * Updates the results table based on the selected question.
+	 *
+	 * <p>This method retrieves the current state of the specified question along with its
+	 * associated answers and reviews, repopulating the observable list used by the results table
+	 * and refreshing its display.</p>
+	 *
+	 * @param question the question for which the results table should be updated.
+	 */
+
 	private void updateResultsTableForQuestion(Question question) {
 		Answer duplicate = null;
 		List<Review> reviews;
@@ -1498,6 +1529,13 @@ public class ReviewerHomePage {
 		resultsTable.refresh();
 	}
 
+	/**
+	 * Displays a pop-up window listing unresolved questions for the current reviewer.
+	 *
+	 * <p>This method retrieves unresolved questions from the database specific to the current user
+	 * and displays them in a new stage. Double-clicking a question will open its potential answers window.</p>
+	 */
+
 	private void showUnresolvedQuestionsForCurrentUser() {
 		// Create a new stage (window) to display unresolved questions
 		Stage stage = new Stage();
@@ -1559,8 +1597,12 @@ public class ReviewerHomePage {
 		stage.show();
 	}
 
-	// Displays a pop-up window listing potential (unread and read) answers for the
-	// specified question.
+	/**
+	 * Displays a pop-up window listing potential answers (both unread and read) for the specified question.
+	 *
+	 * @param question the question for which to display the potential answers.
+	 */
+
 	private void showPotentialAnswersWindow(Question question) {
 		Stage stage = new Stage();
 		stage.setTitle("Answers for: " + question.getTitle());
@@ -1619,7 +1661,12 @@ public class ReviewerHomePage {
 		stage.show();
 	}
 
-	// As a student, I can see a list of all unresolved
+	/**
+	 * Creates and returns a button that, when clicked, displays unresolved questions for the current reviewer.
+	 *
+	 * @return a Button configured to show the current user's unresolved questions.
+	 */
+
 	private Button createViewUnresolvedButton() {
 		Button viewUnresolvedBtn = new Button("View My Unresolved");
 		// Button text instructs that we are viewing the current user's unresolved
@@ -1637,8 +1684,12 @@ public class ReviewerHomePage {
 		// Returns the newly-created button for "View My Unresolved"
 	}
 
-	// Creates a button that shows all unresolved questions for any user (User Story
-	// #2).
+	/**
+	 * Creates and returns a button that, when clicked, displays all unresolved questions.
+	 *
+	 * @return a Button configured to show all unresolved questions.
+	 */
+
 	private Button createViewAllUnresolvedButton() {
 		Button viewAllUnresolvedBtn = new Button("View All Unresolved");
 		// Button text indicates that this lists all unresolved questions (not just the
@@ -1763,6 +1814,13 @@ public class ReviewerHomePage {
 		// Displays this stage to the user
 	}
 	
+	/**
+	 * Refreshes the review table by reloading reviews based on the current review filter.
+	 *
+	 * <p>This method retrieves either all reviews or only the current user's reviews (depending on the filter),
+	 * updates the observable list, and refreshes the review table display.</p>
+	 */
+
 	private void refreshReviewTable() {
 	    try {
 	        if ("All Reviews".equals(reviewFilterString)) {
@@ -1781,6 +1839,17 @@ public class ReviewerHomePage {
 	    }
 	}
 	
+	/**
+	 * Recursively processes and adds related answers to the results observable list.
+	 *
+	 * <p>This method retrieves answers related to the specified parent answer, adds them to the results table,
+	 * and removes them from the provided list to avoid duplication. It processes nested related answers recursively.</p>
+	 *
+	 * @param parentId the ID of the parent answer.
+	 * @param answers  the list of answers to process.
+	 * @return the modified list of answers after processing related answers.
+	 */
+
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
 			// Retrieve related answers
