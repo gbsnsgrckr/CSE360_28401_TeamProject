@@ -1369,6 +1369,7 @@ public class ReviewerHomePage {
 
 				// Toggle the text
 				viewReviewsButton.setText("View Reviews");
+				reviewFilterString = "My Reviews";
 			}
 			reviewToggle = !reviewToggle;
 		});
