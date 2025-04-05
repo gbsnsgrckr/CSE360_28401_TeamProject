@@ -6,9 +6,11 @@
 
 ### Contents
 
-1. Screencasts       - folder containing a file with the URL to Screencast1 and Screencast2(files too large for GitHub)
-3. StandupMeetings   - folder containing Standup Meeting recordings and notes   
-1. TP3               - folder containing Team Project Phase 3 program submission
+1. Design            - folder containing the UML Class diagrams for this phase
+2. Javadoc           - folder containing the output from generating Javadoc from our project
+3. Screencasts       - folder containing a file with the URL to Screencast1 and Screencast2(files too large for GitHub)
+4. StandupMeetings   - folder containing Standup Meeting recordings and notes   
+5. TP3               - folder containing Team Project Phase 3 program submission
 
 
 
