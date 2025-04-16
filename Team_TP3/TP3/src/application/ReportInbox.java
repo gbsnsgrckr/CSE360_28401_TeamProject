@@ -1,0 +1,387 @@
+package application;
+
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import databasePart1.DatabaseHelper;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+
+/**
+ * Displays the Inbox view for a user.
+ * Shows all messages related to the current user in a table, allowing actions
+ * such as reading, replying, and deleting messages.
+ */
+
+public class ReportInbox {
+    private final DatabaseHelper databaseHelper;
+
+    /**
+     * Constructs the Inbox view with a given database helper.
+     *
+     * @param databaseHelper The helper used to interact with the database.
+     */
+    public ReportInbox(DatabaseHelper databaseHelper) {
+        this.databaseHelper = databaseHelper;
+    }
+
+    /**
+     * Displays the Inbox window on the specified stage.
+     * Includes a message table, control buttons, and custom window styling.
+     *
+     * @param primaryStage The stage where the inbox should be shown.
+     */
+    public void show(Stage primaryStage) {
+    	double[] offsetX = { 0 };
+		double[] offsetY = { 0 };
+		
+        TableView<Message> table = new TableView<>();
+        List<Message> messageList = new ArrayList<>();
+
+        // Label to display title to user
+        
+        try {
+            messageList = databaseHelper.qaHelper.retrieveReportedObjects();
+        } catch (SQLException e) {
+            System.out.println("Error fetching messages from the database.");
+            e.printStackTrace();
+        }
+
+        // TableColumn for Message ID
+        TableColumn<Message, Integer> messageIdColumn = new TableColumn<>("MsgID");
+        messageIdColumn.setCellValueFactory(new PropertyValueFactory<>("messageID"));
+        messageIdColumn.setPrefWidth(50);
+
+        // TableColumn for Sender
+        TableColumn<Message, String> senderColumn = new TableColumn<>("From");
+        senderColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getSender() != null ? cellData.getValue().getSender().getUsername() : "Unknown"
+        ));
+
+        // TableColumn for Recipient
+        TableColumn<Message, String> reportedUserColumn = new TableColumn<>("Reported User");
+        reportedUserColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+            cellData.getValue().getRecipient() != null ? cellData.getValue().getRecipient().getUsername() : "Unknown"
+        ));
+        reportedUserColumn.setVisible(false); // Hide column
+        
+        TableColumn<Message, String> referenceColumn = new TableColumn<>("Reference");
+        referenceColumn.setCellValueFactory(cellData -> {
+            Message msg = cellData.getValue();
+
+            String refDisplay = msg.getReferenceType() + msg.getReferenceID();
+            if (msg.getReferenceType() == null || msg.getReferenceType().isBlank() || msg.getReferenceID() <= 0) {
+                refDisplay = "-";
+            }
+
+            return new SimpleStringProperty(refDisplay);
+        });
+
+        referenceColumn.setPrefWidth(80);
+
+
+
+
+        // TableColumn for Subject
+        TableColumn<Message, String> subjectColumn = new TableColumn<>("Subject");
+        subjectColumn.setCellValueFactory(new PropertyValueFactory<>("subject"));
+        subjectColumn.setPrefWidth(175);
+
+        // TableColumn for Message Content
+        TableColumn<Message, String> messageColumn = new TableColumn<>("Message");
+        messageColumn.setCellValueFactory(new PropertyValueFactory<>("message"));
+        messageColumn.setPrefWidth(618);
+
+        // Fixed row height
+        table.setFixedCellSize(70);  
+
+        // Add columns to the table
+        table.getColumns().addAll(messageIdColumn, senderColumn, referenceColumn, reportedUserColumn, subjectColumn, messageColumn);
+
+        ObservableList<Message> messageObservableList = FXCollections.observableArrayList(messageList);
+        table.setItems(messageObservableList);
+
+        // Buttons
+        Button readButton = new Button("Read");
+        readButton.setStyle("-fx-text-fill: white; -fx-background-color: green; -fx-font-weight: bold;");
+        
+        Button editButton = new Button("Edit");
+        editButton.setStyle("-fx-text-fill: white; -fx-background-color: #DAA520; -fx-font-weight: bold;");
+        
+        Button replyButton = new Button("Reply");
+        replyButton.setStyle("-fx-text-fill: white; -fx-background-color: blue; -fx-font-weight: bold;");
+        
+        Button deleteButton = new Button("Delete");
+        deleteButton.setStyle("-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold;");
+
+        // Disable buttons by default until a message is selected
+        readButton.setDisable(true);
+        editButton.setDisable(true);
+        replyButton.setDisable(true);
+        deleteButton.setDisable(true);
+
+        // Enable Buttons on Selection
+        table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
+            boolean hasSelection = newSelection != null;
+            readButton.setDisable(!hasSelection);
+            editButton.setDisable(!hasSelection);
+            replyButton.setDisable(!hasSelection);
+            deleteButton.setDisable(!hasSelection);
+        });
+
+        // Read Button Action
+        readButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Stage detailsStage = new Stage();
+                new ReadReportPage(databaseHelper, selectedMessage).show(detailsStage);
+            }
+        });
+        
+        editButton.setOnAction(e -> {
+            Message selected = table.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Edit Report");
+            dialog.setHeaderText("Editing Report ID #" + selected.getMessageID());
+
+            Label subjectLabel = new Label("Subject:");
+            TextField subjectField = new TextField(selected.getSubject());
+
+            Label messageLabel = new Label("Message:");
+            TextArea messageArea = new TextArea(selected.getMessage());
+            messageArea.setPrefRowCount(5);
+
+            VBox content = new VBox(10, subjectLabel, subjectField, messageLabel, messageArea);
+            content.setPadding(new Insets(10));
+            dialog.getDialogPane().setContent(content);
+
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                try {
+                    databaseHelper.qaHelper.updateReport(
+                        selected.getMessageID(),
+                        subjectField.getText(),
+                        messageArea.getText()
+                    );
+                    // Optional: refresh the table after edit
+                    table.getItems().clear();
+                    table.getItems().addAll(databaseHelper.qaHelper.retrieveReportedObjects());
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showAlert("Failed to update report: " + ex.getMessage());
+                }
+            }
+        });
+
+
+        // Reply Button Action
+        replyButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Stage replyStage = new Stage();
+                int recipientId = selectedMessage.getSenderID();
+                int referenceId = selectedMessage.getMessageID();
+                String referenceType = "Message";
+
+                new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType).show(replyStage);
+            }
+        });
+
+
+
+        // Delete Button Action
+        deleteButton.setOnAction(event -> {
+            Message selectedMessage = table.getSelectionModel().getSelectedItem();
+            if (selectedMessage != null) {
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Confirm Deletion");
+                alert.setHeaderText("Are you sure you want to delete this message?");
+                alert.setContentText("Message ID: " + selectedMessage.getMessageID());
+
+                Optional<ButtonType> result = alert.showAndWait();
+                if (result.isPresent() && result.get() == ButtonType.OK) {
+                    try {
+                        if (databaseHelper.qaHelper.deleteMessage(selectedMessage.getMessageID())) {
+                            table.getItems().remove(selectedMessage);
+                            System.out.println("Message deleted: " + selectedMessage.getMessageID());
+                        } else {
+                            System.out.println("Failed to delete message.");
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        // Layout
+        HBox buttonBox = new HBox(10, readButton, editButton, replyButton, deleteButton);
+        buttonBox.setAlignment(Pos.BOTTOM_LEFT);
+
+        VBox layout = new VBox(10, table, buttonBox);
+        layout.setAlignment(Pos.CENTER);
+        layout.setMinSize(1300, 900);
+		layout.setMaxSize(1300, 900);
+		layout.setStyle("-fx-padding: 20; -fx-background-color: derive(gray, 80%); -fx-background-radius: 100;"
+				+ "-fx-background-insets: 4; -fx-border-color: gray, gray, black;"
+				+ "-fx-border-width: 2, 2, 1; -fx-border-radius: 100, 100, 100;" + "-fx-border-insets: 0, 2, 4");
+
+		// Actions to allow window dragging
+		layout.setOnMousePressed(a -> {
+			offsetX[0] = a.getSceneX();
+			offsetY[0] = a.getSceneY();
+		});
+
+		// Actions to allow window dragging
+		layout.setOnMouseDragged(a -> {
+			primaryStage.setX(a.getScreenX() - offsetX[0]);
+			primaryStage.setY(a.getScreenY() - offsetY[0]);
+		});
+
+		// Container to hold the buttons and allow for click+drag
+		// Button to replace X close button for transparent background
+		Button closeButton = new Button("X");
+		closeButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		closeButton.setMinSize(25, 25);
+		closeButton.setMaxSize(25, 25);
+
+		// Button to replace maximize button for transparent background
+		Button maxButton = new Button("🗖");
+		maxButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		maxButton.setMinSize(25, 25);
+		maxButton.setMaxSize(25, 25);
+
+		// Button to replace minimize button for transparent background
+		Button minButton = new Button("_");
+		minButton.setStyle(
+				"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+						+ "-fx-font-weight: bold; -fx-padding: 0;");
+		minButton.setMinSize(25, 25);
+		minButton.setMaxSize(25, 25);
+
+		// Set onAction events for button
+		closeButton.setOnMouseEntered(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnMouseExited(a -> {
+			closeButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			closeButton.setMinSize(25, 25);
+			closeButton.setMaxSize(25, 25);
+		});
+
+		closeButton.setOnAction(a -> {
+			primaryStage.close();
+		});
+
+		// Set onAction events for button
+		maxButton.setOnMouseEntered(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnMouseExited(a -> {
+			maxButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			maxButton.setMinSize(25, 25);
+			maxButton.setMaxSize(25, 25);
+		});
+
+		maxButton.setOnAction(a -> {
+			primaryStage.setMaximized(!primaryStage.isMaximized());
+		});
+
+		// Set onAction events for button
+		minButton.setOnMouseEntered(a -> {
+			minButton.setStyle(
+					"-fx-background-color: gray; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: red; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		minButton.setOnMouseExited(a -> {
+			minButton.setStyle(
+					"-fx-background-color: transparent; -fx-background-insets: 0; -fx-border-color: black; -fx-text-fill: black; -fx-font-size: 12px;"
+							+ "-fx-font-weight: bold; -fx-padding: 0;");
+			minButton.setMinSize(25, 25);
+			minButton.setMaxSize(25, 25);
+		});
+
+		// Event to minimize the window
+		minButton.setOnAction(a -> {
+			primaryStage.setIconified(true);
+		});
+
+		// Container to hold the three buttons min, max, and close
+		HBox buttonBar = new HBox(5, minButton, maxButton, closeButton);
+		buttonBar.setAlignment(Pos.TOP_RIGHT);
+		buttonBar.setPadding(new Insets(0));
+		buttonBar.setMaxHeight(27);
+		buttonBar.setMaxWidth(80);
+
+		// Spacer to push the titleBar to the top
+		Region spacer = new Region();
+		spacer.setMinHeight(26);
+		spacer.setMaxHeight(26);
+
+		VBox layoutBox = new VBox(spacer, layout);
+		layoutBox.setAlignment(Pos.CENTER);
+
+		// StackPane to control layout sizing
+		StackPane root = new StackPane(layoutBox, buttonBar);
+		root.setAlignment(buttonBar, Pos.TOP_RIGHT);
+		root.setStyle("-fx-background-color: transparent;");
+		root.setPadding(new Insets(0));
+
+        Scene scene = new Scene(root, 1300, 550);
+        scene.setFill(Color.TRANSPARENT);
+        
+        primaryStage.setScene(scene);
+        primaryStage.setTitle("Inbox");
+        primaryStage.centerOnScreen();
+        primaryStage.show();
+    }
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+}
