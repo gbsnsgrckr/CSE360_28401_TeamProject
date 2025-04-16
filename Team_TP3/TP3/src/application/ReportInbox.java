@@ -29,7 +29,7 @@ import javafx.scene.layout.StackPane;
  * such as reading, replying, and deleting messages.
  */
 
-public class Inbox {
+public class ReportInbox {
     private final DatabaseHelper databaseHelper;
 
     /**
@@ -37,7 +37,7 @@ public class Inbox {
      *
      * @param databaseHelper The helper used to interact with the database.
      */
-    public Inbox(DatabaseHelper databaseHelper) {
+    public ReportInbox(DatabaseHelper databaseHelper) {
         this.databaseHelper = databaseHelper;
     }
 
@@ -57,7 +57,7 @@ public class Inbox {
         // Label to display title to user
         
         try {
-            messageList = databaseHelper.qaHelper.retrieveMessagesByUserId(databaseHelper.currentUser.getUserId());
+            messageList = databaseHelper.qaHelper.retrieveReportedObjects();
         } catch (SQLException e) {
             System.out.println("Error fetching messages from the database.");
             e.printStackTrace();
@@ -75,11 +75,11 @@ public class Inbox {
         ));
 
         // TableColumn for Recipient
-        TableColumn<Message, String> recipientColumn = new TableColumn<>("To");
-        recipientColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
+        TableColumn<Message, String> reportedUserColumn = new TableColumn<>("Reported User");
+        reportedUserColumn.setCellValueFactory(cellData -> new SimpleStringProperty(
             cellData.getValue().getRecipient() != null ? cellData.getValue().getRecipient().getUsername() : "Unknown"
         ));
-        recipientColumn.setVisible(false); // Hide column
+        reportedUserColumn.setVisible(false); // Hide column
         
         TableColumn<Message, String> referenceColumn = new TableColumn<>("Reference");
         referenceColumn.setCellValueFactory(cellData -> {
@@ -112,7 +112,7 @@ public class Inbox {
         table.setFixedCellSize(70);  
 
         // Add columns to the table
-        table.getColumns().addAll(messageIdColumn, senderColumn, referenceColumn, recipientColumn, subjectColumn, messageColumn);
+        table.getColumns().addAll(messageIdColumn, senderColumn, referenceColumn, reportedUserColumn, subjectColumn, messageColumn);
 
         ObservableList<Message> messageObservableList = FXCollections.observableArrayList(messageList);
         table.setItems(messageObservableList);
@@ -121,19 +121,18 @@ public class Inbox {
         Button readButton = new Button("Read");
         readButton.setStyle("-fx-text-fill: white; -fx-background-color: green; -fx-font-weight: bold;");
         
+        Button editButton = new Button("Edit");
+        editButton.setStyle("-fx-text-fill: white; -fx-background-color: #DAA520; -fx-font-weight: bold;");
+        
         Button replyButton = new Button("Reply");
         replyButton.setStyle("-fx-text-fill: white; -fx-background-color: blue; -fx-font-weight: bold;");
         
         Button deleteButton = new Button("Delete");
         deleteButton.setStyle("-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold;");
-        
-        Button reportButton = new Button("Report");
-        reportButton.setStyle("-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold;");
-        reportButton.setDisable(true);
-
 
         // Disable buttons by default until a message is selected
         readButton.setDisable(true);
+        editButton.setDisable(true);
         replyButton.setDisable(true);
         deleteButton.setDisable(true);
 
@@ -141,9 +140,9 @@ public class Inbox {
         table.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
             boolean hasSelection = newSelection != null;
             readButton.setDisable(!hasSelection);
+            editButton.setDisable(!hasSelection);
             replyButton.setDisable(!hasSelection);
             deleteButton.setDisable(!hasSelection);
-            reportButton.setDisable(!hasSelection);
         });
 
         // Read Button Action
@@ -151,9 +150,49 @@ public class Inbox {
             Message selectedMessage = table.getSelectionModel().getSelectedItem();
             if (selectedMessage != null) {
                 Stage detailsStage = new Stage();
-                new ReadMessagePage(databaseHelper, selectedMessage).show(detailsStage);
+                new ReadReportPage(databaseHelper, selectedMessage).show(detailsStage);
             }
         });
+        
+        editButton.setOnAction(e -> {
+            Message selected = table.getSelectionModel().getSelectedItem();
+            if (selected == null) return;
+
+            Dialog<ButtonType> dialog = new Dialog<>();
+            dialog.setTitle("Edit Report");
+            dialog.setHeaderText("Editing Report ID #" + selected.getMessageID());
+
+            Label subjectLabel = new Label("Subject:");
+            TextField subjectField = new TextField(selected.getSubject());
+
+            Label messageLabel = new Label("Message:");
+            TextArea messageArea = new TextArea(selected.getMessage());
+            messageArea.setPrefRowCount(5);
+
+            VBox content = new VBox(10, subjectLabel, subjectField, messageLabel, messageArea);
+            content.setPadding(new Insets(10));
+            dialog.getDialogPane().setContent(content);
+
+            dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+            Optional<ButtonType> result = dialog.showAndWait();
+
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                try {
+                    databaseHelper.qaHelper.updateReport(
+                        selected.getMessageID(),
+                        subjectField.getText(),
+                        messageArea.getText()
+                    );
+                    // Optional: refresh the table after edit
+                    table.getItems().clear();
+                    table.getItems().addAll(databaseHelper.qaHelper.retrieveReportedObjects());
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showAlert("Failed to update report: " + ex.getMessage());
+                }
+            }
+        });
+
 
         // Reply Button Action
         replyButton.setOnAction(event -> {
@@ -194,32 +233,9 @@ public class Inbox {
                 }
             }
         });
-        
-        // Report Button Action
-        reportButton.setOnAction(event -> {
-            Message selectedMessage = table.getSelectionModel().getSelectedItem();
-            if (selectedMessage != null) {
-                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                alert.setTitle("Confirm Report");
-                alert.setHeaderText("Are you sure you want to report this message?");
-                alert.setContentText("Message ID: " + selectedMessage.getMessageID());
-
-                alert.showAndWait().ifPresent(response -> {
-                    if (response == ButtonType.OK) {
-                        Stage reportStage = new Stage();
-                        int recipientId = selectedMessage.getSenderID();
-                        int referenceId = selectedMessage.getMessageID();
-                        String referenceType = "Message";
-
-                        new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType, true).show(reportStage);
-                    }
-                });
-            }
-        });
-
 
         // Layout
-        HBox buttonBox = new HBox(10, readButton, replyButton, deleteButton, reportButton);
+        HBox buttonBox = new HBox(10, readButton, editButton, replyButton, deleteButton);
         buttonBox.setAlignment(Pos.BOTTOM_LEFT);
 
         VBox layout = new VBox(10, table, buttonBox);
@@ -360,4 +376,12 @@ public class Inbox {
         primaryStage.centerOnScreen();
         primaryStage.show();
     }
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Error");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
 }
