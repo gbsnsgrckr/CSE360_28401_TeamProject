@@ -125,6 +125,7 @@ public class QAHelper1 {
 		String messageTable = "CREATE TABLE IF NOT EXISTS cse360message ("
 				+ "messageid INT AUTO_INCREMENT PRIMARY KEY, " + "referenceId INT, " + "referenceType VARCHAR(20), "
 				+ "senderid INT, " + "recipientid INT, " + "subject TEXT, " + "message TEXT, "
+				+ "isreport BOOLEAN DEFAULT FALSE, " // HW4
 				+ "createdon TIMESTAMP DEFAULT CURRENT_TIMESTAMP, "
 				+ "updatedon TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)";
 		statement.execute(messageTable);
@@ -1548,7 +1549,7 @@ public class QAHelper1 {
 
 		return sortedList;
 	}
-
+	
 	/**
 	 * Registers a new private message in the database.
 	 * 
@@ -1576,6 +1577,38 @@ public class QAHelper1 {
 	        }
 	    }
 	}
+
+	/**
+	 * Registers a new report message in the database.
+	 * 
+	 * @param message 			A message object you are working with
+	 * 
+	 * @param isReport          Flag to declare if this is a report or a regular message
+	 * 
+	 * @throws SQLException 	In case the database throws an error
+	 * 
+	 */
+	public void createMessage(Message message, boolean isReport) throws SQLException { // HW4
+	    String insertMessage = "INSERT INTO cse360message (senderid, recipientid, subject, message, referenceId, referenceType, isReport) VALUES (?, ?, ?, ?, ?, ?, ?)";
+	    try (PreparedStatement pstmt = connection.prepareStatement(insertMessage, Statement.RETURN_GENERATED_KEYS)) {
+	        pstmt.setInt(1, message.getSenderID());
+	        pstmt.setInt(2, message.getRecipientID());
+	        pstmt.setString(3, message.getSubject());
+	        pstmt.setString(4, message.getMessage());
+	        pstmt.setInt(5, message.getReferenceID());
+	        pstmt.setString(6, message.getReferenceType());
+	        pstmt.setBoolean(7, isReport);  // true if message is a report
+	        pstmt.executeUpdate();
+
+	        try (ResultSet generatedKeys = pstmt.getGeneratedKeys()) {
+	            if (generatedKeys.next()) {
+	                int messageID = generatedKeys.getInt(1);
+	                message.setMessageID(messageID);
+	            }
+	        }
+	    }
+	}
+
 
 	/**
 	 * Deletes a message from the cse360message table matching the provided message id
@@ -1637,7 +1670,7 @@ public class QAHelper1 {
 	 * 
 	 */
 	public List<Message> retrieveMessagesByUserId(int id) throws SQLException {
-	    String query = "SELECT * FROM cse360message WHERE recipientid = ?";
+	    String query = "SELECT * FROM cse360message WHERE recipientid = ? AND isreport = false";
 	    List<Message> messages = new ArrayList<>();
 
 	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
@@ -1652,11 +1685,11 @@ public class QAHelper1 {
 	                String content = rs.getString("message");
 	                int referenceID = rs.getInt("referenceid");
 	                String referenceType = rs.getString("referencetype");
+	                boolean isReport = rs.getBoolean("isreport"); // Optional for debug
 
-	                Message message = new Message(databaseHelper, messageID, senderID, recipientID, subject, content);
-
-	                message.setReferenceID(referenceID);
-	                message.setReferenceType(referenceType);
+	                Message message = new Message(databaseHelper, referenceID, referenceType, 
+	                                              messageID, senderID, recipientID, 
+	                                              subject, content, isReport);
 
 	                messages.add(message);
 	            }
@@ -1700,6 +1733,65 @@ public class QAHelper1 {
 		}
 		return messages;
 	}
+	
+	/**
+	 * Returns a list of all reported objects in the database.
+	 * 
+	 * @return A list of message objects that have value "true" for isReport
+	 * 
+	 * @throws SQLException In case the database throws an error
+	 */
+	public List<Message> retrieveReportedObjects() throws SQLException {  // HW4
+	    String query = "SELECT * FROM cse360message WHERE isreport = true";
+	    List<Message> messages = new ArrayList<>();
+
+	    try (PreparedStatement pstmt = connection.prepareStatement(query)) {
+	        ResultSet rs = pstmt.executeQuery();
+	        while (rs.next()) {
+	            int messageID = rs.getInt("messageid");
+	            int senderID = rs.getInt("senderid");
+	            int recipientID = rs.getInt("recipientid");
+	            String subject = rs.getString("subject");
+	            String content = rs.getString("message");
+	            int referenceID = rs.getInt("referenceId");
+	            String referenceType = rs.getString("referenceType");
+	            boolean isReport = rs.getBoolean("isreport");
+
+	            Message message = new Message(databaseHelper, referenceID, referenceType, 
+	                                          messageID, senderID, recipientID, 
+	                                          subject, content, isReport);
+
+	            messages.add(message);
+	        }
+	    }
+	    return messages;
+	}
+	
+	/**
+	 * Updates the subject and content of a report message.
+	 *
+	 * @param messageId   The ID of the report message to update.
+	 * @param newSubject  The updated subject text.
+	 * @param newContent  The updated message content.
+	 * @throws SQLException If the update fails or the message doesn't exist.
+	 */
+	public void updateReport(int messageId, String newSubject, String newContent) throws SQLException {
+	    String sql = "UPDATE cse360message SET subject = ?, message = ?, updatedon = CURRENT_TIMESTAMP WHERE messageid = ? AND isreport = true";
+
+	    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+	        stmt.setString(1, newSubject);
+	        stmt.setString(2, newContent);
+	        stmt.setInt(3, messageId);
+
+	        int affectedRows = stmt.executeUpdate();
+	        if (affectedRows == 0) {
+	            System.err.println("No report message found with messageid = " + messageId);
+	        } else {
+	            System.out.println("Report message updated successfully.");
+	        }
+	    }
+	}
+
 
 	/**
 	 * Returns a Question object related to a provided answer id
@@ -2259,8 +2351,8 @@ public class QAHelper1 {
 	 * @return The total number of messages related to the user.
 	 * @throws SQLException If a database access error occurs.
 	 */
-	public int getTotalMessageCountForUser(int userId) throws SQLException {
-	    String sql = "SELECT COUNT(*) FROM cse360message WHERE senderid = ? OR recipientid = ?";
+	public int getTotalMessageCountForUser(int userId) throws SQLException { // HW4
+	    String sql = "SELECT COUNT(*) FROM cse360message WHERE (senderid = ? OR recipientid = ?) AND isreport = false";
 
 	    try (PreparedStatement stmt = connection.prepareStatement(sql)) {
 	        stmt.setInt(1, userId);
@@ -2274,6 +2366,7 @@ public class QAHelper1 {
 	    }
 	    return 0;
 	}
+
 
 	/**
 	 * Registers a new vote for a review object in the SQL table
