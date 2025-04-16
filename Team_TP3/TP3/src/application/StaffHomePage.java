@@ -17,18 +17,8 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.TableCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -38,10 +28,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 /**
- * StaffHomePage represents the main UI for staff members to interact with the application.
- * It provides functionality to display, review, and manage questions, answers, and reviews.
+ * This page displays a simple welcome message for the user.
  */
-
 public class StaffHomePage {
 
 	private final DatabaseHelper databaseHelper;
@@ -62,25 +50,10 @@ public class StaffHomePage {
 	private TableView<QATableRow> resultsTable;
 
 	private int indent = 1;
-	
-	/**
-	 * Constructs a StaffHomePage instance with the provided DatabaseHelper.
-	 *
-	 * @param databaseHelper the helper object for database operations.
-	 */
-	
+
 	public StaffHomePage(DatabaseHelper databaseHelper) {
 		this.databaseHelper = databaseHelper;
 	}
-	
-	/**
-	 * Displays the staff home page UI.
-	 *
-	 * <p>This method initializes the UI components, retrieves questions, answers, and reviews
-	 * from the database, and sets up event handlers for user interactions.</p>
-	 *
-	 * @param primaryStage the main stage to display the UI.
-	 */
 
 	public void show(Stage primaryStage) {
 		double[] offsetX = { 0 };
@@ -148,6 +121,10 @@ public class StaffHomePage {
 		}
 		Button inboxButton = new Button("Inbox (" + totalMessages + ")");
 		inboxButton.setStyle(
+				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
+		
+		Button reportInboxButton = new Button("Reports");
+		reportInboxButton.setStyle(
 				"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;");
 
 		// Button to open the ui to submit a new question
@@ -386,10 +363,11 @@ public class StaffHomePage {
 		TableColumn<QATableRow, String> contentColumn = new TableColumn<>("Results");
 		contentColumn.setCellValueFactory(cellData -> new SimpleStringProperty(cellData.getValue().getText()));
 
-		// Add cell factory to deal with text runoff and disable horizontal scrolling
+		// Added cell factory to deal with text runoff and disable horizontal scrolling
 		contentColumn.setCellFactory(a -> new TableCell<QATableRow, String>() {
 			private final Button MessageButton = new Button("Message User");
 			private final Button markAsReadButton = new Button("Mark As Read");
+			private final Button ReportButton = new Button("Report"); // HW4
 			HBox buttonBox = new HBox(10, MessageButton);
 			private final VBox cellContent = new VBox(5);
 			private final HBox cellBox = new HBox();
@@ -400,6 +378,9 @@ public class StaffHomePage {
 
 				markAsReadButton.setStyle(
 						"-fx-text-fill: black; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1;");
+				
+				ReportButton.setStyle(
+						"-fx-text-fill: white; -fx-background-color: red; -fx-font-weight: bold; -fx-border-color: black; -fx-border-width:  1px;"); // HW4
 
 				MessageButton.setOnAction(a -> {
 				    Stage newStage = new Stage();
@@ -486,6 +467,33 @@ public class StaffHomePage {
 						} catch (SQLException e) {
 							e.printStackTrace();
 						}
+					});
+					if (!buttonBox.getChildren().contains(ReportButton)) { // HW4
+						buttonBox.getChildren().add(ReportButton);
+					}
+					
+					ReportButton.setOnAction(a -> { // HW4
+						
+						
+						Stage newStage = new Stage();
+					    int recipientId = row.getAuthorId();
+					    int referenceId;
+					    String referenceType;
+
+					    if (row.getType() == QATableRow.RowType.QUESTION) {
+					        referenceId = row.getQuestionId();
+					        referenceType = "Question";
+					    } else {
+					        referenceId = row.getAnswerId();
+					        referenceType = "Answer";
+					    }
+					    
+					    Alert alert = new Alert(AlertType.CONFIRMATION, "Are you sure you want to report " + referenceType + " " + referenceId + "?");
+					    alert.showAndWait().ifPresent(response -> {
+					        if (response == ButtonType.OK) {
+					        	new CreateMessagePage(databaseHelper, recipientId, referenceId, referenceType, true).show(newStage);
+					        }
+					    });					    
 					});
 
 					// Make sure you're on at least the second row
@@ -1158,15 +1166,7 @@ public class StaffHomePage {
 								databaseHelper.qaHelper.getAnswer(newSelection.getRelatedId()).getId());
 					}
 
-					/**
-					 * Updates the results table based on the selected question.
-					 *
-					 * <p>This method retrieves updated answers and reviews for the provided question,
-					 * and refreshes the observable list used in the results table.</p>
-					 *
-					 * @param question the selected question to update the results for.
-					 */
-
+					// Update results table
 					updateResultsTableForQuestion(question);
 				} catch (SQLException e) {
 					e.printStackTrace();
@@ -1198,7 +1198,7 @@ public class StaffHomePage {
 
 		HBox buttonBox2 = new HBox(10, viewUnresolvedBtn, viewAllUnresolvedBtn);
 
-		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, buttonBox2);
+		HBox buttonBox1 = new HBox(10, viewReviewsButton, quitButtonBox, inboxButton, reportInboxButton, buttonBox2);
 		quitButton.setAlignment(Pos.BOTTOM_LEFT);
 
 		VBox vbox1 = new VBox(10, vbox, buttonBox1);
@@ -1223,10 +1223,15 @@ public class StaffHomePage {
 		});
 
 		inboxButton.setOnAction(a -> {
-			// Create a new stage in order to popup new window and keep this one
 			Stage newStage = new Stage();
 			newStage.initStyle(StageStyle.TRANSPARENT);
 			new Inbox(databaseHelper).show(newStage);
+		});
+		
+		reportInboxButton.setOnAction(a -> {
+			Stage newStage = new Stage();
+			newStage.initStyle(StageStyle.TRANSPARENT);
+			new ReportInbox(databaseHelper).show(newStage);
 		});
 
 		reviewCloseButton.setOnAction(a -> {
@@ -1406,16 +1411,7 @@ public class StaffHomePage {
 		primaryStage.show();
 	}
 
-	/**
-	 * Updates the results table based on the selected question.
-	 *
-	 * <p>This method retrieves the current question, its associated answers, and reviews
-	 * from the database, repopulating the observable list used by the results table and
-	 * refreshing the display.</p>
-	 *
-	 * @param question the question for which the results are to be updated.
-	 */
-
+	// Helper class to update reultsTable contents
 	private void updateResultsTableForQuestion(Question question) {
 		Answer duplicate = null;
 		List<Review> reviews;
@@ -1491,13 +1487,6 @@ public class StaffHomePage {
 		resultsTable.setItems(resultsObservableList);
 		resultsTable.refresh();
 	}
-	
-	/**
-	 * Displays a pop-up window with unresolved questions for the current user.
-	 *
-	 * <p>This method retrieves unresolved questions from the database and shows them in a new stage.</p>
-	 */
-
 
 	private void showUnresolvedQuestionsForCurrentUser() {
 		// Create a new stage (window) to display unresolved questions
@@ -1560,12 +1549,8 @@ public class StaffHomePage {
 		stage.show();
 	}
 
-	/**
-	 * Displays a pop-up window listing potential answers (both read and unread) for the specified question.
-	 *
-	 * @param question the question for which to display potential answers.
-	 */
-
+	// Displays a pop-up window listing potential (unread and read) answers for the
+	// specified question.
 	private void showPotentialAnswersWindow(Question question) {
 		Stage stage = new Stage();
 		stage.setTitle("Answers for: " + question.getTitle());
@@ -1624,12 +1609,7 @@ public class StaffHomePage {
 		stage.show();
 	}
 
-	/**
-	 * Creates and returns a button that, when clicked, displays unresolved questions for the current user.
-	 *
-	 * @return a Button configured to show the current user's unresolved questions.
-	 */
-
+	// As a student, I can see a list of all unresolved
 	private Button createViewUnresolvedButton() {
 		Button viewUnresolvedBtn = new Button("View My Unresolved");
 		// Button text instructs that we are viewing the current user's unresolved
@@ -1647,12 +1627,8 @@ public class StaffHomePage {
 		// Returns the newly-created button for "View My Unresolved"
 	}
 
-	/**
-	 * Displays a pop-up window listing all unresolved questions from all users.
-	 *
-	 * <p>This method retrieves all unresolved questions from the database and presents them in a TableView.</p>
-	 */
-
+	// Creates a button that shows all unresolved questions for any user (User Story
+	// #2).
 	private Button createViewAllUnresolvedButton() {
 		Button viewAllUnresolvedBtn = new Button("View All Unresolved");
 		// Button text indicates that this lists all unresolved questions (not just the
@@ -1776,17 +1752,6 @@ public class StaffHomePage {
 		stage.show();
 		// Displays this stage to the user
 	}
-	
-	/**
-	 * Recursively adds related answers to the results observable list and removes them from the provided answers list.
-	 *
-	 * <p>This method retrieves and processes nested related answers for a given answer (parentId) and
-	 * adds each to the results table.</p>
-	 *
-	 * @param parentId the ID of the parent answer.
-	 * @param answers  the list of answers to process.
-	 * @return the modified list of answers after related answers have been processed.
-	 */
 
 	private List<Answer> addRelatedAnswers(int parentId, List<Answer> answers) {
 		try {
