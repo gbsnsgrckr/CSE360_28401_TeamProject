@@ -7,22 +7,24 @@ import databasePart1.DatabaseHelper;
 
 /**
  * Represents a message exchanged between users in the system.
- * Each message can reference a question, answer, or another message.
+ * Each message can reference a question, answer, review or another message.
  */
+
 public class Message {
-    private int messageID;
-    private int referenceID;
-    private String referenceType;
-    private int senderID;
-    private int recipientID;
-    private String subject;
-    private String message;
-    private LocalDateTime createdOn;
-    private LocalDateTime updatedOn;
-    private User sender;
-    private User recipient;
+	private int messageID;
+	private int referenceID;
+	private String referenceType;
+	private int senderID;
+	private int recipientID;
+	private String subject;
+	private String message;
+	private boolean isReport;
+	private LocalDateTime createdOn;
+	private LocalDateTime updatedOn;
+	private User sender;
+	private User recipient;
 		
-    /** Default constructor. */
+	 /** Default constructor. */
     public Message() {
     }
     
@@ -72,7 +74,7 @@ public class Message {
      *
      * @param dbHelper Database helper for fetching user info
      * @param referenceID Referenced item ID (e.g., message, question, or answer)
-     * @param referenceType Type of referenced item ("Message", "Question", "Answer")
+     * @param referenceType Type of referenced item ("Message", "Question", "Answer", "Review)
      * @param messageID Message ID
      * @param senderID Sender's user ID
      * @param recipientID Recipient's user ID
@@ -83,7 +85,7 @@ public class Message {
         this.messageID = messageID;
         this.senderID = senderID;
         this.referenceID = referenceID;
-        this.referenceType = referenceType;
+		this.referenceType = referenceType;
         this.recipientID = recipientID;
         this.subject = subject;
         this.message = message;
@@ -98,7 +100,7 @@ public class Message {
     }
     
     /**
-     * Constructs a message with reference details but without retrieving User objects.
+     * Constructs a message with reference details but without user objects.
      *
      * @param referenceID Referenced item ID
      * @param referenceType Type of referenced item
@@ -108,16 +110,16 @@ public class Message {
      * @param message Message body
      */
     public Message(int referenceID, String referenceType, int senderID, int recipientID, String subject, String message) {
-        this.referenceID = referenceID;
-        this.referenceType = referenceType;
-        this.senderID = senderID;
-        this.recipientID = recipientID;
-        this.subject = subject;
-        this.message = message;
-    }
+		this.referenceID = referenceID;
+		this.referenceType = referenceType;
+		this.senderID = senderID;
+		this.recipientID = recipientID;
+		this.subject = subject;
+		this.message = message;
+	}
     
     /**
-     * Constructs a message with full timestamp information.
+     * Constructs a message with full timestamp info.
      *
      * @param messageID Message ID
      * @param referenceID Reference ID
@@ -141,8 +143,62 @@ public class Message {
         this.createdOn = createdOn;
         this.updatedOn = updatedOn;
     }
+    
+    /**
+     * Constructs a message but with a isReport flag to be used as a for reporting a users question, answer, message or review for inappropriate behavior.
+     * 
+     * @param referenceID Reference ID
+     * @param referenceType Reference type
+     * @param senderID Sender ID
+     * @param recipientID Recipient ID
+     * @param subject Subject
+     * @param message Message content
+     * @param isReport Is this a report
+     */
+    public Message(int referenceID, String referenceType, int senderID, int recipientID, String subject, String message, boolean isReport) { // HW4
+		this.referenceID = referenceID;
+		this.referenceType = referenceType;
+		this.senderID = senderID;
+		this.recipientID = recipientID;
+		this.subject = subject;
+		this.message = message;
+		this.isReport = isReport;
+	}
+    
+    /**
+     * Constructs a message with a reference and retrieves sender/recipient User objects.
+     *
+     * @param dbHelper Database helper for fetching user info
+     * @param referenceID Referenced item ID (e.g., message, question, or answer)
+     * @param referenceType Type of referenced item ("Message", "Question", "Answer", "Review)
+     * @param messageID Message ID
+     * @param senderID Sender's user ID
+     * @param recipientID Recipient's user ID
+     * @param subject Subject of the message
+     * @param message Message body
+     * @param isReport Is this a report
+     */
+    public Message(DatabaseHelper dbHelper, int referenceID, String referenceType, int messageID, int senderID, int recipientID, String subject, String message, boolean isReport) {
+        this.messageID = messageID;
+        this.senderID = senderID;
+        this.referenceID = referenceID;
+		this.referenceType = referenceType;
+        this.recipientID = recipientID;
+        this.subject = subject;
+        this.message = message;
+        try {
+            this.sender = dbHelper.getUser(senderID);
+            this.recipient = dbHelper.getUser(recipientID);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            this.sender = null;
+            this.recipient = null;
+        }
+        this.isReport = isReport;
+    }
+    
 	
-    // Getters and Setters
+	// Getters and Setters
     
     /**
      * Gets the unique message ID.
@@ -241,7 +297,7 @@ public class Message {
     }
 
     /**
-     * Gets the subject of the message.
+     * Gets the message subject.
      * @return Subject of the message.
      */
     public String getSubject() {
@@ -249,7 +305,7 @@ public class Message {
     }
 
     /**
-     * Sets the subject of the message.
+     * Sets the message subject.
      * @param subject Subject of the message.
      */
     public void setSubject(String subject) {
@@ -303,11 +359,27 @@ public class Message {
     public void setUpdatedOn(LocalDateTime updatedOn) {
         this.updatedOn = updatedOn;
     }
+     /**
+      * Gets report flag of message object.
+      * @return flag if this is a report or a message.
+      */
+    public boolean isReport() {
+        return isReport;
+    }
+
+    /**
+     * Sets the report flag.
+     * @param isReport is a flag that tells the system if this is a report or a normal message.
+     */
+    public void setIsReport(boolean isReport) {
+        this.isReport = isReport;
+    }
+
 
     /**
      * Returns a string representation of the message for debugging or display.
      *
-     * @return Formatted string representing key message attributes.
+     * @return Formatted string representing key message attributes
      */
     public String toString() {
         return String.format(
@@ -318,8 +390,12 @@ public class Message {
             "Sender ID: %d\n" +
             "Recipient ID: %d\n" +
             "Subject: %s\n" +
-            "Message: %s\n",
+            "Message: %s\n"
+//            + "Created On: %s\n" +
+//            "Updated On: %s"
+            ,
             messageID, referenceID, referenceType, senderID, recipientID, subject, message
+//            , createdOn, updatedOn
         );
-    }
+        }
 }
